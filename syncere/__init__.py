@@ -44,6 +44,9 @@ class Syncere:
         self._preview()
         self._store_rules()
         self._parse_pending_changes()
+        # TODO: Also allow optionally bypassing the interface if there are no
+        #       undecided pending changes left after applying the rules (i.e.
+        #       sync without confirmation)
         if self.pending_changes:
             Interface(self.pending_changes)
             self._synchronize()
@@ -131,7 +134,8 @@ class Syncere:
 
     def _synchronize(self):
         # TODO: Allow choosing the method from the interface or the command
-        #       line options
+        #       line options; it should also be possible to set a default
+        #       method to a shortcut interface command, e.g. 'X'
         #       Each has its advantages and disadvantages (see e.g. --checksum
         #       and problems with (hard) links)
         # TODO: Also allow writing file objects and feeding them to the
