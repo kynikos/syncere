@@ -1,7 +1,7 @@
 # syncere
 
-syncere is a tool that helps manage groups of rsync or rdiff-backup sessions
-interactively or through special profiles.
+syncere is a tool that helps manage groups of rsync sessions interactively or
+through special profiles.
 
 ## License
 

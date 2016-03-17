@@ -1,0 +1,280 @@
+# syncere - Turn rsync commands interactive.
+# Copyright (C) 2016 Dario Giovannetti <dev@dariogiovannetti.net>
+#
+# This file is part of syncere.
+#
+# syncere is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# syncere is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with syncere.  If not, see <http://www.gnu.org/licenses/>.
+
+import subprocess
+import re
+# TODO: Use proper logging
+
+from .rules import Rules
+from .interface import Interface
+from .exceptions import UnrecognizedItemizedChangeError
+
+
+class Syncere:
+    """
+    The main class, primarily responsible for managing the internal rsync
+    commands.
+    """
+    VERSION = '0.1'
+
+    def __init__(self, syncereargs, rsyncargs):
+        # TODO: Support instantiation without cli arguments (e.g. using
+        #       **kwargs)
+        # TODO: Use fnmatch for globbing patterns
+        # TODO: Rulesets should be looked for in .config etc.
+        self.syncereargs = syncereargs
+        self.rsyncargs = rsyncargs
+
+    def run(self):
+        self._preview()
+        self._store_rules()
+        self._parse_pending_changes()
+        if self.pending_changes:
+            Interface(self.pending_changes)
+            self._synchronize()
+        else:
+            # FIXME
+            print("Nothing to do")
+
+    def _preview(self):
+        # TODO:
+        #  * Reflect rsync commands' error exit values
+        #  * Also capture stderr?
+        #  * What is the maximum size of the data that stdout can host?
+        #  * Support terminating with Ctrl+c or in some other way
+        call = subprocess.Popen(['rsync', *self.rsyncargs, '--dry-run',
+                                 '--info', 'backup4,copy4,del4,flist4,misc4,'
+                                 'mount4,name4,remove4,skip4,symsafe4',
+                                 '--out-format',
+                                 '{syncere}%i '  # itemized changes
+                                 '%o '  # operation
+                                 '%B '  # permissions
+                                 '%U '  # uid
+                                 '%G '  # gid
+                                 '%l '  # length (bytes)
+                                 '{//}%M'  # last mod timestamp
+                                 '{//}%f'  # filename (long)
+                                 '{//}%n'  # filename (short)
+                                 '{//}%L'  # link string
+                                 '{//}%C'  # md5
+                                 '{/syncere}'],
+                                stdout=subprocess.PIPE,
+                                universal_newlines=True)
+
+        # Popen.communicate already waits for the process to terminate, there's
+        # no need to call wait
+        # TODO: Display a dynamic "processing..." message in a separate thread,
+        #       using \r to refresh the line
+        # TODO: Print the process' output in real time, but watch out for the
+        #       deadlock problems!!!
+        #       https://docs.python.org/3.5/library/subprocess.html
+        self.stdout = call.communicate()[0]
+
+    def _store_rules(self):
+        self.rules = Rules()
+
+        # TODO: support all the ways to add rules and rulesets
+        for setname in self.syncereargs.rulesets:
+            self.rules.parse_ruleset(setname)
+
+    def _parse_pending_changes(self):
+        # TODO: Here the rulesets should be loaded and compared against the
+        #       parsed changes to set their self.included attribute
+        #       Or maybe this can be done later and merged with the function
+        #       that applies the rules from a file created dynamically to edit
+        #       them
+        self.pending_changes = []
+
+        for ln, line in enumerate(self.stdout.splitlines()):
+            if line[:9] == '{syncere}':
+                match = re.match('\{syncere}(.{11}) '
+                                 '(send|recv|del\.) '
+                                 # TODO: test if %B shows ACLs like ls -l
+                                 '(.+?) '
+                                 '([0-9]+) '
+                                 '([0-9]+|DEFAULT) '
+                                 '([0-9]+) '
+                                 '\{//\}(.+?)'
+                                 '\{//\}(.+?)'
+                                 '\{//\}(.+?)'
+                                 '\{//\}(.*?)'
+                                 '\{//\}([0-9a-fA-F]{32}| {32})'
+                                 '\{/syncere\}',
+                                 line)
+
+                if match:
+                    self.pending_changes.append(Change(
+                                                self.rules,
+                                                len(self.pending_changes) + 1,
+                                                *match.groups()))
+                else:
+                    raise UnrecognizedItemizedChangeError()
+            else:
+                # TODO: Allow suppressing these lines
+                # FIXME
+                print(line)
+
+    def _synchronize(self):
+        # TODO: Allow choosing the method from the interface or the command
+        #       line options
+        #       Each has its advantages and disadvantages (see e.g. --checksum
+        #       and problems with (hard) links)
+        # TODO: Also allow writing file objects and feeding them to the
+        #       transfer command with stdinput; of course this requires that
+        #       stdinput is not used for some other reason
+        for args in (self._synchronize_exclude(),
+                     self._synchronize_exclude_from(),
+                     self._synchronize_include(),
+                     self._synchronize_include_from(),
+                     self._synchronize_files_from()):
+            # FIXME
+            print(' '.join(args))
+            # TODO: Support terminating with Ctrl+c or in some other way
+            # TODO: Pass the original sys.stdin, if present, to the command
+            call = subprocess.Popen(args)
+
+            # FIXME: unneeded in production
+            call.wait()
+
+    def _synchronize_exclude(self):
+        # TODO: Also consider the maximum length of a command, default to
+        #  _synchronize_exclude_from if too long
+
+        # Note that Popen already does all the necessary escaping on the
+        # arguments
+        excludes = []
+        for change in self.pending_changes:
+            if not change.included:
+                excludes.extend(['--exclude', change.sfilename])
+
+        return ['rsync', *self.rsyncargs, *excludes]
+
+    def _synchronize_exclude_from(self):
+        # TODO: Allow choosing the path
+        FILE = './exclude_from'
+
+        # TODO: Protect from exceptions (permissions...)
+        # TODO: Warn if the file already exists
+        with open(FILE, 'w'):
+            # First make sure the file is empty
+            pass
+        with open(FILE, 'a') as filefrom:
+            for change in self.pending_changes:
+                if not change.included:
+                    filefrom.write(change.sfilename + '\n')
+
+        return ['rsync', *self.rsyncargs, '--exclude-from', FILE]
+
+    def _synchronize_include(self):
+        # TODO: Also consider the maximum length of a command, default to
+        #  _synchronize_include_from if too long
+
+        # Note that Popen already does all the necessary escaping on the
+        # arguments
+        includes = []
+        for change in self.pending_changes:
+            if change.included:
+                includes.extend(['--include', change.sfilename])
+
+        return ['rsync', *self.rsyncargs, *includes, '--exclude', '*']
+
+    def _synchronize_include_from(self):
+        # TODO: Allow choosing the path
+        FILE = './include_from'
+
+        # TODO: Protect from exceptions (permissions...)
+        # TODO: Warn if the file already exists
+        with open(FILE, 'w'):
+            # First make sure the file is empty
+            pass
+        with open(FILE, 'a') as filefrom:
+            for change in self.pending_changes:
+                if change.included:
+                    filefrom.write(change.sfilename + '\n')
+
+        return ['rsync', *self.rsyncargs, '--include-from', FILE, '--exclude',
+                '*']
+
+    def _synchronize_files_from(self):
+        # TODO: Allow choosing the path
+        FILE = './files_from'
+
+        # TODO: Protect from exceptions (permissions...)
+        # TODO: Warn if the file already exists
+        with open(FILE, 'w'):
+            # First make sure the file is empty
+            pass
+        with open(FILE, 'a') as filefrom:
+            for change in self.pending_changes:
+                if change.included:
+                    filefrom.write(change.sfilename + '\n')
+
+        return ['rsync', *self.rsyncargs, '--files-from', FILE]
+
+
+class Change:
+    """
+    Objects of this class represent pending changes.
+    """
+    STATUS = {
+        # TODO: All these strings should be defined in a central place instead
+        #       of hardcoding them everywhere
+        None: ' ? ',
+        True: '  >',
+        False: '!  ',
+    }
+    INV_STATUS = {v.strip(): k for k, v in STATUS.items()}
+
+    def __init__(self, rules, id_, ichange, operation, permissions, uid, gid,
+                 length, tstamp, lfilename, sfilename, link, checksum):
+        self.id_ = id_
+        self.ichange = ichange
+        self.operation = operation
+        self.permissions = permissions
+        self.uid = uid
+        self.gid = gid
+        self.length = length
+        self.tstamp = tstamp
+        self.lfilename = lfilename
+        self.sfilename = sfilename
+        self.link = link
+        self.checksum = checksum
+
+        self.included = self.INV_STATUS[rules.decide_change(self.ichange,
+                                                            self.sfilename)]
+
+    def get_summary(self, width):
+        pad = width - len(str(self.id_))
+        return '[{0}{1}] {2} {3}   {4}{5}'.format(' ' * pad, self.id_,
+                                                  self.STATUS[self.included],
+                                                  self.operation,
+                                                  self.sfilename, self.link)
+
+    def get_details(self, width):
+        return ' ' * (7 + width) + ' '.join((self.ichange, self.permissions,
+                                             self.uid, self.gid, self.length,
+                                             self.tstamp, self.checksum))
+
+    def include(self):
+        self.included = True
+
+    def exclude(self):
+        self.included = False
+
+    def reset(self):
+        self.included = None
