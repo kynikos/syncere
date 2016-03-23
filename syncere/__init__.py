@@ -167,7 +167,11 @@ class Syncere:
             if not change.included:
                 excludes.extend(['--exclude', change.sfilename])
 
-        return ['rsync', *self.rsyncargs, *excludes]
+        # Prepend, not append, excludes, since the original rsync command may
+        # have other include/exclude/filter rules, and rsync stops at the first
+        # match that it finds
+        # TODO: Still allow appending them optionally?
+        return ['rsync', *excludes, *self.rsyncargs]
 
     def _synchronize_exclude_from(self):
         # TODO: Allow choosing the path
@@ -183,7 +187,11 @@ class Syncere:
                 if not change.included:
                     filefrom.write(change.sfilename + '\n')
 
-        return ['rsync', *self.rsyncargs, '--exclude-from', FILE]
+        # Prepend, not append, excludes, since the original rsync command may
+        # have other include/exclude/filter rules, and rsync stops at the first
+        # match that it finds
+        # TODO: Still allow appending them optionally?
+        return ['rsync', '--exclude-from', FILE, *self.rsyncargs]
 
     def _synchronize_include(self):
         # TODO: Also consider the maximum length of a command, default to
@@ -196,7 +204,11 @@ class Syncere:
             if change.included:
                 includes.extend(['--include', change.sfilename])
 
-        return ['rsync', *self.rsyncargs, *includes, '--exclude', '*']
+        # Prepend, not append, includes, since the original rsync command may
+        # have other include/exclude/filter rules, and rsync stops at the first
+        # match that it finds
+        # TODO: Still allow appending them optionally?
+        return ['rsync', *includes, '--exclude', '*', *self.rsyncargs]
 
     def _synchronize_include_from(self):
         # TODO: Allow choosing the path
@@ -212,8 +224,12 @@ class Syncere:
                 if change.included:
                     filefrom.write(change.sfilename + '\n')
 
-        return ['rsync', *self.rsyncargs, '--include-from', FILE, '--exclude',
-                '*']
+        # Prepend, not append, includes, since the original rsync command may
+        # have other include/exclude/filter rules, and rsync stops at the first
+        # match that it finds
+        # TODO: Still allow appending them optionally?
+        return ['rsync', '--include-from', FILE, '--exclude', '*',
+                *self.rsyncargs]
 
     def _synchronize_files_from(self):
         # TODO: Allow choosing the path
@@ -229,7 +245,8 @@ class Syncere:
                 if change.included:
                     filefrom.write(change.sfilename + '\n')
 
-        return ['rsync', *self.rsyncargs, '--files-from', FILE]
+        # TODO: Allow appending --files-from instead of prepending it?
+        return ['rsync', '--files-from', FILE, *self.rsyncargs]
 
 
 class Change:
