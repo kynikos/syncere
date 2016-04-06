@@ -16,422 +16,748 @@
 # You should have received a copy of the GNU General Public License
 # along with syncere.  If not, see <http://www.gnu.org/licenses/>.
 
-import argparse
+import forwarg as _m_forwarg
+import sys as _m_sys
 
 from . import Syncere
 
 
-def main():
-    # There would also be the prefix_chars argument, but it would make using
-    #  the program too confusing
-    #  Anyway, in that case "=" couldn't be used because it's also used to pass
-    #   values to long options, e.g. ==option=value would be ambiguous
-    #  Also other characters are reserved by the shell, e.g. "<" and ">"
-    #  "~" would look too similar to the normal "-", and also some programs use
-    #   it to indicate temporary files
-    parser_root = argparse.ArgumentParser(description="syncere is a "
-                                          "drop-in rsync wrapper that makes "
-                                          "data synchronization sessions "
-                                          "interactive.",
-                                          # rsync's -h option has an
-                                          # ambiguous meaning, don't deal
-                                          # with it automatically
-                                          add_help=False)
+class ActionHelp(_m_forwarg.Action):
+    # TODO: Implement man page (also a separate (5) page for ruleset syntax?
+    #       Note that syncere(1) is referred from the help message below
+    # TODO: Note that there are some TODOs in the message
+    def _process_flag(self):
+        print("""\
+Usage: syncere [syncere_options] [rsync_options] [src [src]...] [dest]
 
-    # TODO: expand the version message
-    parser_root.add_argument('--version', action='version',
-                             version='%(prog)s {0}'.format(Syncere.VERSION))
+syncere is a drop-in rsync wrapper that makes data synchronization sessions
+interactive. The syntax is the same as rsync, with the addition of some
+syncere-specific options; refer to rsync's documentation for details. Some
+advanced rsync use cases are not supported; syncere will warn for the known
+cases of incompatibility.
 
-    parser_root.add_argument('-h', '--help', action='help',
-                             help="Show this help message and exit.")
+syncere uses 2 rsync commands internally: the first, which will be referred to
+as the "preview" command, is a --dry-run command used to display the pending
+changes; the second, which will be referred to as the "transfer" command, is
+the command that will be used to transfer the files, properly modified to
+exclude the interactively deselected pending changes.
 
-    parsers_modes = parser_root.add_subparsers(title='modes of operation',
-                                               description="These are the "
-                                               "modes in which syncere can "
-                                               "work: they determine the "
-                                               "compatibility with the native "
-                                               "rsync options.",
-                                               dest='subparser_name')
+Positional arguments:
+    [src] and [dest] are the same arguments as rsync's.
 
-    parser_raw = parsers_modes.add_parser('raw', aliases=['R', '0'],
-                                          usage='%(prog)s [OPTION...] SRC... '
-                                          '[DEST]',
-                                          help="The same arguments are passed "
-                                          "to both rsync internal commands; "
-                                          "only those strictly unsupported "
-                                          "are rejected; this maximizes the "
-                                          "compatibility with complex rsync "
-                                          "commands but disables some of "
-                                          "syncere features.",
-                                          # Don't use parser_root as a parent,
-                                          # or the subparsers will be inherited
-                                          # too
-                                          add_help=False)
+Overridden options:
+    These rsync options are completely overridden by syncere; to use their
+    rsync version, a separate rsync command must be run.
 
-    parser_raw_syncere_group = parser_raw.add_argument_group(
-                                'syncere arguments',
-                                "These are the arguments specific to syncere.")
+    --help      Show this help message and exit. Unlike rsync, using -h
+                without options is not supported.
 
-    # TODO: Implement
-    parser_raw_syncere_group.add_argument('--ruleset',
-                                          metavar='NAME', action='append',
-                                          dest='rulesets', default=[],
-                                          help="Load a pre-saved set of rules "
-                                          "to automatically confirm or "
-                                          "discard recurrent file transfers. "
-                                          "Repeat the option to load more "
-                                          "rule sets in the specified order.")
-    # TODO: Also allow passing rules from a file with --rules-from and
-    #       directly with a --rule option, similar to --exclude-from and
-    #       --exclude
+    --version   Show syncere's version number, copyright and license
+                information, then exit.
 
-    parser_raw_overridden_group = parser_raw.add_argument_group(
-                                       "overridden arguments",
-                                       "This section explains how syncere "
-                                       "supports the original rsync "
-                                       "arguments, and passes them on to "
-                                       "the internal rsync commands. See "
-                                       "rsync(1) for information about "
-                                       "their usage. Note that for obvious "
-                                       "reasons the --daemon mode and "
-                                       "related options are not supported.")
+Syncere-specific options:
+    These options are only used by syncere, they will not be passed to the
+    internal rsync commands.
 
-    # TODO: properly reflect rsync's ambivalent meaning of -h, and update
-    #       --help's description to mention that it's supported
-    #       At least check that -h works as --human-readable
-    parser_raw_overridden_group.add_argument(
-                                    '--help', action='help',
-                                    help="Show this help message and exit. "
-                                    "Unlike rsync, using -h without "
-                                    "options is not supported.")
+    --ruleset=FILE
+                Load a pre-saved set of rules to automatically confirm or
+                discard recurrent file transfers. Repeat the option to load
+                more rule sets in the specified order. See syncere(1) for the
+                used syntax.
 
-    parser_raw_shared_group = parser_raw.add_argument_group(
-                        'shared arguments',
-                        "These arguments are used by syncere but also passed "
-                        "to the rsync commands.")
+Shared options:
+    These options are passed to the internal rsync commands, but they are also
+    used by syncere. Below only the syncere meaning is explained; refer to the
+    rsync documentation for details about their meaning in rsync.
 
-    # TODO
-    parser_raw_shared_group.add_argument('-v --verbose', action='count',
-                                         help="Passed verbatim to both the "
-                                         "internal rsync commands, but it "
-                                         "also has an effect on the details "
-                                         "of syncere's specific messages.")
+    -v, --verbose
+                Increase the verbosity of syncere's output.
 
-    parser_raw_semisupported_group = parser_raw.add_argument_group(
-                            'semisupported arguments',
-                            "These rsync arguments are somewhat supported.")
+    --info=FLAGS
+                The internal "preview" rsync command needs to modify this
+                option in order to ensure that the list of pending changes is
+                retrieved correctly; the FLAGS are instead passed verbatim to
+                the "transfer" command.
 
-    # TODO
-    parser_raw_semisupported_group.add_argument(
-                            '--msgs2stderr', action='store_true',
-                            help="Passed verbatim to the transfer rsync "
-                            "command, but it is incompatible with the "
-                            "preview command.")
-    # TODO
-    parser_raw_semisupported_group.add_argument(
-                            '-q', '--quiet', action='store_true',
-                            help="Passed verbatim to the transfer rsync "
-                            "command, but it is incompatible with the "
-                            "preview command.")
+    -n, --dry-run
+                The internal "preview" rsync command forces this option even
+                if it is not specified in syncere's command line; if present,
+                though, it is also passed to the "transfer" command.
 
-    parser_raw_unsupported_group = parser_raw.add_argument_group(
-                                'unsupported arguments',
-                                "These rsync arguments are unsupported, i.e. "
-                                "they will prevent syncere from running.")
+    -i, --itemize-changes
+                The internal "preview" rsync command uses a custom --out-format
+                option, therefore this option will have no effect on the
+                "preview" command; if present, though, it is normally passed to
+                the "transfer" command.
 
-    # TODO
-    parser_raw_unsupported_group.add_argument('--daemon', action='store_true')
+    --out-format=FORMAT
+                The internal "preview" rsync command needs to modify this
+                option in order to ensure that the list of pending changes is
+                retrieved correctly; the FORMAT is instead passed verbatim to
+                the "transfer" command.
 
-    # TODO
-    parser_raw_unsupported_group.add_argument('--config', metavar='FILE')
+    --stats     The internal "preview" rsync command uses a custom --info
+                option, therefore this option will have no effect on the
+                "preview" command; if present, though, it will be normally
+                passed to the "transfer" command.
 
-    # TODO
-    parser_raw_unsupported_group.add_argument('-M', '--dparam',
-                                              metavar='OVERRIDE')
+Transfer-only options:
+    These rsync options are removed from the "preview" command, and only passed
+    to the "transfer" command, where their meaning is unchanged.
 
-    # TODO
-    parser_raw_unsupported_group.add_argument('--no-detach',
-                                              action='store_true')
+    --msgs2stderr
+    -q, --quiet
 
-    parser_opt = parsers_modes.add_parser('optimized',
-                                          aliases=['opt', 'O', '1'],
-                                          usage='%(prog)s [OPTION...] SRC... '
-                                          '[DEST]',
-                                          help="The arguments passed to the "
-                                          "rsync commands are optimized "
-                                          "according to known use cases; "
-                                          "this means that some complex "
-                                          "combinations of rsync arguments "
-                                          "may not be supported.",
-                                          parents=[parser_raw],
-                                          add_help=False)
+Optimized options:
+    syncere will offer to optimize the usage of these rsync options when
+    possible.
 
-    parser_opt_optimized_group = parser_opt.add_argument_group(
-                                'optimized arguments',
-                                "Using these rsync arguments will trigger "
-                                "special optimizing features.")
+    -c, --checksum
+                TODO
 
-    # TODO
-    parser_opt_optimized_group.add_argument('-c', '--checksum',
-                                            action='store_true',
-                                            help="Only used for the preview "
-                                            "rsync command. It will not be "
-                                            "used again for the syncing "
-                                            "command.")
+    -y, --fuzzy
+                TODO
 
-    # TODO
-    parser_opt_optimized_group.add_argument('-a', '--archive',
-                                            action='store_true',
-                                            help="Passed verbatim to both the "
-                                            "internal rsync commands.")
+Currently unsupported options:
+    These rsync options are unsupported by the current syncere version, as
+    their effects must be more thoroughly tested. In a later release, support
+    for them may be either added or dropped definitively.
 
-    parser_adv = parsers_modes.add_parser('advanced',
-                                          aliases=['adv', 'A', '2'],
-                                          # The unsupported options
-                                          # shouldn't be shown in the usage
-                                          # line
-                                          usage='%(prog)s [OPTION...] SRC... '
-                                          '[DEST]',
-                                          help="All the given rsync arguments "
-                                          "are also parsed by syncere in "
-                                          "order to identify the source and "
-                                          "destination locations, hence "
-                                          "allowing syncere to enable some "
-                                          "advanced features; only a subset "
-                                          "of rsync arguments is supported "
-                                          "by this mode, therefore some "
-                                          "less common rsync use cases may "
-                                          "not be supported.",
-                                          parents=[parser_opt],
-                                          add_help=False)
+    -l, --links
+    -L, --copy-links
+    --copy-unsafe-links
+    --safe-links
+    --munge-links
+    -k, --copy-dirlinks
+    -K, --keep-dirlinks
+    -H, --hard-links
 
-    parser_adv_advanced_group = parser_adv.add_argument_group(
-                                'supported arguments',
-                                "Besides those above, these are the only "
-                                "rsync arguments supported by this mode.")
+    -a, --archive
 
-    # TODO
-    parser_adv_advanced_group.add_argument('--info', metavar='FLAGS',
-                                           help="Passed verbatim to the "
-                                           "internal synchronizing rsync "
-                                           "command. The preview command "
-                                           "must instead force its own "
-                                           "--info option in order to "
-                                           "properly preview the "
-                                           "files to be changed.")
+    --timeout
+    --contimeout
+    -s, --protect-args
+    --outbuf
+    -8, --8-bit-output
+    --log-file
+    --log-file-format
+    --list-only
 
-    # TODO
-    parser_adv_advanced_group.add_argument('--debug', metavar='FLAGS',
-                                           help="Passed verbatim to both the "
-                                           "internal rsync commands.")
+    -0, --from0
 
-    # TODO
-    parser_adv_advanced_group.add_argument('--no-motd', action='store_true',
-                                           help="Passed verbatim to both the "
-                                           "internal rsync commands.")
+Permanently unsupported options:
+    These rsync options are not supported by syncere.
 
-    # TODO: Some ways to accept the rsync arguments:
-    #  * use separate profile files to list the options
-    #  * introduce syncere options with --syncere-*
-    #  * use the special -- flag to separate the raw rsync options
-    #    If using ==, -- must be implied, and vice versa
-    #  * use a different prefix for syncere options, e.g. ==
-    #  * adopt a white-list method, where only some options are explicitly
-    #    supported
-    #  * adopt a black-list method, where the known troublesome arguments
-    #    are detected and a warning or error is issued if present
-    # TODO: Remember to fail if rsyncargs is not empty in advanced mode
-    syncereargs, rsyncargs = parser_root.parse_known_args()
-    # FIXME
-    print(syncereargs, rsyncargs)
-    Syncere(syncereargs, rsyncargs).run()
+    --daemon
+    --config
+    -M, --dparam
+    -M', --remote-option
+    --no-detach
 
-    # FIXME: use where/if needed instead of sys.exit()
-    parser_root.exit(0)
+Fully-supported options:
+    All the rsync options that are not listed above are fully supported and
+    used by both the internal "preview" and the "transfer" commands.
+""")
+        _m_sys.exit(0)
+
+    def _store_value(self, newvalue):
+        pass
+
+    def check_value(self):
+        pass
 
 
-# TODO: Investigate the behavior with links, especially hard links, because
-# excluding their copies/targets may generate synchronization issues
-"""
--l, --links                 copy symlinks as symlinks
--L, --copy-links            transform symlink into referent file/dir
---copy-unsafe-links     only "unsafe" symlinks are transformed
---safe-links            ignore symlinks that point outside the tree
---munge-links           munge symlinks to make them safer
--k, --copy-dirlinks         transform symlink to dir into referent dir
--K, --keep-dirlinks         treat symlinked dir on receiver as dir
--H, --hard-links            preserve hard links
-"""
+class ActionVersion(_m_forwarg.Action):
+    def _process_flag(self):
+        print("""\
+syncere {0} {1}
 
-# TODO: --archive inherits the problems of the options it activates
-"""
--a, --archive               archive mode; equals -rlptgoD (no -H,-A,-X)
-"""
+Copyright (C) 2016 Dario Giovannetti <dev@dariogiovannetti.net>
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, you are welcome to redistribute it under the
+conditions of the GNU General Public License version 3 or later.
+See <http://gnu.org/licenses/gpl.html> for details.
+""".format(Syncere.VERSION_NUMBER, Syncere.VERSION_DATE))
+        _m_sys.exit(0)
 
-# TODO: Test the effect of these arguments
-"""
---no-OPTION             turn off an implied OPTION (e.g. --no-D)
---timeout=SECONDS       set I/O timeout in seconds
---contimeout=SECONDS    set daemon connection timeout in seconds
--s, --protect-args          no space-splitting; wildcard chars only
---outbuf=N|L|B          set out buffering to None, Line, or Block
--8, --8-bit-output          leave high-bit chars unescaped in output
--M, --remote-option=OPTION  send OPTION to the remote side only
---log-file=FILE         log what we're doing to the specified FILE
---log-file-format=FMT   log updates using the specified FMT
---list-only             list the files instead of copying them
-"""
+    def _store_value(self, newvalue):
+        pass
 
-# TODO: These can't stay in the preview command; they are ok in the transfer
-#       command
-"""
---msgs2stderr           special output handling for debugging
--q, --quiet                 suppress non-error messages
-"""
+    def check_value(self):
+        pass
 
-# TODO: In order to avoid recalculating the checksums again, the transfer
-# command could omit the --checksum argument, compile a --files-from list
-# instead of an --exclude-from list, and use --ignore-times to force updating
-# the files whose size and timestamp are the same (the only difference is the
-# checksum)
-"""
--c, --checksum              skip based on checksum, not mod-time & size
-"""
 
-# TODO: Is this similar to --checksum?
-"""
--y, --fuzzy                 find similar file for basis if no dest file
-"""
+class Main:
+    def __init__(self):
+        # There would also be the prefix_chars argument, but it would make
+        #   using the program too confusing
+        #  Anyway, in that case "=" couldn't be used because it's also used to
+        #   pass  values to long options, e.g. ==option=value would be
+        #   ambiguous
+        #  Also other characters are reserved by the shell, e.g. "<" and ">"
+        #  "~" would look too similar to the normal "-", and also some programs
+        #   use it to indicate temporary files
+        self.parser = _m_forwarg.ArgumentParser()
 
-# TODO: Can these arguments be specified multiple times?
-"""
---exclude-from=FILE     read exclude patterns from FILE
---include-from=FILE     read include patterns from FILE
---files-from=FILE       read list of source-file names from FILE
-"""
+        # TODO: use parser.exit(0) where/if needed instead of sys.exit()
 
-# TODO: This can create problems if the generated files use different
-#       delimiters
-"""
--0, --from0                 all *from/filter files are delimited by 0s
-"""
+        self.overridden()
+        self.syncere()
+        self.shared()
+        self.transfer_only()
+        # TODO: Disable optimized and/or advanced modes if the args don't
+        #       validate or an exception is raised by argparse
+        self.need_optimization()
+        self.investigate()
+        self.unsupported()
+        self.safe()
 
-# TODO: Inform that these are shared (but maybe parsing them would be too
-#       aggressive except in advanced mode?)
-"""
--v, --verbose               increase verbosity
---info=FLAGS            fine-grained informational verbosity
---stats                 give some file-transfer stats
--i, --itemize-changes       output a change-summary for all updates
---out-format=FORMAT     output updates using the specified FORMAT
--n, --dry-run               perform a trial run with no changes made
-"""
+        # TODO: Some ways to accept the rsync arguments:
+        #  * use separate profile files to list the options
+        #  * introduce syncere options with --syncere-*
+        #  * use the special -- flag to separate the raw rsync options
+        #    If using ==, -- must be implied, and vice versa
+        #  * use a different prefix for syncere options, e.g. ==
+        #  * adopt a white-list method, where only some options are explicitly
+        #    supported
+        #  * adopt a black-list method, where the known troublesome arguments
+        #    are detected and a warning or error is issued if present
+        # TODO: There would also be 'parse_known_args' to forward unknown
+        #       arguments to the rsync commands, however it's buggy and
+        #       unreliable, especially for short options, see e.g.
+        #       https://bugs.python.org/issue16142
+        #       An alternative would be to use the 'click' module, which seems
+        #       to better support unknown arguments
+        #       http://click.pocoo.org/
+        args = self.parser.parse_args()
 
-# TODO: It doesn't make sense to support daemon mode
-"""
---daemon                run as an rsync daemon
---config=FILE           specify alternate rsyncd.conf file
--M, --dparam=OVERRIDE       override global daemon config parameter
---no-detach             do not detach from the parent
-"""
+        # FIXME
+        print(args)
+        Syncere(args).run()
 
-# TODO: These should be safe in both commands
-"""
---debug=FLAGS           fine-grained debug verbosity
---no-motd               suppress daemon-mode MOTD (see caveat)
--r, --recursive             recurse into directories
--R, --relative              use relative path names
---no-implied-dirs       don't send implied dirs with --relative
--b, --backup                make backups (see --suffix & --backup-dir)
---backup-dir=DIR        make backups into hierarchy based in DIR
---suffix=SUFFIX         backup suffix (default ~ w/o --backup-dir)
--u, --update                skip files that are newer on the receiver
---inplace               update destination files in-place
---append                append data onto shorter files
---append-verify         --append w/old data in file checksum
--d, --dirs                  transfer directories without recursing
--p, --perms                 preserve permissions
--E, --executability         preserve executability
---chmod=CHMOD           affect file and/or directory permissions
--A, --acls                  preserve ACLs (implies -p)
--X, --xattrs                preserve extended attributes
--o, --owner                 preserve owner (super-user only)
--g, --group                 preserve group
---devices               preserve device files (super-user only)
---specials              preserve special files
--D                          same as --devices --specials
--t, --times                 preserve modification times
--O, --omit-dir-times        omit directories from --times
--J, --omit-link-times       omit symlinks from --times
---super                 receiver attempts super-user activities
---fake-super            store/recover privileged attrs using xattrs
--S, --sparse                handle sparse files efficiently
---preallocate           allocate dest files before writing
--W, --whole-file            copy files whole (w/o delta-xfer algorithm)
--x, --one-file-system       don't cross filesystem boundaries
--B, --block-size=SIZE       force a fixed checksum block-size
--e, --rsh=COMMAND           specify the remote shell to use
---rsync-path=PROGRAM    specify the rsync to run on remote machine
---existing              skip creating new files on receiver
---ignore-existing       skip updating files that exist on receiver
---remove-source-files   sender removes synchronized files (non-dir)
---del                   an alias for --delete-during
---delete                delete extraneous files from dest dirs
---delete-before         receiver deletes before xfer, not during
---delete-during         receiver deletes during the transfer
---delete-delay          find deletions during, delete after
---delete-after          receiver deletes after transfer, not during
---delete-excluded       also delete excluded files from dest dirs
---ignore-missing-args   ignore missing source args without error
---delete-missing-args   delete missing source args from destination
---ignore-errors         delete even if there are I/O errors
---force                 force deletion of dirs even if not empty
---max-delete=NUM        don't delete more than NUM files
---max-size=SIZE         don't transfer any file larger than SIZE
---min-size=SIZE         don't transfer any file smaller than SIZE
---partial               keep partially transferred files
---partial-dir=DIR       put a partially transferred file into DIR
---delay-updates         put all updated files into place at end
--m, --prune-empty-dirs      prune empty directory chains from file-list
---numeric-ids           don't map uid/gid values by user/group name
---usermap=STRING        custom username mapping
---groupmap=STRING       custom groupname mapping
---chown=USER:GROUP      simple username/groupname mapping
--I, --ignore-times          don't skip files that match size and time
---size-only             skip files that match in size
---modify-window=NUM     compare mod-times with reduced accuracy
--T, --temp-dir=DIR          create temporary files in directory DIR
---compare-dest=DIR      also compare received files relative to DIR
---copy-dest=DIR         ... and include copies of unchanged files
---link-dest=DIR         hardlink to files in DIR when unchanged
--z, --compress              compress file data during the transfer
---compress-level=NUM    explicitly set compression level
---skip-compress=LIST    skip compressing files with suffix in LIST
--C, --cvs-exclude           auto-ignore files in the same way CVS does
--f, --filter=RULE           add a file-filtering RULE
--F                          same as --filter='dir-merge /.rsync-filter'
---filter='- .rsync-filter'
---exclude=PATTERN       exclude files matching PATTERN
---include=PATTERN       don't exclude files matching PATTERN
---address=ADDRESS       bind address for outgoing socket to daemon
---port=PORT             specify double-colon alternate port number
---sockopts=OPTIONS      specify custom TCP options
---blocking-io           use blocking I/O for the remote shell
--h, --human-readable        output numbers in a human-readable format
---progress              show progress during transfer
--P                          same as --partial --progress
---password-file=FILE    read daemon-access password from FILE
---bwlimit=RATE          limit socket I/O bandwidth
---write-batch=FILE      write a batched update to FILE
---only-write-batch=FILE like --write-batch but w/o updating dest
---read-batch=FILE       read a batched update from FILE
---protocol=NUM          force an older protocol version to be used
---iconv=CONVERT_SPEC    request charset conversion of filenames
---checksum-seed=NUM     set block/file checksum seed (advanced)
--4, --ipv4                  prefer IPv4
--6, --ipv6                  prefer IPv6
---version               print version number
--h) --help                  show this help (see below for -h comment)
-"""
+    def overridden(self):
+        group = self.parser.add_argument_group("overridden")
 
-main()
+        # TODO: Implement
+        group.add_argument('--version', action=ActionVersion)
+
+        # TODO: Implement
+        #       properly reflect rsync's ambivalent meaning of -h, and update
+        #       --help's description to mention that it's supported
+        #       At least check that -h works as --human-readable
+        group.add_argument('--help', action=ActionHelp)
+
+    def syncere(self):
+        group = self.parser.add_argument_group('syncere')
+
+        # TODO: Implement
+        group.add_argument('--ruleset', action='append', dest='rulesets')
+        # TODO: Also allow passing rules from a file with --rules-from and
+        #       directly with a --rule option, similar to --exclude-from and
+        #       --exclude
+
+    def shared(self):
+        group = self.parser.add_argument_group('shared')
+
+        # TODO: Inform that these are shared (but maybe parsing them would be
+        #       too aggressive except in advanced mode?)
+
+        # TODO: implement and pass on to the rsync commands
+        #       maybe use '*' and check the number of values later, since
+        #       some options don't need positional arguments, e.g. --help
+        # Note that differentiating between sources and destination isn't
+        # supported yet by forwarg, since it would require sources to have a
+        # '*?' (non-greedy) nargs to let the last value be assigned to
+        # destination
+        group.add_argument('locations', nargs='+')
+
+        # TODO: implement and pass on to the rsync commands
+        group.add_argument('-v', '--verbose', action='count')
+
+        # TODO: properly process and pass on to the rsync commands
+        # TODO: can this option be specified multiple times? what happens?
+        group.add_argument('--info', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-n', '--dry-run', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-i', '--itemize-changes', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--out-format')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--stats', action='store_true')
+
+    def transfer_only(self):
+        group = self.parser.add_argument_group('transfer-only')
+
+        # TODO: These can't stay in the preview command; they are ok in the
+        #       transfer command
+
+        # TODO: really pass on to the transfer command
+        group.add_argument('--msgs2stderr', action='store_true')
+
+        # TODO: really pass on to the transfer command
+        group.add_argument('-q', '--quiet', action='store_true')
+
+    def need_optimization(self):
+        group = self.parser.add_argument_group('need optimization')
+
+        # TODO: In order to avoid recalculating the checksums again, the
+        #       transfer command could omit the --checksum argument, compile a
+        #       --files-from list instead of an --exclude-from list, and use
+        #       --ignore-times to force updating the files whose size and
+        #       timestamp are the same (the only difference is the checksum)
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-c', '--checksum', action='store_true')
+
+        # TODO: Is this similar to --checksum?
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-y', '--fuzzy', action='count')
+
+    def investigate(self):
+        group = self.parser.add_argument_group('investigate')
+
+        # TODO: Investigate the behavior with links, especially hard links,
+        #       because excluding their copies/targets may generate
+        #       synchronization issues
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-l', '--links', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-l', '--no-links', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-L', '--copy-links', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--copy-unsafe-links', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--safe-links', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--munge-links', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-k', '--copy-dirlinks', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-K', '--keep-dirlinks', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-H', '--hard-links', action='store_true')
+
+
+        # TODO: --archive inherits the problems of 'l', if any
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-a', '--archive', action='store_true')
+
+
+        # TODO: Test the effect of these arguments
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--timeout')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--contimeout')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-s', '--protect-args', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-s', '--no-protect-args', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--outbuf')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-8', '--8-bit-output', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--log-file')
+
+        # TODO: properly process and pass on to the rsync commands
+        # TODO: can this accept an empty string as a value?
+        group.add_argument('--log-file-format')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--list-only', action='store_true')
+
+
+        # TODO: This can create problems if the generated files use different
+        #       delimiters
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-0', '--from0', action='store_true')
+
+    def unsupported(self):
+        group = self.parser.add_argument_group('unsupported')
+
+        # TODO: It doesn't make sense to support daemon mode
+
+        # TODO: quit syncere if present
+        group.add_argument('--daemon', action='store_true')
+
+        # TODO: quit syncere if present
+        group.add_argument('--config')
+
+        # TODO: quit syncere if present
+        group.add_argument('-M', '--remote-option', '--dparam')
+
+        # TODO: quit syncere if present
+        group.add_argument('--no-detach', action='store_true')
+
+    def safe(self):
+        group = self.parser.add_argument_group('safe')
+
+        # TODO: These should be safe in both commands
+
+        # TODO: properly process and pass on to the rsync commands
+        # TODO: can this option be specified multiple times? what happens?
+        group.add_argument('--debug', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-motd', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-I', '--ignore-times', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--size-only', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--modify-window')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-r', '--recursive', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-r', '--no-recursive', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-i-r', '--no-inc-recursive',
+                           action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-R', '--relative', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-R', '--no-relative', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-implied-dirs', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-b', '--backup', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        # TODO: can this option be specified multiple times? what happens?
+        group.add_argument('--backup-dir')
+
+        # TODO: properly process and pass on to the rsync commands
+        # TODO: can this option be specified multiple times? what happens?
+        group.add_argument('--suffix')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-u', '--update', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--inplace', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--append', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--append-verify', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-d', '--dirs', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-d', '--no-dirs', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-p', '--perms', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-p', '--no-perms', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-E', '--executability', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-A', '--acls', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-X', '--xattrs', action='count')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--chmod', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-o', '--owner', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-o', '--no-owner', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-g', '--group', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-g', '--no-group', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--devices', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--specials', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-D', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-D', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-t', '--times', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-t', '--no-times', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-O', '--omit-dir-times', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-J', '--omit-link-times', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--super', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-super', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--fake-super', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-S', '--sparse', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--preallocate', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-W', '--whole-file', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-W', '--no-whole-file', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-x', '--one-file-system', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-x', '--no-one-file-system',
+                           action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--existing', '--ignore-non-existing',
+                           action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--ignore-existing', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--remove-source-files', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--delete', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--delete-before', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--delete-during', '--del', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--delete-delay', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--delete-after', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--delete-excluded', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--ignore-missing-args', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--delete-missing-args', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--ignore-errors', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--force', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--max-delete')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--max-size')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--min-size')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-B', '--block-size')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-e', '--rsh')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--rsync-path')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-C', '--cvs-exclude', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-f', '--filter', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-F', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--exclude', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--exclude-from', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--include', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--include-from', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--files-from', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-T', '--temp-dir')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--compare-dest', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--copy-dest', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--link-dest', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-z', '--compress', action='count')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--new-compress', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--old-compress', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--compress-level')
+
+        # TODO: properly process and pass on to the rsync commands
+        # TODO: can this option be specified multiple times? what happens?
+        group.add_argument('--skip-compress', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--numeric-ids', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        # TODO: can this option be specified multiple times? what happens?
+        group.add_argument('--usermap', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        # TODO: can this option be specified multiple times? what happens?
+        group.add_argument('--groupmap', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--chown')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--address')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--port')
+
+        # TODO: properly process and pass on to the rsync commands
+        # TODO: can this option be specified multiple times? what happens?
+        group.add_argument('--sockopts', action='append')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--blocking-io', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-blocking-io', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-h', '--human-readable', action='count')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-h', '--no-human-readable',
+                           action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--partial', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--partial-dir')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--delay-updates', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-m', '--prune-empty-dirs', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--progress', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-P', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--password-file')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--bwlimit')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--write-batch')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--only-write-batch')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--read-batch')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--protocol')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--iconv')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--no-iconv', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-4', '--ipv4', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('-6', '--ipv6', action='store_true')
+
+        # TODO: properly process and pass on to the rsync commands
+        group.add_argument('--checksum-seed')
+
+
+Main()

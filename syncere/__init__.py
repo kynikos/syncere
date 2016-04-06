@@ -30,15 +30,17 @@ class Syncere:
     The main class, primarily responsible for managing the internal rsync
     commands.
     """
-    VERSION = '0.1'
+    # TODO: Remind to keep up to date
+    VERSION_NUMBER = '0.1.0'
+    VERSION_DATE = '(2016-04-06)'
 
-    def __init__(self, syncereargs, rsyncargs):
+
+    def __init__(self, cliargs):
         # TODO: Support instantiation without cli arguments (e.g. using
         #       **kwargs)
         # TODO: Use fnmatch for globbing patterns
         # TODO: Rulesets should be looked for in .config etc.
-        self.syncereargs = syncereargs
-        self.rsyncargs = rsyncargs
+        self.cliargs = cliargs
 
     def run(self):
         self._preview()
@@ -93,7 +95,7 @@ class Syncere:
         self.rules = Rules()
 
         # TODO: support all the ways to add rules and rulesets
-        for setname in self.syncereargs.rulesets:
+        for setname in self.cliargs.rulesets:
             self.rules.parse_ruleset(setname)
 
     def _parse_pending_changes(self):
