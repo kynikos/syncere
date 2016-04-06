@@ -53,6 +53,36 @@ class Interface:
                    'the synchronization')),
             ('?', (self.reset_change, 'reset the changes to an undecided '
                    'status')),
+
+            # TODO: raw mode:
+            #  The same arguments are passed
+            #  to both rsync internal commands;
+            #  only those strictly unsupported
+            #  are rejected; this maximizes the
+            #  compatibility with complex rsync
+            #  commands but disables some of
+            #  syncere features.
+
+            # TODO: optimized mode:
+            #  The arguments passed to the
+            #  rsync commands are optimized
+            #  according to known use cases;
+            #  this means that some complex
+            #  combinations of rsync arguments
+            #  may not be supported.
+
+            # TODO: advanced mode:
+            #  All the given rsync arguments
+            #  are also parsed by syncere in
+            #  order to identify the source and
+            #  destination locations, hence
+            #  allowing syncere to enable some
+            #  advanced features; only a subset
+            #  of rsync arguments is supported
+            #  by this mode, therefore some
+            #  less common rsync use cases may
+            #  not be supported.
+
             ('S', (self.synchronize, 'start the synchronization, then exit '
                    'syncere')),
             # TODO: Allow editing the pending changes in an external text
