@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with syncere.  If not, see <http://www.gnu.org/licenses/>.
 
-import re
+import re as _m_re
 
 from . import exceptions
 
@@ -34,7 +34,7 @@ class Rules:
         # TODO: The set must be searched in the configured ruleset directories
         with open(setname, 'r') as ruleset:
             for line in ruleset:
-                if not re.match(self.IGNORE, line):
+                if not _m_re.match(self.IGNORE, line):
                     self.rules.append(Rule(line))
 
     def decide_change(self, ichange, sfilename):
@@ -71,7 +71,7 @@ class Rule:
     SYNTAX = r'\s*([!?>])\s*({0})\s*(pi?|P|gi?|G|ri?|R):(.+)$'.format(ITEMIZED)
 
     def __init__(self, line):
-        match = re.match(self.SYNTAX, line)
+        match = _m_re.match(self.SYNTAX, line)
         if not match:
             # TODO: Include the invalid rule and the line number in the error
             #       message

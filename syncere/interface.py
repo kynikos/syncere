@@ -16,13 +16,13 @@
 # You should have received a copy of the GNU General Public License
 # along with syncere.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
+import sys as _m_sys
 from collections import OrderedDict
 # simply importing readline is enough to enable command history by pressing
 # the up and down keys
 # TODO: it's possible to go beyond this and enable a completer etc., see the
 #       documentation
-import readline  # NOQA <- this hides the lint error [F401]
+import readline as _m_readline  # NOQA <- this hides the lint error [F401]
 
 
 class Interface:
@@ -80,7 +80,7 @@ class Interface:
                     action[0](inp[1:])
 
         except self.Quit:
-            sys.exit(0)
+            _m_sys.exit(0)
         except self.Proceed:
             pass
 

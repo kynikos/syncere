@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with syncere.  If not, see <http://www.gnu.org/licenses/>.
 
-import subprocess
-import re
+import subprocess as _m_subprocess
+import re as _m_re
 # TODO: Use proper logging
 
 from .rules import Rules
@@ -60,24 +60,25 @@ class Syncere:
         #  * Also capture stderr?
         #  * What is the maximum size of the data that stdout can host?
         #  * Support terminating with Ctrl+c or in some other way
-        call = subprocess.Popen(['rsync', *self.rsyncargs, '--dry-run',
-                                 '--info', 'backup4,copy4,del4,flist4,misc4,'
-                                 'mount4,name4,remove4,skip4,symsafe4',
-                                 '--out-format',
-                                 '{syncere}%i '  # itemized changes
-                                 '%o '  # operation
-                                 '%B '  # permissions
-                                 '%U '  # uid
-                                 '%G '  # gid
-                                 '%l '  # length (bytes)
-                                 '{//}%M'  # last mod timestamp
-                                 '{//}%f'  # filename (long)
-                                 '{//}%n'  # filename (short)
-                                 '{//}%L'  # link string
-                                 '{//}%C'  # md5
-                                 '{/syncere}'],
-                                stdout=subprocess.PIPE,
-                                universal_newlines=True)
+        call = _m_subprocess.Popen(['rsync', *self.rsyncargs, '--dry-run',
+                                    '--info',
+                                    'backup4,copy4,del4,flist4,misc4,'
+                                    'mount4,name4,remove4,skip4,symsafe4',
+                                    '--out-format',
+                                    '{syncere}%i '  # itemized changes
+                                    '%o '  # operation
+                                    '%B '  # permissions
+                                    '%U '  # uid
+                                    '%G '  # gid
+                                    '%l '  # length (bytes)
+                                    '{//}%M'  # last mod timestamp
+                                    '{//}%f'  # filename (long)
+                                    '{//}%n'  # filename (short)
+                                    '{//}%L'  # link string
+                                    '{//}%C'  # md5
+                                    '{/syncere}'],
+                                   stdout=_m_subprocess.PIPE,
+                                   universal_newlines=True)
 
         # Popen.communicate already waits for the process to terminate, there's
         # no need to call wait
@@ -105,20 +106,20 @@ class Syncere:
 
         for ln, line in enumerate(self.stdout.splitlines()):
             if line[:9] == '{syncere}':
-                match = re.match('\{syncere}(.{11}) '
-                                 '(send|recv|del\.) '
-                                 # TODO: test if %B shows ACLs like ls -l
-                                 '(.+?) '
-                                 '([0-9]+) '
-                                 '([0-9]+|DEFAULT) '
-                                 '([0-9]+) '
-                                 '\{//\}(.+?)'
-                                 '\{//\}(.+?)'
-                                 '\{//\}(.+?)'
-                                 '\{//\}(.*?)'
-                                 '\{//\}([0-9a-fA-F]{32}| {32})'
-                                 '\{/syncere\}',
-                                 line)
+                match = _m_re.match('\{syncere}(.{11}) '
+                                    '(send|recv|del\.) '
+                                    # TODO: test if %B shows ACLs like ls -l
+                                    '(.+?) '
+                                    '([0-9]+) '
+                                    '([0-9]+|DEFAULT) '
+                                    '([0-9]+) '
+                                    '\{//\}(.+?)'
+                                    '\{//\}(.+?)'
+                                    '\{//\}(.+?)'
+                                    '\{//\}(.*?)'
+                                    '\{//\}([0-9a-fA-F]{32}| {32})'
+                                    '\{/syncere\}',
+                                    line)
 
                 if match:
                     self.pending_changes.append(Change(
@@ -150,7 +151,7 @@ class Syncere:
             print(' '.join(args))
             # TODO: Support terminating with Ctrl+c or in some other way
             # TODO: Pass the original sys.stdin, if present, to the command
-            call = subprocess.Popen(args)
+            call = _m_subprocess.Popen(args)
 
             # FIXME: unneeded in production
             call.wait()
