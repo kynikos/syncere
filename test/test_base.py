@@ -1,16 +1,19 @@
 import pytest
-import os
+import subprocess
+import shlex
+
 from . import syncere
 
-
-def find_tests():
-    for entry in os.scandir('.'):
-        if entry.is_dir() and entry.name != '__pycache__':
-            yield entry
+# TODO: find . -printf "%i\t%k\t%M\t%n\t%u\t%g\t%s\t%A+\t%C+\t%T+\t//\t%P\t//->\t%l\t//\n"
 
 
-@pytest.mark.parametrize('entry', find_tests())
-def test(entry):
-    os.chdir(entry.name)
-    assert syncere.Syncere('test.profile')
-    os.chdir('..')
+def run_test(args):
+    return subprocess.run(shlex.split('python -m syncere ' + args))
+
+
+def test_help():
+    assert run_test('--help').returncode == 0
+
+
+def test_version():
+    assert run_test('--version').returncode == 0
