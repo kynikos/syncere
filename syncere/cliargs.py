@@ -64,6 +64,10 @@ Syncere-specific options:
                 more rule sets in the specified order. See syncere(1) for the
                 used syntax.
 
+    --experimental
+                Enable the experimentally-supported rsync options, see the
+                relevant section below.
+
 Shared options:
     These options are passed to the internal rsync commands, but they are also
     used by syncere. Below only the syncere meaning is explained; refer to the
@@ -117,10 +121,11 @@ Optimized options:
     -y, --fuzzy
                 TODO
 
-Currently unsupported options:
-    These rsync options are unsupported by the current syncere version, as
-    their effects must be more thoroughly tested. In a later release, support
-    for them may be either added or dropped definitively.
+Experimental options:
+    These rsync options are disabled by default, as the effects in an
+    interactive, "two-pass" rsync session are to be more thoroughly assessed.
+    You can enable them by passing the --experimental flag. In a later syncere
+    release, support for them will be either added or dropped definitively.
 
     -l, --links
     -L, --copy-links
@@ -144,7 +149,7 @@ Currently unsupported options:
 
     -0, --from0
 
-Permanently unsupported options:
+Unsupported options:
     These rsync options are not supported by syncere.
 
     --daemon
@@ -216,8 +221,8 @@ class CLIArgs:
         self._transfer_only()
         # TODO: Disable optimized and/or advanced modes if the args don't
         #       validate or an exception is raised by argparse
-        self._need_optimization()
-        self._investigate()
+        self._optimized()
+        self._experimental()
         self._unsupported()
         self._safe()
 
@@ -262,6 +267,9 @@ class CLIArgs:
         # TODO: Also allow passing rules from a file with --rules-from and
         #       directly with a --rule option, similar to --exclude-from and
         #       --exclude
+
+        # TODO: Implement
+        group.add_argument('--experimental', action='store_true')
 
     def _shared(self):
         group = self.parser.add_argument_group('shared')
@@ -309,8 +317,8 @@ class CLIArgs:
         # TODO: really pass on to the transfer command
         group.add_argument('-q', '--quiet', action='store_true')
 
-    def _need_optimization(self):
-        group = self.parser.add_argument_group('need optimization')
+    def _optimized(self):
+        group = self.parser.add_argument_group('optimized')
 
         # TODO: In order to avoid recalculating the checksums again, the
         #       transfer command could omit the --checksum argument, compile a
@@ -324,8 +332,8 @@ class CLIArgs:
         # TODO: properly process and pass on to the rsync commands
         group.add_argument('-y', '--fuzzy', action='count')
 
-    def _investigate(self):
-        group = self.parser.add_argument_group('investigate')
+    def _experimental(self):
+        group = self.parser.add_argument_group('experimental')
 
         # TODO: Investigate the behavior with links, especially hard links,
         #       because excluding their copies/targets may generate
