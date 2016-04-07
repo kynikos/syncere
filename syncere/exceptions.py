@@ -30,3 +30,7 @@ class InvalidRuleError(SyncereError):
 
 class UnrecognizedItemizedChangeError(SyncereError):
     pass
+
+
+class UnsupportedOptionError(SyncereError):
+    pass

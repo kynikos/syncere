@@ -20,6 +20,8 @@ import forwarg as _m_forwarg
 import sys as _m_sys
 import shlex as _m_shlex
 
+from .exceptions import UnsupportedOptionError
+
 
 class ActionHelp(_m_forwarg.Action):
     # TODO: Implement man page (also a separate (5) page for ruleset syntax?
@@ -191,6 +193,17 @@ conditions of the GNU General Public License version 3 or later.
 See <http://gnu.org/licenses/gpl.html> for details.\
 """.format(self.VERSION_NUMBER, self.VERSION_DATE))
         _m_sys.exit(0)
+
+    def _store_value(self, newvalue):
+        pass
+
+    def check_value(self):
+        pass
+
+
+class ActionUnsupported(_m_forwarg.Action):
+    def _process_flag(self):
+        raise UnsupportedOptionError(self.argholder.dest)
 
     def _store_value(self, newvalue):
         pass
@@ -411,19 +424,11 @@ class CLIArgs:
     def _unsupported(self):
         group = self.parser.add_argument_group('unsupported')
 
-        # TODO: It doesn't make sense to support daemon mode
-
-        # TODO: quit syncere if present
-        group.add_argument('--daemon', action='store_true')
-
-        # TODO: quit syncere if present
-        group.add_argument('--config')
-
-        # TODO: quit syncere if present
-        group.add_argument('-M', '--remote-option', '--dparam')
-
-        # TODO: quit syncere if present
-        group.add_argument('--no-detach', action='store_true')
+        group.add_argument('--daemon', action=ActionUnsupported)
+        group.add_argument('--config', action=ActionUnsupported)
+        group.add_argument('-M', '--remote-option', '--dparam',
+                           action=ActionUnsupported)
+        group.add_argument('--no-detach', action=ActionUnsupported)
 
     def _safe(self):
         group = self.parser.add_argument_group('safe')
