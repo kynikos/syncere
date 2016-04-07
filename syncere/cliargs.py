@@ -210,16 +210,16 @@ class CLIArgs:
 
         # TODO: use parser.exit(0) where/if needed instead of sys.exit()
 
-        self.overridden()
-        self.syncere()
-        self.shared()
-        self.transfer_only()
+        self._overridden()
+        self._syncere()
+        self._shared()
+        self._transfer_only()
         # TODO: Disable optimized and/or advanced modes if the args don't
         #       validate or an exception is raised by argparse
-        self.need_optimization()
-        self.investigate()
-        self.unsupported()
-        self.safe()
+        self._need_optimization()
+        self._investigate()
+        self._unsupported()
+        self._safe()
 
         # TODO: Some ways to accept the rsync arguments:
         #  * use separate profile files to list the options
@@ -247,7 +247,7 @@ class CLIArgs:
         print(namespace)
         return namespace
 
-    def overridden(self):
+    def _overridden(self):
         group = self.parser.add_argument_group("overridden")
 
         # TODO: Implement
@@ -259,7 +259,7 @@ class CLIArgs:
         #       At least check that -h works as --human-readable
         group.add_argument('--help', action=ActionHelp)
 
-    def syncere(self):
+    def _syncere(self):
         group = self.parser.add_argument_group('syncere')
 
         # TODO: Implement
@@ -268,7 +268,7 @@ class CLIArgs:
         #       directly with a --rule option, similar to --exclude-from and
         #       --exclude
 
-    def shared(self):
+    def _shared(self):
         group = self.parser.add_argument_group('shared')
 
         # TODO: Inform that these are shared (but maybe parsing them would be
@@ -302,7 +302,7 @@ class CLIArgs:
         # TODO: properly process and pass on to the rsync commands
         group.add_argument('--stats', action='store_true')
 
-    def transfer_only(self):
+    def _transfer_only(self):
         group = self.parser.add_argument_group('transfer-only')
 
         # TODO: These can't stay in the preview command; they are ok in the
@@ -314,7 +314,7 @@ class CLIArgs:
         # TODO: really pass on to the transfer command
         group.add_argument('-q', '--quiet', action='store_true')
 
-    def need_optimization(self):
+    def _need_optimization(self):
         group = self.parser.add_argument_group('need optimization')
 
         # TODO: In order to avoid recalculating the checksums again, the
@@ -329,7 +329,7 @@ class CLIArgs:
         # TODO: properly process and pass on to the rsync commands
         group.add_argument('-y', '--fuzzy', action='count')
 
-    def investigate(self):
+    def _investigate(self):
         group = self.parser.add_argument_group('investigate')
 
         # TODO: Investigate the behavior with links, especially hard links,
@@ -405,7 +405,7 @@ class CLIArgs:
         # TODO: properly process and pass on to the rsync commands
         group.add_argument('-0', '--from0', action='store_true')
 
-    def unsupported(self):
+    def _unsupported(self):
         group = self.parser.add_argument_group('unsupported')
 
         # TODO: It doesn't make sense to support daemon mode
@@ -422,7 +422,7 @@ class CLIArgs:
         # TODO: quit syncere if present
         group.add_argument('--no-detach', action='store_true')
 
-    def safe(self):
+    def _safe(self):
         group = self.parser.add_argument_group('safe')
 
         # TODO: These should be safe in both commands
