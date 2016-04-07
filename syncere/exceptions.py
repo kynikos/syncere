@@ -17,6 +17,7 @@
 # along with syncere.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# TODO: Show human-understandable (and troubleshootable) error messages
 class SyncereError(Exception):
     """
     The base exception from which all other syncere exceptions are derived.

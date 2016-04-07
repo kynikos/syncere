@@ -287,9 +287,6 @@ class CLIArgs:
     def _shared(self):
         group = self.parser.add_argument_group('shared')
 
-        # TODO: Inform that these are shared (but maybe parsing them would be
-        #       too aggressive except in advanced mode?)
-
         # TODO: implement and pass on to the rsync commands
         #       maybe use '*' and check the number of values later, since
         #       some options don't need positional arguments, e.g. --help
@@ -320,9 +317,6 @@ class CLIArgs:
 
     def _transfer_only(self):
         group = self.parser.add_argument_group('transfer-only')
-
-        # TODO: These can't stay in the preview command; they are ok in the
-        #       transfer command
 
         # TODO: really pass on to the transfer command
         group.add_argument('--msgs2stderr', action='store_true')
@@ -432,8 +426,6 @@ class CLIArgs:
 
     def _safe(self):
         group = self.parser.add_argument_group('safe')
-
-        # TODO: These should be safe in both commands
 
         # TODO: properly process and pass on to the rsync commands
         # TODO: can this option be specified multiple times? what happens?
