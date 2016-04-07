@@ -40,7 +40,7 @@ class Syncere:
         #       **kwargs)
         # TODO: Use fnmatch for globbing patterns
         # TODO: Rulesets should be looked for in .config etc.
-        self.cliargs = CLIArgs(cliargs)
+        self.cliargs = CLIArgs(cliargs).parser
 
         self._preview()
         self._store_rules()

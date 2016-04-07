@@ -239,8 +239,8 @@ class CLIArgs:
         #       An alternative would be to use the 'click' module, which seems
         #       to better support unknown arguments
         #       http://click.pocoo.org/
-        self.namespace = self.parser.parse_args(_m_shlex.split(args)) \
-            if args is not None else self.parser.parse_args()
+        self.parser.parse_args(_m_shlex.split(args)) if args is not None \
+            else self.parser.parse_args()
 
     def _overridden(self):
         group = self.parser.add_argument_group("overridden")
