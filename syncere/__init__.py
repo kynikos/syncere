@@ -35,16 +35,13 @@ class Syncere:
     VERSION_NUMBER = '0.1.0'
     VERSION_DATE = '(2016-04-06)'
 
-
     def __init__(self, cliargs=None):
         # TODO: Support instantiation without cli arguments (e.g. using
         #       **kwargs)
         # TODO: Use fnmatch for globbing patterns
         # TODO: Rulesets should be looked for in .config etc.
-        self.cliargs = CLIArgs().parse(cliargs)
-        self.run()
+        self.cliargs = CLIArgs(cliargs)
 
-    def run(self):
         self._preview()
         self._store_rules()
         self._parse_pending_changes()

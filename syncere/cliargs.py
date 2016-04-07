@@ -195,7 +195,7 @@ See <http://gnu.org/licenses/gpl.html> for details.\
 
 
 class CLIArgs:
-    def __init__(self):
+    def __init__(self, args):
         # args is useful when instantiating this programmatically for testing
 
         # There would also be the prefix_chars argument, but it would make
@@ -232,7 +232,6 @@ class CLIArgs:
         #  * adopt a black-list method, where the known troublesome arguments
         #    are detected and a warning or error is issued if present
 
-    def parse(self, args):
         # TODO: There would also be 'parse_known_args' to forward unknown
         #       arguments to the rsync commands, however it's buggy and
         #       unreliable, especially for short options, see e.g.
@@ -240,12 +239,8 @@ class CLIArgs:
         #       An alternative would be to use the 'click' module, which seems
         #       to better support unknown arguments
         #       http://click.pocoo.org/
-        namespace = self.parser.parse_args(_m_shlex.split(args)) \
-                    if args is not None else self.parser.parse_args()
-
-        # FIXME
-        print(namespace)
-        return namespace
+        self.namespace = self.parser.parse_args(_m_shlex.split(args)) \
+            if args is not None else self.parser.parse_args()
 
     def _overridden(self):
         group = self.parser.add_argument_group("overridden")
