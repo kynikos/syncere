@@ -26,8 +26,8 @@ from .exceptions import UnsupportedOptionError
 class ActionHelp(_m_forwarg.Action):
     # TODO: Implement man page (also a separate (5) page for ruleset syntax?
     #       Note that syncere(1) is referred from the help message below
-    # TODO: Note that there are some TODOs in the message
     def _process_flag(self):
+        # TODO: Note that there are some TODOs in the message
         print("""\
 Usage: syncere [syncere_options] [rsync_options] [src [src]...] [dest]
 
@@ -263,11 +263,9 @@ class CLIArgs:
     def _overridden(self):
         group = self.parser.add_argument_group("overridden")
 
-        # TODO: Implement
         group.add_argument('--version', action=ActionVersion)
 
-        # TODO: Implement
-        #       properly reflect rsync's ambivalent meaning of -h, and update
+        # TODO: properly reflect rsync's ambivalent meaning of -h, and update
         #       --help's description to mention that it's supported
         #       At least check that -h works as --human-readable
         group.add_argument('--help', action=ActionHelp)
@@ -427,346 +425,139 @@ class CLIArgs:
     def _safe(self):
         group = self.parser.add_argument_group('safe')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO: Check that the options passed to the rsync commands belong
+        #       to this group
+
         # TODO: can this option be specified multiple times? what happens?
         group.add_argument('--debug', action='append')
 
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-motd', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-I', '--ignore-times', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--size-only', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--modify-window')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-r', '--recursive', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-r', '--no-recursive', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-i-r', '--no-inc-recursive',
                            action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-R', '--relative', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-R', '--no-relative', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-implied-dirs', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-b', '--backup', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
         # TODO: can this option be specified multiple times? what happens?
         group.add_argument('--backup-dir')
 
-        # TODO: properly process and pass on to the rsync commands
         # TODO: can this option be specified multiple times? what happens?
         group.add_argument('--suffix')
 
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-u', '--update', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--inplace', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--append', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--append-verify', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-d', '--dirs', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-d', '--no-dirs', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-p', '--perms', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-p', '--no-perms', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-E', '--executability', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-A', '--acls', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-X', '--xattrs', action='count')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--chmod', action='append')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-o', '--owner', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-o', '--no-owner', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-g', '--group', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-g', '--no-group', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--devices', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--specials', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-D', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-D', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-t', '--times', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-t', '--no-times', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-O', '--omit-dir-times', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-J', '--omit-link-times', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--super', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-super', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--fake-super', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-S', '--sparse', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--preallocate', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-W', '--whole-file', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-W', '--no-whole-file', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-x', '--one-file-system', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-x', '--no-one-file-system',
                            action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--existing', '--ignore-non-existing',
                            action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--ignore-existing', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--remove-source-files', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--delete', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--delete-before', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--delete-during', '--del', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--delete-delay', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--delete-after', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--delete-excluded', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--ignore-missing-args', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--delete-missing-args', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--ignore-errors', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--force', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--max-delete')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--max-size')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--min-size')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-B', '--block-size')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-e', '--rsh')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--rsync-path')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-C', '--cvs-exclude', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-f', '--filter', action='append')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-F', action='append')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--exclude', action='append')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--exclude-from', action='append')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--include', action='append')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--include-from', action='append')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--files-from', action='append')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-T', '--temp-dir')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--compare-dest', action='append')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--copy-dest', action='append')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--link-dest', action='append')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-z', '--compress', action='count')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--new-compress', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--old-compress', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--compress-level')
 
-        # TODO: properly process and pass on to the rsync commands
         # TODO: can this option be specified multiple times? what happens?
         group.add_argument('--skip-compress', action='append')
 
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--numeric-ids', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
         # TODO: can this option be specified multiple times? what happens?
         group.add_argument('--usermap', action='append')
 
-        # TODO: properly process and pass on to the rsync commands
         # TODO: can this option be specified multiple times? what happens?
         group.add_argument('--groupmap', action='append')
 
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--chown')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--address')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--port')
 
-        # TODO: properly process and pass on to the rsync commands
         # TODO: can this option be specified multiple times? what happens?
         group.add_argument('--sockopts', action='append')
 
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--blocking-io', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-blocking-io', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-h', '--human-readable', action='count')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-h', '--no-human-readable',
                            action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--partial', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--partial-dir')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--delay-updates', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-m', '--prune-empty-dirs', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--progress', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-P', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--password-file')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--bwlimit')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--write-batch')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--only-write-batch')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--read-batch')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--protocol')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--iconv')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--no-iconv', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-4', '--ipv4', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-6', '--ipv6', action='store_true')
-
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('--checksum-seed')
