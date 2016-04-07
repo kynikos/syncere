@@ -17,8 +17,8 @@ def test_version():
     assert excinfo.value.code == 0
 
 
-@pytest.mark.parametrize('args', ('--daemon', '--config', '-M', '--dparam',
-                                  '--remote-option', '--no-detach'))
-def test_unsupported(args):
+@pytest.mark.parametrize('arg', ('--daemon', '--config', '-M', '--dparam',
+                                 '--remote-option', '--no-detach'))
+def test_unsupported(arg):
     with pytest.raises(exceptions.UnsupportedOptionError):
-        Syncere(args)
+        Syncere('source destination -av {} --delete'.format(arg))
