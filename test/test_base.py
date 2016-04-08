@@ -17,33 +17,52 @@ def test_version():
     assert excinfo.value.code == 0
 
 
-@pytest.mark.parametrize('arg', ('--daemon', '--config', '-M', '--dparam',
-                                 '--remote-option', '--no-detach'))
-def test_unsupported(arg):
-    with pytest.raises(exceptions.UnsupportedOptionError):
+@pytest.mark.parametrize('arg,dest', (('--daemon', 'daemon'),
+                                      ('--config', 'config'),
+                                      ('-M', 'remote_option'),
+                                      ('--dparam', 'remote_option'),
+                                      ('--remote-option', 'remote_option'),
+                                      ('--no-detach', 'no_detach')))
+def test_unsupported(arg, dest):
+    with pytest.raises(exceptions.UnsupportedOptionError) as excinfo:
         Syncere('source destination -av {} --delete'.format(arg))
+    assert excinfo.value.args[0] == dest
 
 
-@pytest.mark.parametrize('arg', ('-l', '--links',
-                                 '--no-l', '--no-links',
-                                 '-L', '--copy-links',
-                                 '--copy-unsafe-links',
-                                 '--safe-links',
-                                 '--munge-links',
-                                 '-k', '--copy-dirlinks',
-                                 '-K', '--keep-dirlinks',
-                                 '-H', '--hard-links',
-                                 '-a', '--archive',
-                                 '--timeout=1',
-                                 '--contimeout=1',
-                                 '-s', '--protect-args',
-                                 '--no-s', '--no-protect-args',
-                                 '--outbuf=1',
-                                 '-8', '--8-bit-output',
-                                 '--log-file=1',
-                                 '--log-file-format=1',
-                                 '--list-only',
-                                 '-0', '--from0'))
-def test_experimental_disabled(arg):
-    with pytest.raises(exceptions.ExperimentalOptionWarning):
+@pytest.mark.parametrize('arg,dest', (('-l', 'links'),
+                                      ('--links', 'links'),
+                                      ('--no-l', 'no_links'),
+                                      ('--no-links', 'no_links'),
+                                      ('-L', 'copy_links'),
+                                      ('--copy-links', 'copy_links'),
+                                      ('--copy-unsafe-links',
+                                       'copy_unsafe_links'),
+                                      ('--safe-links', 'safe_links'),
+                                      ('--munge-links', 'munge_links'),
+                                      ('-k', 'copy_dirlinks'),
+                                      ('--copy-dirlinks', 'copy_dirlinks'),
+                                      ('-K', 'keep_dirlinks'),
+                                      ('--keep-dirlinks', 'keep_dirlinks'),
+                                      ('-H', 'hard_links'),
+                                      ('--hard-links', 'hard_links'),
+                                      ('-a', 'archive'),
+                                      ('--archive', 'archive'),
+                                      ('--timeout=1', 'timeout'),
+                                      ('--contimeout=1', 'contimeout'),
+                                      ('-s', 'protect_args'),
+                                      ('--protect-args', 'protect_args'),
+                                      ('--no-s', 'no_protect_args'),
+                                      ('--no-protect-args', 'no_protect_args'),
+                                      ('--outbuf=1', 'outbuf'),
+                                      ('-8', '_8_bit_output'),
+                                      ('--8-bit-output', '_8_bit_output'),
+                                      ('--log-file=1', 'log_file'),
+                                      ('--log-file-format=1',
+                                       'log_file_format'),
+                                      ('--list-only', 'list_only'),
+                                      ('-0', 'from0'),
+                                      ('--from0', 'from0')))
+def test_experimental_disabled(arg, dest):
+    with pytest.raises(exceptions.ExperimentalOptionWarning) as excinfo:
         Syncere('source destination {}'.format(arg))
+    assert excinfo.value.args[0] == dest
