@@ -348,7 +348,7 @@ class CLIArgs:
         group.add_argument('-l', '--links', action='store_true')
 
         # TODO: properly process and pass on to the rsync commands
-        group.add_argument('--no-l', '--no-links', action='store_true')
+        group.add_argument('--no-links', '--no-l', action='store_true')
 
         # TODO: properly process and pass on to the rsync commands
         group.add_argument('-L', '--copy-links', action='store_true')
@@ -389,7 +389,7 @@ class CLIArgs:
         group.add_argument('-s', '--protect-args', action='store_true')
 
         # TODO: properly process and pass on to the rsync commands
-        group.add_argument('--no-s', '--no-protect-args', action='store_true')
+        group.add_argument('--no-protect-args', '--no-s', action='store_true')
 
         # TODO: properly process and pass on to the rsync commands
         group.add_argument('--outbuf')
@@ -436,11 +436,11 @@ class CLIArgs:
         group.add_argument('--size-only', action='store_true')
         group.add_argument('--modify-window')
         group.add_argument('-r', '--recursive', action='store_true')
-        group.add_argument('--no-r', '--no-recursive', action='store_true')
-        group.add_argument('--no-i-r', '--no-inc-recursive',
+        group.add_argument('--no-recursive', '--no-r', action='store_true')
+        group.add_argument('--no-inc-recursive', '--no-i-r',
                            action='store_true')
         group.add_argument('-R', '--relative', action='store_true')
-        group.add_argument('--no-R', '--no-relative', action='store_true')
+        group.add_argument('--no-relative', '--no-R', action='store_true')
         group.add_argument('--no-implied-dirs', action='store_true')
         group.add_argument('-b', '--backup', action='store_true')
 
@@ -455,23 +455,23 @@ class CLIArgs:
         group.add_argument('--append', action='store_true')
         group.add_argument('--append-verify', action='store_true')
         group.add_argument('-d', '--dirs', action='store_true')
-        group.add_argument('--no-d', '--no-dirs', action='store_true')
+        group.add_argument('--no-dirs', '--no-d', action='store_true')
         group.add_argument('-p', '--perms', action='store_true')
-        group.add_argument('--no-p', '--no-perms', action='store_true')
+        group.add_argument('--no-perms', '--no-p', action='store_true')
         group.add_argument('-E', '--executability', action='store_true')
         group.add_argument('-A', '--acls', action='store_true')
         group.add_argument('-X', '--xattrs', action='count')
         group.add_argument('--chmod', action='append')
         group.add_argument('-o', '--owner', action='store_true')
-        group.add_argument('--no-o', '--no-owner', action='store_true')
+        group.add_argument('--no-owner', '--no-o', action='store_true')
         group.add_argument('-g', '--group', action='store_true')
-        group.add_argument('--no-g', '--no-group', action='store_true')
+        group.add_argument('--no-group', '--no-g', action='store_true')
         group.add_argument('--devices', action='store_true')
         group.add_argument('--specials', action='store_true')
         group.add_argument('-D', action='store_true')
         group.add_argument('--no-D', action='store_true')
         group.add_argument('-t', '--times', action='store_true')
-        group.add_argument('--no-t', '--no-times', action='store_true')
+        group.add_argument('--no-times', '--no-t', action='store_true')
         group.add_argument('-O', '--omit-dir-times', action='store_true')
         group.add_argument('-J', '--omit-link-times', action='store_true')
         group.add_argument('--super', action='store_true')
@@ -480,9 +480,9 @@ class CLIArgs:
         group.add_argument('-S', '--sparse', action='store_true')
         group.add_argument('--preallocate', action='store_true')
         group.add_argument('-W', '--whole-file', action='store_true')
-        group.add_argument('--no-W', '--no-whole-file', action='store_true')
+        group.add_argument('--no-whole-file', '--no-W', action='store_true')
         group.add_argument('-x', '--one-file-system', action='store_true')
-        group.add_argument('--no-x', '--no-one-file-system',
+        group.add_argument('--no-one-file-system', '--no-x',
                            action='store_true')
         group.add_argument('--existing', '--ignore-non-existing',
                            action='store_true')
@@ -542,7 +542,7 @@ class CLIArgs:
         group.add_argument('--blocking-io', action='store_true')
         group.add_argument('--no-blocking-io', action='store_true')
         group.add_argument('-h', '--human-readable', action='count')
-        group.add_argument('--no-h', '--no-human-readable',
+        group.add_argument('--no-human-readable', '--no-h',
                            action='store_true')
         group.add_argument('--partial', action='store_true')
         group.add_argument('--partial-dir')
