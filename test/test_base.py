@@ -22,3 +22,28 @@ def test_version():
 def test_unsupported(arg):
     with pytest.raises(exceptions.UnsupportedOptionError):
         Syncere('source destination -av {} --delete'.format(arg))
+
+
+@pytest.mark.parametrize('arg', ('-l', '--links',
+                                 '--no-l', '--no-links',
+                                 '-L', '--copy-links',
+                                 '--copy-unsafe-links',
+                                 '--safe-links',
+                                 '--munge-links',
+                                 '-k', '--copy-dirlinks',
+                                 '-K', '--keep-dirlinks',
+                                 '-H', '--hard-links',
+                                 '-a', '--archive',
+                                 '--timeout=1',
+                                 '--contimeout=1',
+                                 '-s', '--protect-args',
+                                 '--no-s', '--no-protect-args',
+                                 '--outbuf=1',
+                                 '-8', '--8-bit-output',
+                                 '--log-file=1',
+                                 '--log-file-format=1',
+                                 '--list-only',
+                                 '-0', '--from0'))
+def test_experimental_disabled(arg):
+    with pytest.raises(exceptions.ExperimentalOptionWarning):
+        Syncere('source destination {}'.format(arg))

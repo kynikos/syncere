@@ -25,6 +25,10 @@ class SyncereError(Exception):
     pass
 
 
+class ExperimentalOptionWarning(SyncereError):
+    pass
+
+
 class InvalidRuleError(SyncereError):
     pass
 

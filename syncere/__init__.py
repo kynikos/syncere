@@ -23,7 +23,8 @@ import re as _m_re
 from .cliargs import CLIArgs
 from .rules import Rules
 from .interface import Interface
-from .exceptions import UnrecognizedItemizedChangeError
+from .exceptions import (UnrecognizedItemizedChangeError,
+                         ExperimentalOptionWarning)
 
 
 class Syncere:
@@ -41,6 +42,7 @@ class Syncere:
         # TODO: Use fnmatch for globbing patterns
         # TODO: Rulesets should be looked for in .config etc.
         self.cliargs = CLIArgs(cliargs).parser
+        self._check_experimental_arguments()
 
         self._preview()
         self._store_rules()
@@ -54,6 +56,13 @@ class Syncere:
         else:
             # FIXME
             print("Nothing to do")
+
+    def _check_experimental_arguments(self):
+        if self.cliargs.dest_to_argholder['experimental'].value is not True:
+            for argholder in self.cliargs.title_to_group[
+                                    'experimental'].dest_to_argholder.values():
+                if argholder.parsed_arg_indices:
+                    raise ExperimentalOptionWarning(argholder.dest)
 
     def _preview(self):
         # TODO:
