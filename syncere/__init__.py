@@ -23,8 +23,7 @@ import re as _m_re
 from .cliargs import CLIArgs
 from .rules import Rules
 from .interface import Interface
-from .exceptions import (UnrecognizedItemizedChangeError,
-                         ExperimentalOptionWarning)
+from . import exceptions
 
 
 class Syncere:
@@ -42,7 +41,7 @@ class Syncere:
         # TODO: Use fnmatch for globbing patterns
         # TODO: Rulesets should be looked for in .config etc.
         self.cliargs = CLIArgs().parse(cliargs)
-        self._check_experimental_arguments()
+        self._check_arguments()
 
         self._preview()
         self._store_rules()
@@ -57,21 +56,29 @@ class Syncere:
             # FIXME
             print("Nothing to do")
 
-    def _check_experimental_arguments(self):
+    def _check_arguments(self):
         if self.cliargs.namespace.experimental is not True:
             for argdef in self.cliargs.parser.title_to_group[
                                     'experimental'].dest_to_argdef.values():
                 if self.cliargs.argdef_to_argholder[argdef].value is not None:
-                    raise ExperimentalOptionWarning(argdef.dest)
+                    raise exceptions.ExperimentalOptionWarning(argdef.dest)
+        if len(self.cliargs.namespace.locations) < 2:
+            raise exceptions.MissingDestinationError()
 
     def _preview(self):
+        # If experimental is disabled and some of its options have been
+        # specified, the program has already exited by now
+        rsyncargs = self.cliargs.filter_whitelist(groups=('shared',
+                                                          'optimized',
+                                                          'experimental',
+                                                          'safe'))
+
         # TODO:
         #  * Reflect rsync commands' error exit values
         #  * Also capture stderr?
         #  * What is the maximum size of the data that stdout can host?
         #  * Support terminating with Ctrl+c or in some other way
-        call = _m_subprocess.Popen(['rsync', *self.rsyncargs, '--dry-run',
-                                    '--info',
+        call = _m_subprocess.Popen(['rsync', *rsyncargs, '--dry-run', '--info',
                                     'backup4,copy4,del4,flist4,misc4,'
                                     'mount4,name4,remove4,skip4,symsafe4',
                                     '--out-format',
@@ -98,6 +105,10 @@ class Syncere:
         #       deadlock problems!!!
         #       https://docs.python.org/3.5/library/subprocess.html
         self.stdout = call.communicate()[0]
+
+        if call.returncode != 0:
+            # TODO: Use sys.exit(call.returncode)?
+            raise exceptions.RsyncError(call.returncode)
 
     def _store_rules(self):
         self.rules = Rules()
@@ -137,7 +148,7 @@ class Syncere:
                                                 len(self.pending_changes) + 1,
                                                 *match.groups()))
                 else:
-                    raise UnrecognizedItemizedChangeError()
+                    raise exceptions.UnrecognizedItemizedChangeError()
             else:
                 # TODO: Allow suppressing these lines
                 # FIXME
@@ -161,6 +172,7 @@ class Syncere:
             print(' '.join(args))
             # TODO: Support terminating with Ctrl+c or in some other way
             # TODO: Pass the original sys.stdin, if present, to the command
+            # TODO: Test what happens in case of an rsync error here
             call = _m_subprocess.Popen(args)
 
             # FIXME: unneeded in production

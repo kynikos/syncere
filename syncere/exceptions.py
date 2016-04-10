@@ -33,6 +33,14 @@ class InvalidRuleError(SyncereError):
     pass
 
 
+class MissingDestinationError(SyncereError):
+    pass
+
+
+class RsyncError(SyncereError):
+    pass
+
+
 class UnrecognizedItemizedChangeError(SyncereError):
     pass
 

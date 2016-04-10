@@ -66,3 +66,15 @@ def test_experimental_disabled(arg, dest):
     with pytest.raises(exceptions.ExperimentalOptionWarning) as excinfo:
         Syncere('source destination {}'.format(arg))
     assert excinfo.value.args[0] == dest
+
+
+def test_missing_destination():
+    with pytest.raises(exceptions.MissingDestinationError):
+        Syncere('source')
+
+
+def test_non_existing_folders(tmpdir):
+    with pytest.raises(exceptions.RsyncError) as excinfo:
+        Syncere('source destination')
+    retcode = excinfo.value.args[0]
+    assert isinstance(retcode, int) and retcode > 0
