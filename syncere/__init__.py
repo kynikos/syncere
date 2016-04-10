@@ -41,7 +41,7 @@ class Syncere:
         #       **kwargs)
         # TODO: Use fnmatch for globbing patterns
         # TODO: Rulesets should be looked for in .config etc.
-        self.cliargs = CLIArgs(cliargs).parser
+        self.cliargs = CLIArgs().parse(cliargs)
         self._check_experimental_arguments()
 
         self._preview()
@@ -58,11 +58,11 @@ class Syncere:
             print("Nothing to do")
 
     def _check_experimental_arguments(self):
-        if self.cliargs.dest_to_argholder['experimental'].value is not True:
-            for argholder in self.cliargs.title_to_group[
-                                    'experimental'].dest_to_argholder.values():
-                if argholder.parsed_arg_indices:
-                    raise ExperimentalOptionWarning(argholder.dest)
+        if self.cliargs.namespace.experimental is not True:
+            for argdef in self.cliargs.parser.title_to_group[
+                                    'experimental'].dest_to_argdef.values():
+                if self.cliargs.argdef_to_argholder[argdef].value is not None:
+                    raise ExperimentalOptionWarning(argdef.dest)
 
     def _preview(self):
         # TODO:
