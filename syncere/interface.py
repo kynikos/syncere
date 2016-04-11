@@ -110,7 +110,6 @@ class Interface:
                     try:
                         action = self.actions[command[0]]
                     except KeyError:
-                        # FIXME
                         print("Unrecognized command, enter 'h' for help")
                     else:
                         action[0](command[1:])
@@ -124,7 +123,6 @@ class Interface:
                     # TODO: Support command=True, which allows the user to
                     #       enter a command interactively through the normal
                     #       input prompt in the loop above
-                    # FIXME
                     print(self.PROMPT, command, sep='')
                     try:
                         action = self.actions[command[0]]
@@ -152,7 +150,6 @@ class Interface:
                     id0 = self._get_0_based_id(isel)
                     change = self.pending_changes[id0]
                 except (ValueError, IndexError):
-                    # FIXME
                     print('Unrecognized selection')
                 else:
                     changes.append(change)
@@ -163,14 +160,12 @@ class Interface:
                 try:
                     ids, ide = [self._get_0_based_id(rid) for rid in rsel]
                 except ValueError:
-                    # FIXME
                     print('Unrecognized selection')
                 else:
                     for change in self.pending_changes[ids:ide + 1]:
                         changes.append(change)
 
             else:
-                # FIXME
                 print('Unrecognized selection')
 
         return changes
@@ -184,7 +179,6 @@ class Interface:
         return id0
 
     def list_summary(self, args):
-        # FIXME
         print()
 
         changes = self._select_changes(args)
@@ -193,14 +187,11 @@ class Interface:
         # TODO: Paginate; allow setting the limit
         # TODO: Use colors; allow disabling them
         for change in changes:
-            # FIXME
             print(change.get_summary(width))
 
-        # FIXME
         print()
 
     def list_details(self, args):
-        # FIXME
         print()
 
         changes = self._select_changes(args)
@@ -209,11 +200,9 @@ class Interface:
         # TODO: Paginate; allow setting the limit
         # TODO: Use colors; allow disabling them
         for change in changes:
-            # FIXME
             print(change.get_summary(width))
             print(change.get_details(width))
 
-        # FIXME
         print()
 
     def include_change(self, args):
@@ -241,21 +230,17 @@ class Interface:
         #       being excluded
         for change in self.pending_changes:
             if change.included not in (True, False):
-                # FIXME
                 print('There are still undecided changes')
                 break
         else:
             raise self.Proceed()
 
     def help(self, args):
-        # FIXME
         print()
 
         for akey in self.actions:
-            # FIXME
             print('   {0}   {1}'.format(akey, self.actions[akey][1]))
 
-        # FIXME
         print()
 
     def quit(self, args):

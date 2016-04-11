@@ -82,6 +82,3 @@ class Rule:
         self.itemized = match.group(2)
         self.path_type = match.group(3)
         self.path = match.group(4)
-
-        # FIXME
-        print(self.action, self.itemized, self.path_type, self.path)

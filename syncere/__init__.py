@@ -62,7 +62,6 @@ class Syncere:
             Interface(self.pending_changes, test)
             self._synchronize()
         else:
-            # FIXME
             print("Nothing to do")
             _m_sys.exit(0)
 
@@ -155,7 +154,6 @@ class Syncere:
                     raise exceptions.UnrecognizedItemizedChangeError()
             else:
                 # TODO: Allow suppressing these lines
-                # FIXME
                 print(line)
 
     def _synchronize(self):
@@ -172,8 +170,6 @@ class Syncere:
                      self._synchronize_include(),
                      self._synchronize_include_from(),
                      self._synchronize_files_from()):
-            # FIXME
-            print(' '.join(args))
             # TODO: Support terminating with Ctrl+c or in some other way
             # TODO: Pass the original sys.stdin, if present, to the command
             # TODO: Test what happens in case of an rsync error here
