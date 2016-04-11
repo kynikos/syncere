@@ -11,7 +11,8 @@ def testdir(tmpdir):
 
 class Utils:
     def populate(self, commands):
-        return subprocess.run(textwrap.dedent(commands), shell=True, check=True)
+        return subprocess.run(textwrap.dedent(commands), shell=True,
+                              check=True)
 
     def verify(self, commands):
         # TODO: Is this method needed? These tests shouldn't test the
