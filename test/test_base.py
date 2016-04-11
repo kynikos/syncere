@@ -85,6 +85,7 @@ class TestCliArgsErrors(Utils):
             Syncere('./source/')
 
 
+@pytest.mark.usefixtures('testdir')
 class TestPreviewErrors(Utils):
     """
     Test the errors that can happen at the preview stage, leading the
@@ -98,6 +99,7 @@ class TestPreviewErrors(Utils):
         # TODO: Test that the interface hasn't been started
 
 
+@pytest.mark.usefixtures('testdir')
 class TestTransferExecution(Utils):
     """
     Test that syncere does initiate the rsync transfer command.

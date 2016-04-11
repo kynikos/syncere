@@ -6,12 +6,9 @@ import textwrap
 @pytest.fixture
 def testdir(tmpdir):
     # It's necessary to explicitly change into the temp directory
-    # This fixture is used by the Utils class below, which is then inherited
-    # by all the test classes
     tmpdir.chdir()
 
 
-@pytest.mark.usefixtures('testdir')
 class Utils:
     def populate(self, commands):
         return subprocess.run(textwrap.dedent(commands), shell=True, check=True)
