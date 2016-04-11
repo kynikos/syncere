@@ -117,3 +117,33 @@ class TestTransferExecution(Utils):
             Syncere('./source/ ./destination/')
         assert excinfo.value.code == 0
         # TODO: Test that the application has exited at the correct stage
+
+    def test_default_transfer(self):
+        self.populate("""
+        mkdir source
+        mkdir destination
+        cd source
+        echo "foo" > foo.txt
+        """)
+        # TODO: Don't use an experimental option here
+        Syncere('./source/ ./destination/ -avv --experimental',
+                test=['>*', 'S'])
+        # TODO: Test that the application has exited at the correct stage
+
+
+@pytest.mark.usefixtures('testdir')
+class TestInterface(Utils):
+    """
+    Test that the interactive interface actually works (in all the other tests
+    the commands are entered automatically).
+    """
+    def test_basic_transfer(self):
+        self.populate("""
+        mkdir source
+        mkdir destination
+        cd source
+        echo "foo" > foo.txt
+        """)
+        # TODO: Don't use an experimental option here
+        Syncere('./source/ ./destination/ -avv --experimental')
+        # TODO: Test that the application has exited at the correct stage
