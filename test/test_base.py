@@ -102,11 +102,11 @@ class TestPreviewErrors(Utils):
 @pytest.mark.usefixtures('testdir')
 class TestTransferExecution(Utils):
     """
-    Test that syncere does initiate the rsync transfer command.
+    Test that syncere does complete the rsync transfer command.
 
-    Note: this must *not* be used to test rsync itself, i.e. do not
-    waste time and resources trying to test what the rsync developers
-    already do upstream!
+    Note: this must *not* be used to test the results of the rsync command
+    itself, i.e. do not waste time and resources trying to test what the rsync
+    developers already do upstream!
     """
     def test_null_transfer(self):
         self.populate("""
