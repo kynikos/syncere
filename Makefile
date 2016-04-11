@@ -8,4 +8,4 @@ help:
 
 .PHONY: test
 test:
-	cd $(BASEDIR)/test; py.test -svx --basetemp=$(BASEDIR)/test/tmpdir
+	cd $(BASEDIR)/test; py.test -svx --basetemp=$(BASEDIR)/test/tmpdir/

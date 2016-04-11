@@ -275,7 +275,8 @@ class CLIArgs:
         group = self.parser.add_argument_group('syncere')
 
         # TODO: Implement
-        group.add_argument('--ruleset', action='append', dest='rulesets')
+        group.add_argument('--ruleset', action='append', dest='rulesets',
+                           default=[])
         # TODO: Also allow passing rules from a file with --rules-from and
         #       directly with a --rule option, similar to --exclude-from and
         #       --exclude

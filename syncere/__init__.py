@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with syncere.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys as _m_sys
 import subprocess as _m_subprocess
 import re as _m_re
 # TODO: Use proper logging
@@ -55,6 +56,7 @@ class Syncere:
         else:
             # FIXME
             print("Nothing to do")
+            _m_sys.exit(0)
 
     def _check_arguments(self):
         if self.cliargs.namespace.experimental is not True:
@@ -114,7 +116,7 @@ class Syncere:
         self.rules = Rules()
 
         # TODO: support all the ways to add rules and rulesets
-        for setname in self.cliargs.rulesets:
+        for setname in self.cliargs.namespace.rulesets:
             self.rules.parse_ruleset(setname)
 
     def _parse_pending_changes(self):

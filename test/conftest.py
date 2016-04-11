@@ -1,0 +1,22 @@
+import pytest
+import subprocess
+import textwrap
+
+
+@pytest.fixture
+def testdir(tmpdir):
+    # It's necessary to explicitly change into the temp directory
+    # This fixture is used by the Utils class below, which is then inherited
+    # by all the test classes
+    tmpdir.chdir()
+
+
+@pytest.mark.usefixtures('testdir')
+class Utils:
+    def populate(self, commands):
+        return subprocess.run(textwrap.dedent(commands), shell=True, check=True)
+
+    def verify(self, commands):
+        # TODO: find . -printf "%i\t%k\t%M\t%n\t%u\t%g\t%s\t%A+\t%C+\t%T+\t//\t%P\t//->\t%l\t//\n"
+        assert subprocess.run(textwrap.dedent(commands), shell=True,
+                              check=True).returncode == 0
