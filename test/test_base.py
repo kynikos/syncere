@@ -8,18 +8,28 @@ from .conftest import Utils
 
 
 class TestHelp(Utils):
+    """
+    Test the options that exit the application before anything else can be
+    done.
+    """
     def test_help(self):
         with pytest.raises(SystemExit) as excinfo:
             Syncere('--help')
         assert excinfo.value.code == 0
+        # TODO: Test that preview hasn't been started
 
     def test_version(self):
         with pytest.raises(SystemExit) as excinfo:
             Syncere('--version')
         assert excinfo.value.code == 0
+        # TODO: Test that preview hasn't been started
 
 
 class TestCliArgsErrors(Utils):
+    """
+    Test the errors in the command line itself that lead to the program
+    exiting before anything can be done.
+    """
     @pytest.mark.parametrize('arg,dest', (('--daemon', 'daemon'),
                                           ('--config', 'config'),
                                           ('-M', 'remote_option'),
@@ -76,14 +86,26 @@ class TestCliArgsErrors(Utils):
 
 
 class TestPreviewErrors(Utils):
+    """
+    Test the errors that can happen at the preview stage, leading the
+    application to exit *before* the interactive interface is brought up.
+    """
     def test_non_existing_folders(self):
         with pytest.raises(exceptions.RsyncError) as excinfo:
             Syncere('./source/ ./destination/')
         retcode = excinfo.value.args[0]
         assert isinstance(retcode, int) and retcode > 0
+        # TODO: Test that the interface hasn't been started
 
 
-class TestTransfers(Utils):
+class TestTransferExecution(Utils):
+    """
+    Test that syncere does initiate the rsync transfer command.
+
+    Note: this must *not* be used to test rsync itself, i.e. do not
+    waste time and resources trying to test what the rsync developers
+    already do upstream!
+    """
     def test_null_transfer(self):
         self.populate("""
         mkdir source
@@ -92,3 +114,4 @@ class TestTransfers(Utils):
         with pytest.raises(SystemExit) as excinfo:
             Syncere('./source/ ./destination/')
         assert excinfo.value.code == 0
+        # TODO: Test that the application has exited at the correct stage

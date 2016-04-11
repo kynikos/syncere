@@ -177,7 +177,8 @@ class Syncere:
             # TODO: Test what happens in case of an rsync error here
             call = _m_subprocess.Popen(args)
 
-            # FIXME: unneeded in production
+            # TODO: unneeded in production? Or needed to return rsync's return
+            #       code?
             call.wait()
 
     def _synchronize_exclude(self):

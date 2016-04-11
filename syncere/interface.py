@@ -47,6 +47,7 @@ class Interface:
             ('d', (self.list_details, 'list pending changes with details')),
             # TODO: When acting on a directory, it should be possible to apply
             #       the change recursively to its descendants
+            # TODO: Allow specifying transfer rules also here, interactively
             ('>', (self.include_change, 'include (confirm) the changes in the '
                    'synchronization')),
             ('!', (self.exclude_change, 'exclude (cancel) the changes from '
