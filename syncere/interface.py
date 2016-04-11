@@ -24,6 +24,8 @@ from collections import OrderedDict
 #       documentation
 import readline as _m_readline  # NOQA <- this hides the lint error [F401]
 
+from . import exceptions
+
 
 class Interface:
     """
@@ -31,9 +33,11 @@ class Interface:
     """
     Proceed = type('Proceed', (Exception, ), {})
     Quit = type('Quit', (Exception, ), {})
+    PROMPT = 'Command (h for help): '
 
-    def __init__(self, pending_changes):
+    def __init__(self, pending_changes, test):
         self.pending_changes = pending_changes
+        self.test = test
 
         # TODO: Document that some options take parameters (#,#-#,#,# or *)
         self.actions = OrderedDict((
@@ -100,16 +104,33 @@ class Interface:
         self.list_summary('')
 
         try:
-            while True:
-                inp = input('Command (h for help): ')
-                try:
-                    action = self.actions[inp[0]]
-                except KeyError:
+            if self.test is False:
+                while True:
+                    command = input(self.PROMPT)
+                    try:
+                        action = self.actions[command[0]]
+                    except KeyError:
+                        # FIXME
+                        print("Unrecognized command, enter 'h' for help")
+                    else:
+                        action[0](command[1:])
+            else:
+                while True:
+                    try:
+                        command = test.pop(0)
+                    except IndexError:
+                        raise exceptions.InsufficientTestCommands()
+                    # TODO: Make sure that command is a string
+                    # TODO: Support command=True, which allows the user to
+                    #       enter a command interactively through the normal
+                    #       input prompt in the loop above
                     # FIXME
-                    print("Unrecognized command, enter 'h' for help")
-                else:
-                    action[0](inp[1:])
-
+                    print(self.PROMPT, command, sep='')
+                    try:
+                        action = self.actions[command[0]]
+                    except KeyError:
+                        raise exceptions.UnrecognizedTestCommand(command)
+                    action[0](command[1:])
         except self.Quit:
             _m_sys.exit(0)
         except self.Proceed:

@@ -36,7 +36,7 @@ class Syncere:
     VERSION_NUMBER = '0.1.0'
     VERSION_DATE = '(2016-04-06)'
 
-    def __init__(self, cliargs=None):
+    def __init__(self, cliargs=None, test=False):
         # TODO: Support instantiation without cli arguments (e.g. using
         #       **kwargs)
         # TODO: Use fnmatch for globbing patterns
@@ -51,7 +51,7 @@ class Syncere:
         #       undecided pending changes left after applying the rules (i.e.
         #       sync without confirmation)
         if self.pending_changes:
-            Interface(self.pending_changes)
+            Interface(self.pending_changes, test)
             self._synchronize()
         else:
             # FIXME

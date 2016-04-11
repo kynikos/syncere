@@ -29,6 +29,10 @@ class ExperimentalOptionWarning(SyncereError):
     pass
 
 
+class InsufficientTestCommands(SyncereError):
+    pass
+
+
 class InvalidRuleError(SyncereError):
     pass
 
@@ -42,6 +46,10 @@ class RsyncError(SyncereError):
 
 
 class UnrecognizedItemizedChangeError(SyncereError):
+    pass
+
+
+class UnrecognizedTestCommand(SyncereError):
     pass
 
 
