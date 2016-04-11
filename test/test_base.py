@@ -1,10 +1,7 @@
 import pytest
-import subprocess
 
 from .syncere import Syncere, exceptions
 from .conftest import Utils
-
-# TODO: find . -printf "%i\t%k\t%M\t%n\t%u\t%g\t%s\t%A+\t%C+\t%T+\t//\t%P\t//->\t%l\t//\n"
 
 
 class TestHelp(Utils):
