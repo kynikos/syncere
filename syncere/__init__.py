@@ -44,6 +44,14 @@ class Syncere:
         self.cliargs = CLIArgs().parse(cliargs)
         self._check_arguments()
 
+        # If experimental is disabled and some of its options have been
+        # specified, the program has already exited in _check_arguments
+        self.previewargs = self.cliargs.filter_whitelist(groups=(
+                                'shared', 'optimized', 'experimental', 'safe'))
+        self.transferargs = self.cliargs.filter_whitelist(groups=(
+                                'shared', 'transfer-only', 'optimized',
+                                'experimental', 'safe'))
+
         self._preview()
         self._store_rules()
         self._parse_pending_changes()
@@ -68,19 +76,13 @@ class Syncere:
             raise exceptions.MissingDestinationError()
 
     def _preview(self):
-        # If experimental is disabled and some of its options have been
-        # specified, the program has already exited by now
-        rsyncargs = self.cliargs.filter_whitelist(groups=('shared',
-                                                          'optimized',
-                                                          'experimental',
-                                                          'safe'))
-
         # TODO:
         #  * Reflect rsync commands' error exit values
         #  * Also capture stderr?
         #  * What is the maximum size of the data that stdout can host?
         #  * Support terminating with Ctrl+c or in some other way
-        call = _m_subprocess.Popen(['rsync', *rsyncargs, '--dry-run', '--info',
+        call = _m_subprocess.Popen(['rsync', *self.previewargs, '--dry-run',
+                                    '--info',
                                     'backup4,copy4,del4,flist4,misc4,'
                                     'mount4,name4,remove4,skip4,symsafe4',
                                     '--out-format',
@@ -196,7 +198,7 @@ class Syncere:
         # have other include/exclude/filter rules, and rsync stops at the first
         # match that it finds
         # TODO: Still allow appending them optionally?
-        return ['rsync', *excludes, *self.rsyncargs]
+        return ['rsync', *excludes, *self.transferargs]
 
     def _synchronize_exclude_from(self):
         # TODO: Allow choosing the path
@@ -216,7 +218,7 @@ class Syncere:
         # have other include/exclude/filter rules, and rsync stops at the first
         # match that it finds
         # TODO: Still allow appending them optionally?
-        return ['rsync', '--exclude-from', FILE, *self.rsyncargs]
+        return ['rsync', '--exclude-from', FILE, *self.transferargs]
 
     def _synchronize_include(self):
         # TODO: Also consider the maximum length of a command, default to
@@ -233,7 +235,7 @@ class Syncere:
         # have other include/exclude/filter rules, and rsync stops at the first
         # match that it finds
         # TODO: Still allow appending them optionally?
-        return ['rsync', *includes, '--exclude', '*', *self.rsyncargs]
+        return ['rsync', *includes, '--exclude', '*', *self.transferargs]
 
     def _synchronize_include_from(self):
         # TODO: Allow choosing the path
@@ -254,7 +256,7 @@ class Syncere:
         # match that it finds
         # TODO: Still allow appending them optionally?
         return ['rsync', '--include-from', FILE, '--exclude', '*',
-                *self.rsyncargs]
+                *self.transferargs]
 
     def _synchronize_files_from(self):
         # TODO: Allow choosing the path
@@ -271,7 +273,7 @@ class Syncere:
                     filefrom.write(change.sfilename + '\n')
 
         # TODO: Allow appending --files-from instead of prepending it?
-        return ['rsync', '--files-from', FILE, *self.rsyncargs]
+        return ['rsync', '--files-from', FILE, *self.transferargs]
 
 
 class Change:
