@@ -56,6 +56,11 @@ Core:
 Interface:
 #4: In the 'h' (help) screen document that some interactive options take
     parameters (#,#-#,#,# or *)
+#25: If an interactive command doesn't accept arguments, it shouldn't execute
+     if some are given; e.g. if 'qabc' or 'quit' are passed, 'q' shouldn't be
+     executed; same goes for 'h'
+     Also the commands that accept filters shouldn't execute at all if part of
+     a filter is wrong; currently, something like '>5,a,6' does select 5 and 6
 
 
 v0.2.0

@@ -56,6 +56,7 @@ class Interface:
 
         self.list_summary('')
 
+        # TODO #25
         try:
             if self.test is False:
                 while True:
