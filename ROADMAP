@@ -4,6 +4,8 @@ Core:
 #16: Allow choosing the transfer command type from the interface; it should
      also be possible to set a default method to a shortcut interface command,
      e.g. 'X', with a command-line option
+#26: Currently also the identical files are shown among the pending changes,
+     but they shouldn't be
 #5: The --ruleset option must work with set names in specific configuration
     directories, e.g. ~/.config/syncere/ ; currently instead it accepts a path
     to a file

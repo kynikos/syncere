@@ -125,6 +125,7 @@ class Syncere:
                                     line)
 
                 if match:
+                    # TODO #26
                     self.pending_changes.append(Change(
                                                 self.rules,
                                                 len(self.pending_changes) + 1,
