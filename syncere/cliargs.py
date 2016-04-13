@@ -16,9 +16,13 @@
 # You should have received a copy of the GNU General Public License
 # along with syncere.  If not, see <http://www.gnu.org/licenses/>.
 
-import forwarg as _m_forwarg
 import sys as _m_sys
 import shlex as _m_shlex
+
+try:
+    import forwarg as _m_forwarg
+except ImportError:
+    from . import forwarg as _m_forwarg
 
 from .exceptions import UnsupportedOptionError
 
