@@ -4,7 +4,12 @@ SYNCERE=$(BASEDIR)/syncere.py
 
 .PHONY: help
 help:
-	@echo 'make test            run the tests               '
+	@echo 'make serve           serve the git repo with git-daemon        '
+	@echo 'make test            run the tests                             '
+
+.PHONY: serve
+serve:
+	git daemon --base-path=.. --export-all --reuseaddr --informative-errors --verbose
 
 .PHONY: test
 test:
