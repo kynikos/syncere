@@ -19,7 +19,6 @@
 import sys as _m_sys
 import subprocess as _m_subprocess
 import re as _m_re
-# TODO: Use proper logging
 
 from .cliargs import CLIArgs
 from .rules import Rules
@@ -32,15 +31,10 @@ class Syncere:
     The main class, primarily responsible for managing the internal rsync
     commands.
     """
-    # TODO: Remind to keep up to date
     VERSION_NUMBER = '0.1.0'
     VERSION_DATE = '(2016-04-06)'
 
     def __init__(self, cliargs=None, test=False):
-        # TODO: Support instantiation without cli arguments (e.g. using
-        #       **kwargs)
-        # TODO: Use fnmatch for globbing patterns
-        # TODO: Rulesets should be looked for in .config etc.
         self.cliargs = CLIArgs().parse(cliargs)
         self._check_arguments()
 
@@ -55,9 +49,6 @@ class Syncere:
         self._preview()
         self._store_rules()
         self._parse_pending_changes()
-        # TODO: Also allow optionally bypassing the interface if there are no
-        #       undecided pending changes left after applying the rules (i.e.
-        #       sync without confirmation)
         if self.pending_changes:
             Interface(self.pending_changes, test)
             self._synchronize()
@@ -75,11 +66,7 @@ class Syncere:
             raise exceptions.MissingDestinationError()
 
     def _preview(self):
-        # TODO:
-        #  * Reflect rsync commands' error exit values
-        #  * Also capture stderr?
-        #  * What is the maximum size of the data that stdout can host?
-        #  * Support terminating with Ctrl+c or in some other way
+        # TODO #12 #14
         call = _m_subprocess.Popen(['rsync', *self.previewargs, '--dry-run',
                                     '--info',
                                     'backup4,copy4,del4,flist4,misc4,'
@@ -102,37 +89,29 @@ class Syncere:
 
         # Popen.communicate already waits for the process to terminate, there's
         # no need to call wait
-        # TODO: Display a dynamic "processing..." message in a separate thread,
-        #       using \r to refresh the line
-        # TODO: Print the process' output in real time, but watch out for the
-        #       deadlock problems!!!
-        #       https://docs.python.org/3.5/library/subprocess.html
+        # TODO #13 #22
         self.stdout = call.communicate()[0]
 
         if call.returncode != 0:
-            # TODO: Use sys.exit(call.returncode)?
+            # TODO #15: Use sys.exit(call.returncode)?
             raise exceptions.RsyncError(call.returncode)
 
     def _store_rules(self):
         self.rules = Rules()
 
-        # TODO: support all the ways to add rules and rulesets
+        # TODO #5
         for setname in self.cliargs.namespace.rulesets:
             self.rules.parse_ruleset(setname)
 
     def _parse_pending_changes(self):
-        # TODO: Here the rulesets should be loaded and compared against the
-        #       parsed changes to set their self.included attribute
-        #       Or maybe this can be done later and merged with the function
-        #       that applies the rules from a file created dynamically to edit
-        #       them
         self.pending_changes = []
 
         for ln, line in enumerate(self.stdout.splitlines()):
             if line[:9] == '{syncere}':
                 match = _m_re.match('\{syncere}(.{11}) '
                                     '(send|recv|del\.) '
-                                    # TODO: test if %B shows ACLs like ls -l
+                                    # TODO #42: test if %B shows ACLs like
+                                    #           ls -l
                                     '(.+?) '
                                     '([0-9]+) '
                                     '([0-9]+|DEFAULT) '
@@ -151,37 +130,26 @@ class Syncere:
                                                 len(self.pending_changes) + 1,
                                                 *match.groups()))
                 else:
-                    raise exceptions.UnrecognizedItemizedChangeError()
+                    raise exceptions.UnrecognizedItemizedChangeError(line)
             else:
-                # TODO: Allow suppressing these lines
+                # TODO #3: Allow suppressing these lines
                 print(line)
 
     def _synchronize(self):
-        # TODO: Allow choosing the method from the interface or the command
-        #       line options; it should also be possible to set a default
-        #       method to a shortcut interface command, e.g. 'X'
-        #       Each has its advantages and disadvantages (see e.g. --checksum
-        #       and problems with (hard) links)
-        # TODO: Also allow writing file objects and feeding them to the
-        #       transfer command with stdinput; of course this requires that
-        #       stdinput is not used for some other reason
+        # TODO #16 #17
         for args in (self._synchronize_exclude(),
                      self._synchronize_exclude_from(),
                      self._synchronize_include(),
                      self._synchronize_include_from(),
                      self._synchronize_files_from()):
-            # TODO: Support terminating with Ctrl+c or in some other way
-            # TODO: Pass the original sys.stdin, if present, to the command
-            # TODO: Test what happens in case of an rsync error here
+            # TODO #14 #18
             call = _m_subprocess.Popen(args)
 
-            # TODO: unneeded in production? Or needed to return rsync's return
-            #       code?
+            # TODO #19 #23 (otherwise maybe calling 'wait' is unneeded?)
             call.wait()
 
     def _synchronize_exclude(self):
-        # TODO: Also consider the maximum length of a command, default to
-        #  _synchronize_exclude_from if too long
+        # TODO #24
 
         # Note that Popen already does all the necessary escaping on the
         # arguments
@@ -193,15 +161,12 @@ class Syncere:
         # Prepend, not append, excludes, since the original rsync command may
         # have other include/exclude/filter rules, and rsync stops at the first
         # match that it finds
-        # TODO: Still allow appending them optionally?
         return ['rsync', *excludes, *self.transferargs]
 
     def _synchronize_exclude_from(self):
-        # TODO: Allow choosing the path
+        # TODO #23
         FILE = './exclude_from'
 
-        # TODO: Protect from exceptions (permissions...)
-        # TODO: Warn if the file already exists
         with open(FILE, 'w'):
             # First make sure the file is empty
             pass
@@ -213,12 +178,10 @@ class Syncere:
         # Prepend, not append, excludes, since the original rsync command may
         # have other include/exclude/filter rules, and rsync stops at the first
         # match that it finds
-        # TODO: Still allow appending them optionally?
         return ['rsync', '--exclude-from', FILE, *self.transferargs]
 
     def _synchronize_include(self):
-        # TODO: Also consider the maximum length of a command, default to
-        #  _synchronize_include_from if too long
+        # TODO #24
 
         # Note that Popen already does all the necessary escaping on the
         # arguments
@@ -230,15 +193,12 @@ class Syncere:
         # Prepend, not append, includes, since the original rsync command may
         # have other include/exclude/filter rules, and rsync stops at the first
         # match that it finds
-        # TODO: Still allow appending them optionally?
         return ['rsync', *includes, '--exclude', '*', *self.transferargs]
 
     def _synchronize_include_from(self):
-        # TODO: Allow choosing the path
+        # TODO #23
         FILE = './include_from'
 
-        # TODO: Protect from exceptions (permissions...)
-        # TODO: Warn if the file already exists
         with open(FILE, 'w'):
             # First make sure the file is empty
             pass
@@ -250,16 +210,13 @@ class Syncere:
         # Prepend, not append, includes, since the original rsync command may
         # have other include/exclude/filter rules, and rsync stops at the first
         # match that it finds
-        # TODO: Still allow appending them optionally?
         return ['rsync', '--include-from', FILE, '--exclude', '*',
                 *self.transferargs]
 
     def _synchronize_files_from(self):
-        # TODO: Allow choosing the path
+        # TODO #23
         FILE = './files_from'
 
-        # TODO: Protect from exceptions (permissions...)
-        # TODO: Warn if the file already exists
         with open(FILE, 'w'):
             # First make sure the file is empty
             pass
@@ -268,7 +225,6 @@ class Syncere:
                 if change.included:
                     filefrom.write(change.sfilename + '\n')
 
-        # TODO: Allow appending --files-from instead of prepending it?
         return ['rsync', '--files-from', FILE, *self.transferargs]
 
 
@@ -277,8 +233,7 @@ class Change:
     Objects of this class represent pending changes.
     """
     STATUS = {
-        # TODO: All these strings should be defined in a central place instead
-        #       of hardcoding them everywhere
+        # TODO #56
         None: ' ? ',
         True: '  >',
         False: '!  ',

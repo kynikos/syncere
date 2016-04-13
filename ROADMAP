@@ -1,0 +1,150 @@
+v0.1.0
+
+Core:
+#16: Allow choosing the transfer command type from the interface; it should
+     also be possible to set a default method to a shortcut interface command,
+     e.g. 'X', with a command-line option
+#5: The --ruleset option must work with set names in specific configuration
+    directories, e.g. ~/.config/syncere/ ; currently instead it accepts a path
+    to a file
+    A --ruleset-path option could anyway be added to really point to a file
+    Alternatively a path could be checked if no rulesets with the given name
+    are found in the configuration directories (a path can be forced by using
+    '/' in the value)
+#6: Support all the ruleset path types and the itemized wildcards
+    Use fnmatch for globbing patterns
+#7: Rules: allow wildcards in the itemized representation
+    Allow to omit the itemized representation if only the path should
+    be tested
+#8: Rules: allow enclosing the path in some character, e.g. in quotes, for
+    example for paths that end with spaces, since they would be at risk
+    of being trimmed by text editors
+    The syntax could be e.g. 'p"path/to/file"', i.e. if a colon is
+    used, than the path is expected to end at the line break; if a
+    double quote is used, then the path is expected to end with '"$"
+    Other supported characters/separators can be <>, all parentheses,
+    or the path could be always started with '/', etc.
+#3: Implement more experimental and optimized options
+    --verbose could decide whether the non itemized-change lines should be
+    printed when parsing the preview command results
+#12: Preview rsync command: also capture stderr?
+#13: Preview rsync command: Display a dynamic "processing..." message in a
+      separate thread, using \r to refresh the line
+     What is the maximum size of the data that stdout
+      can host?
+#14: Check that terminating syncere with Ctrl+c (and other common ways?) also
+     terminates the rsync commands
+#15: Preview rsync command: use sys.exit(call.returncode) instead of raising
+     RsyncError?
+#17: Also allow writing file objects and feeding them to the
+     transfer command's --*-from options with stdinput; of course this
+     requires that stdinput is not used for some other reason (see also #18)
+#18: Pass the original sys.stdin, if present, to the transfer command (see also
+     #17)
+#19: Test what happens in case of an error in the transfer rsync commands
+     Ensure that rsync's return code is the one returned when the whole syncere
+     process exits
+#23: Optionally delete the *-from files after the transfer command completes
+     Allow choosing at what path they are created
+     Protect from exceptions that may be raised when creating them
+      (permissions etc.)
+      Also warn if the file already exists
+#24: Disable the transfer modes that use --exclude or --include options when
+     the number of paths to be filtered is greater than a certain number
+     Make this compatible with the 'X' command from #16
+
+Interface:
+#4: In the 'h' (help) screen document that some interactive options take
+    parameters (#,#-#,#,# or *)
+
+
+v0.2.0
+
+Interface:
+#10: Paginate the change preview lists in the interface; allow setting the
+     limit of changes per page
+#11: Use colors to show the pending changes in the interface; allow disabling
+     them
+
+Tests:
+#1: Test that the various application stages are reached
+#2: Use only fully-supported options to test basic functionality, don't use
+    experimental options
+#9: Check that all the raised exceptions and sys.exit calls are tested
+
+
+v1.0.0
+
+Core:
+#40: Improve error messages, show more information to ease troubleshooting
+     In InvalidRuleError also show the line number in the ruleset file
+#41: Use a proper logging system
+#42: Test if the %B argument of --out-format shows ACLs like ls -l
+
+Tests:
+#50: Remove unneeded verify method in conftest.py.Utils?
+
+Docs:
+# Suggest that it's possible to transfer the new data into an empty folder,
+  and then process it separately (--compare-dest argument)
+  Create a small utility that shows a diff for the files?
+# Mention syncere in http://superuser.com/questions/282942/make-rsync-wait-for-a-confirmation-before-actually-changing-files
+
+
+v1.0.1
+
+Style:
+#56: The interactive menu commands and the '?' '!' '>' symbols shouldn't be
+     hard-coded, but centralized constants should be used in their place
+
+
+v1.1.0
+
+Core:
+#20: Allow choosing whether rulesets are applied in a cascading
+     (last one wins) or rsync mode (first one wins)
+#21: Allow optionally bypassing the interface if there are no
+     undecided pending changes left after applying the rules (i.e.
+     sync without confirmation)
+#22: Print the process' output in real time, but watch out for the
+     deadlock problems!!!
+     https://docs.python.org/3.5/library/subprocess.html
+
+Interface:
+#30: In some interactive commands it should be possible to use filters, e.g.
+      only show included, excluded or undecided changes
+     Other possible filters: show only the root items; show only the children
+      of a directory; show only the descendants of a directory
+     Maybe a directory tree should be created during the
+      initial parse of the --itemize-changes output
+     It would be nice to also recognize ranges that end with '-', e.g. "3-"
+     could mean "select from 3 to the end"
+#31: When applying an interactive action on a directory, it should be possible
+     to apply the change recursively to its descendants
+     See also the related TODO comments in interface.py
+#32: Also allow specifying transfer rules (like in rule sets) through
+     interactive commands
+#33: Allow opening and editing the pending changes in an external text
+     editor (chosen with the $EDITOR environment variable)
+#34: Add an interactive command to preview the actual rsync command that
+     would be used with 'S', but remind that Popen takes care of
+     escaping characters
+#35: It should be possible to write a files-from or exclude-from
+     file from the interactive menu (i.e. without necessarily executing 'S')
+
+Tests:
+#60: In the 'test' parameter of the main Syncere class, used to pass automatic
+     interactive commands for testing, support adding in the list a value such
+     as 'True' to allow the user to enter a command interactively through the
+     normal input prompt in the loop above (i.e. instead of having the command
+     added automatically); maybe a new special interactive command should also
+     be added for testing sessions, to restart the execution of the 'test' list
+     (e.g. 'T: resume the testing commands list')
+
+
+v1.8.0
+
+#80: interface.py imports readline to enable the history of interactive
+     commands; it's however possible to go beyond this and enable a completer
+     etc., see the documentation
+#100: Internationalization: allow localizing all the messages

@@ -20,8 +20,7 @@ import sys as _m_sys
 from collections import OrderedDict
 # simply importing readline is enough to enable command history by pressing
 # the up and down keys
-# TODO: it's possible to go beyond this and enable a completer etc., see the
-#       documentation
+# TODO #80
 import readline as _m_readline  # NOQA <- this hides the lint error [F401]
 
 from . import exceptions
@@ -39,64 +38,18 @@ class Interface:
         self.pending_changes = pending_changes
         self.test = test
 
-        # TODO: Document that some options take parameters (#,#-#,#,# or *)
+        # TODO #4 #30 #31 #32 #33 #34 #35 #56
         self.actions = OrderedDict((
-            # TODO: It should be possible to use filters, e.g. only show
-            #       included, excluded or undecided changes
-            # TODO: Show only the root items; show only the children of a
-            #       directory; show only the descendants of a directory
-            #       Maybe a directory tree should be created during the
-            #       initial parse of the --itemize-changes output
             ('l', (self.list_summary, 'list pending changes')),
             ('d', (self.list_details, 'list pending changes with details')),
-            # TODO: When acting on a directory, it should be possible to apply
-            #       the change recursively to its descendants
-            # TODO: Allow specifying transfer rules also here, interactively
             ('>', (self.include_change, 'include (confirm) the changes in the '
                    'synchronization')),
             ('!', (self.exclude_change, 'exclude (cancel) the changes from '
                    'the synchronization')),
             ('?', (self.reset_change, 'reset the changes to an undecided '
                    'status')),
-
-            # TODO: raw mode:
-            #  The same arguments are passed
-            #  to both rsync internal commands;
-            #  only those strictly unsupported
-            #  are rejected; this maximizes the
-            #  compatibility with complex rsync
-            #  commands but disables some of
-            #  syncere features.
-
-            # TODO: optimized mode:
-            #  The arguments passed to the
-            #  rsync commands are optimized
-            #  according to known use cases;
-            #  this means that some complex
-            #  combinations of rsync arguments
-            #  may not be supported.
-
-            # TODO: advanced mode:
-            #  All the given rsync arguments
-            #  are also parsed by syncere in
-            #  order to identify the source and
-            #  destination locations, hence
-            #  allowing syncere to enable some
-            #  advanced features; only a subset
-            #  of rsync arguments is supported
-            #  by this mode, therefore some
-            #  less common rsync use cases may
-            #  not be supported.
-
             ('S', (self.synchronize, 'start the synchronization, then exit '
                    'syncere')),
-            # TODO: Allow editing the pending changes in an external text
-            #       editor (chosen with the $EDITOR environment variable)
-            # TODO: Add a command to preview the actual rsync command that
-            #       would be used with S, but remind that Popen takes care of
-            #       escaping characters
-            # TODO: It should be possible to write a files-from or exclude-from
-            #       file from the menu
             ('q', (self.quit, 'exit syncere without synchronizing anything')),
             ('h', (self.help, 'show this help screen')),
         ))
@@ -119,10 +72,7 @@ class Interface:
                         command = test.pop(0)
                     except IndexError:
                         raise exceptions.InsufficientTestCommands()
-                    # TODO: Make sure that command is a string
-                    # TODO: Support command=True, which allows the user to
-                    #       enter a command interactively through the normal
-                    #       input prompt in the loop above
+                    # TODO #60
                     print(self.PROMPT, command, sep='')
                     try:
                         action = self.actions[command[0]]
@@ -155,8 +105,6 @@ class Interface:
                     changes.append(change)
 
             elif len(rsel) == 2:
-                # TODO: It would be nice to also recognize e.g. "3-" as "select
-                #       from 3 to the end"
                 try:
                     ids, ide = [self._get_0_based_id(rid) for rid in rsel]
                 except ValueError:
@@ -184,8 +132,7 @@ class Interface:
         changes = self._select_changes(args)
         width = len(str(changes[-1].id_))
 
-        # TODO: Paginate; allow setting the limit
-        # TODO: Use colors; allow disabling them
+        # TODO #10 #11
         for change in changes:
             print(change.get_summary(width))
 
@@ -197,8 +144,7 @@ class Interface:
         changes = self._select_changes(args)
         width = len(str(changes[-1].id_))
 
-        # TODO: Paginate; allow setting the limit
-        # TODO: Use colors; allow disabling them
+        # TODO #10 #11
         for change in changes:
             print(change.get_summary(width))
             print(change.get_details(width))
@@ -206,26 +152,27 @@ class Interface:
         print()
 
     def include_change(self, args):
-        # TODO: This should also ask to include all the ancestor directories,
-        #       if they aren't included already
+        # TODO #31: This should also ask to include all the ancestor
+        #       directories, if they aren't included already
         for change in self._select_changes(args):
             change.include()
 
     def exclude_change(self, args):
-        # TODO: If this is a directory, this should also ask to exclude all the
-        #       descendant files and directories, if they are still included
+        # TODO #31: If this is a directory, this should also ask to exclude all
+        #       the descendant files and directories, if they are still
+        #       included
         for change in self._select_changes(args):
             change.exclude()
 
     def reset_change(self, args):
-        # TODO: If the path was included and was a directory, this should ask
-        #       to reset all the descendants; if the path was excluded, this
-        #       should ask to reset all the ancestor directories
+        # TODO #31: If the path was included and was a directory, this should
+        #       ask to reset all the descendants; if the path was excluded,
+        #       this should ask to reset all the ancestor directories
         for change in self._select_changes(args):
             change.reset()
 
     def synchronize(self, args):
-        # TODO: This should also warn if some files are included, but their
+        # TODO #31: This should also warn if some files are included, but their
         #       parent directories are not, resulting in the files actually
         #       being excluded
         for change in self.pending_changes:
