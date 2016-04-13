@@ -62,6 +62,9 @@ class Interface:
                     command = input(self.PROMPT)
                     try:
                         action = self.actions[command[0]]
+                    except IndexError:
+                        # IndexError is raised if command is an empty string
+                        pass
                     except KeyError:
                         print("Unrecognized command, enter 'h' for help")
                     else:
@@ -76,7 +79,8 @@ class Interface:
                     print(self.PROMPT, command, sep='')
                     try:
                         action = self.actions[command[0]]
-                    except KeyError:
+                    except (IndexError, KeyError):
+                        # IndexError is raised if command is an empty string
                         raise exceptions.UnrecognizedTestCommand(command)
                     action[0](command[1:])
         except self.Quit:
