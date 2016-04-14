@@ -207,6 +207,9 @@ Fully-supported options:
     def _store_value(self, newvalue):
         pass
 
+    def check_flag(self):
+        pass
+
     def check_value(self):
         pass
 
@@ -230,6 +233,9 @@ See <http://gnu.org/licenses/gpl.html> for details.\
     def _store_value(self, newvalue):
         pass
 
+    def check_flag(self):
+        pass
+
     def check_value(self):
         pass
 
@@ -239,6 +245,9 @@ class ActionUnsupported(_m_forwarg.Action):
         raise UnsupportedOptionError(self.argdef.dest)
 
     def _store_value(self, newvalue):
+        pass
+
+    def check_flag(self):
         pass
 
     def check_value(self):
