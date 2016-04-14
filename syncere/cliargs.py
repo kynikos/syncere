@@ -51,10 +51,8 @@ from .exceptions import UnsupportedOptionError
 
 
 class ActionHelp(_m_forwarg.Action):
-    # TODO: Implement man page (also a separate (5) page for ruleset syntax?
-    #       Note that syncere(1) is referred from the help message below
     def _process_flag(self):
-        # TODO: Note that there are some TODOs in the message
+        # TODO #3: Note that there are some TODOs in the message
         print("""\
 Usage: syncere [syncere_options] [rsync_options] [src [src]...] [dest]
 
@@ -248,38 +246,20 @@ class CLIArgs:
         #   use it to indicate temporary files
         self.parser = _m_forwarg.ArgumentParser()
 
-        # TODO: use parser.exit(0) where/if needed instead of sys.exit()
-
         self._overridden()
         self._syncere()
         self._shared()
         self._transfer_only()
-        # TODO: Disable optimized and/or advanced modes if the args don't
-        #       validate or an exception is raised by argparse
         self._optimized()
         self._experimental()
         self._unsupported()
         self._safe()
 
-        # TODO: Some ways to accept the rsync arguments:
-        #  * use separate profile files to list the options
-        #  * introduce syncere options with --syncere-*
-        #  * use the special -- flag to separate the raw rsync options
-        #    If using ==, -- must be implied, and vice versa
-        #  * use a different prefix for syncere options, e.g. ==
-        #  * adopt a white-list method, where only some options are explicitly
-        #    supported
-        #  * adopt a black-list method, where the known troublesome arguments
-        #    are detected and a warning or error is issued if present
-
     def parse(self, args):
-        # TODO: There would also be 'parse_known_args' to forward unknown
-        #       arguments to the rsync commands, however it's buggy and
-        #       unreliable, especially for short options, see e.g.
-        #       https://bugs.python.org/issue16142
-        #       An alternative would be to use the 'click' module, which seems
-        #       to better support unknown arguments
-        #       http://click.pocoo.org/
+        # There would also be 'parse_known_args' to forward unknown
+        # arguments to the rsync commands, however it's buggy and
+        # unreliable, especially for short options, see e.g.
+        # https://bugs.python.org/issue16142
         return self.parser.parse_args(_m_shlex.split(args)) \
             if args is not None else self.parser.parse_args()
 
@@ -288,153 +268,123 @@ class CLIArgs:
 
         group.add_argument('--version', action=ActionVersion)
 
-        # TODO: properly reflect rsync's ambivalent meaning of -h, and update
-        #       --help's description to mention that it's supported
-        #       At least check that -h works as --human-readable
+        # TODO #27
         group.add_argument('--help', action=ActionHelp)
 
     def _syncere(self):
         group = self.parser.add_argument_group('syncere')
 
-        # TODO: Implement
+        # TODO #5
         group.add_argument('--ruleset', action='append', dest='rulesets',
                            default=[])
-        # TODO: Also allow passing rules from a file with --rules-from and
-        #       directly with a --rule option, similar to --exclude-from and
-        #       --exclude
-
-        # TODO: Implement
         group.add_argument('--experimental', action='store_true')
 
     def _shared(self):
         group = self.parser.add_argument_group('shared')
 
-        # TODO: implement and pass on to the rsync commands
-        #       maybe use '*' and check the number of values later, since
-        #       some options don't need positional arguments, e.g. --help
         # Note that differentiating between sources and destination isn't
         # supported yet by forwarg, since it would require sources to have a
         # '*?' (non-greedy) nargs to let the last value be assigned to
         # destination
         group.add_argument('locations', nargs='+')
 
-        # TODO: implement and pass on to the rsync commands
+        # TODO #28
         group.add_argument('-v', '--verbose', action='count')
 
-        # TODO: properly process and pass on to the rsync commands
-        # TODO: can this option be specified multiple times? what happens?
+        # TODO #28 #29
         group.add_argument('--info', action='append')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #28
         group.add_argument('-n', '--dry-run', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #28
         group.add_argument('-i', '--itemize-changes', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #28
         group.add_argument('--out-format')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #28
         group.add_argument('--stats', action='store_true')
 
     def _transfer_only(self):
         group = self.parser.add_argument_group('transfer-only')
 
-        # TODO: really pass on to the transfer command
         group.add_argument('--msgs2stderr', action='store_true')
-
-        # TODO: really pass on to the transfer command
         group.add_argument('-q', '--quiet', action='store_true')
 
     def _optimized(self):
         group = self.parser.add_argument_group('optimized')
 
-        # TODO: In order to avoid recalculating the checksums again, the
-        #       transfer command could omit the --checksum argument, compile a
-        #       --files-from list instead of an --exclude-from list, and use
-        #       --ignore-times to force updating the files whose size and
-        #       timestamp are the same (the only difference is the checksum)
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('-c', '--checksum', action='store_true')
-
-        # TODO: Is this similar to --checksum?
-        # TODO: properly process and pass on to the rsync commands
         group.add_argument('-y', '--fuzzy', action='count')
 
     def _experimental(self):
         group = self.parser.add_argument_group('experimental')
 
-        # TODO: Investigate the behavior with links, especially hard links,
-        #       because excluding their copies/targets may generate
-        #       synchronization issues
-
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('-l', '--links', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('--no-links', '--no-l', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('-L', '--copy-links', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('--copy-unsafe-links', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('--safe-links', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('--munge-links', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('-k', '--copy-dirlinks', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('-K', '--keep-dirlinks', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('-H', '--hard-links', action='store_true')
 
 
-        # TODO: --archive inherits the problems of 'l', if any
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3: --archive inherits the problems of 'l', if any
         group.add_argument('-a', '--archive', action='store_true')
 
 
-        # TODO: Test the effect of these arguments
-
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('--timeout')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('--contimeout')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('-s', '--protect-args', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('--no-protect-args', '--no-s', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('--outbuf')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('-8', '--8-bit-output', action='store_true')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('--log-file')
 
-        # TODO: properly process and pass on to the rsync commands
-        # TODO: can this accept an empty string as a value?
+        # TODO #3: Can this accept an empty string as a value? forwarg
+        #          wouldn't support that for the moment
         group.add_argument('--log-file-format')
 
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3
         group.add_argument('--list-only', action='store_true')
 
 
-        # TODO: This can create problems if the generated files use different
-        #       delimiters
-        # TODO: properly process and pass on to the rsync commands
+        # TODO #3: This can create problems if the generated files use
+        #       different  delimiters
         group.add_argument('-0', '--from0', action='store_true')
 
     def _unsupported(self):
@@ -449,10 +399,7 @@ class CLIArgs:
     def _safe(self):
         group = self.parser.add_argument_group('safe')
 
-        # TODO: Check that the options passed to the rsync commands belong
-        #       to this group
-
-        # TODO: can this option be specified multiple times? what happens?
+        # TODO #29
         group.add_argument('--debug', action='append')
 
         group.add_argument('--no-motd', action='store_true')
@@ -468,10 +415,10 @@ class CLIArgs:
         group.add_argument('--no-implied-dirs', action='store_true')
         group.add_argument('-b', '--backup', action='store_true')
 
-        # TODO: can this option be specified multiple times? what happens?
+        # TODO #29
         group.add_argument('--backup-dir')
 
-        # TODO: can this option be specified multiple times? what happens?
+        # TODO #29
         group.add_argument('--suffix')
 
         group.add_argument('-u', '--update', action='store_true')
@@ -545,22 +492,22 @@ class CLIArgs:
         group.add_argument('--old-compress', action='store_true')
         group.add_argument('--compress-level')
 
-        # TODO: can this option be specified multiple times? what happens?
+        # TODO #29
         group.add_argument('--skip-compress', action='append')
 
         group.add_argument('--numeric-ids', action='store_true')
 
-        # TODO: can this option be specified multiple times? what happens?
+        # TODO #29
         group.add_argument('--usermap', action='append')
 
-        # TODO: can this option be specified multiple times? what happens?
+        # TODO #29
         group.add_argument('--groupmap', action='append')
 
         group.add_argument('--chown')
         group.add_argument('--address')
         group.add_argument('--port')
 
-        # TODO: can this option be specified multiple times? what happens?
+        # TODO #29
         group.add_argument('--sockopts', action='append')
 
         group.add_argument('--blocking-io', action='store_true')
