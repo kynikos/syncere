@@ -116,6 +116,7 @@ Core:
 #22: Print the process' output in real time, but watch out for the
      deadlock problems!!!
      https://docs.python.org/3.5/library/subprocess.html
+#61: Ability to choose the synchronization direction per file if only one source is given (akin to Unison)
 
 Interface:
 #30: In some interactive commands it should be possible to use filters, e.g.
