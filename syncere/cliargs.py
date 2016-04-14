@@ -201,15 +201,10 @@ Fully-supported options:
 
 
 class ActionVersion(_m_forwarg.Action):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
+    def _process_flag(self):
         # Import here, otherwise there's a circular import
         from . import Syncere
-        self.VERSION_NUMBER = Syncere.VERSION_NUMBER
-        self.VERSION_DATE = Syncere.VERSION_DATE
 
-    def _process_flag(self):
         print("""\
 syncere {0} {1}
 
@@ -218,7 +213,7 @@ This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, you are welcome to redistribute it under the
 conditions of the GNU General Public License version 3 or later.
 See <http://gnu.org/licenses/gpl.html> for details.\
-""".format(self.VERSION_NUMBER, self.VERSION_DATE))
+""".format(Syncere.VERSION_NUMBER, Syncere.VERSION_DATE))
         _m_sys.exit(0)
 
     def _store_value(self, newvalue):
