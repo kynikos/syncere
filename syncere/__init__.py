@@ -51,7 +51,7 @@ class Syncere:
         self._parse_pending_changes()
         if self.pending_changes:
             Interface(self.pending_changes, test)
-            self._synchronize()
+            self._transfer()
         else:
             print("Nothing to do")
             _m_sys.exit(0)
@@ -136,20 +136,20 @@ class Syncere:
                 # TODO #3: Allow suppressing these lines
                 print(line)
 
-    def _synchronize(self):
+    def _transfer(self):
         # TODO #16 #17
-        for args in (self._synchronize_exclude(),
-                     self._synchronize_exclude_from(),
-                     self._synchronize_include(),
-                     self._synchronize_include_from(),
-                     self._synchronize_files_from()):
+        for args in (self._transfer_exclude(),
+                     self._transfer_exclude_from(),
+                     self._transfer_include(),
+                     self._transfer_include_from(),
+                     self._transfer_files_from()):
             # TODO #14 #18
             call = _m_subprocess.Popen(args)
 
             # TODO #19 #23 (otherwise maybe calling 'wait' is unneeded?)
             call.wait()
 
-    def _synchronize_exclude(self):
+    def _transfer_exclude(self):
         # TODO #24
 
         # Note that Popen already does all the necessary escaping on the
@@ -164,7 +164,7 @@ class Syncere:
         # match that it finds
         return ['rsync', *excludes, *self.transferargs]
 
-    def _synchronize_exclude_from(self):
+    def _transfer_exclude_from(self):
         # TODO #23
         FILE = './exclude_from'
 
@@ -181,7 +181,7 @@ class Syncere:
         # match that it finds
         return ['rsync', '--exclude-from', FILE, *self.transferargs]
 
-    def _synchronize_include(self):
+    def _transfer_include(self):
         # TODO #24
 
         # Note that Popen already does all the necessary escaping on the
@@ -196,7 +196,7 @@ class Syncere:
         # match that it finds
         return ['rsync', *includes, '--exclude', '*', *self.transferargs]
 
-    def _synchronize_include_from(self):
+    def _transfer_include_from(self):
         # TODO #23
         FILE = './include_from'
 
@@ -214,7 +214,7 @@ class Syncere:
         return ['rsync', '--include-from', FILE, '--exclude', '*',
                 *self.transferargs]
 
-    def _synchronize_files_from(self):
+    def _transfer_files_from(self):
         # TODO #23
         FILE = './files_from'
 
