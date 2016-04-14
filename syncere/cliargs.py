@@ -103,6 +103,10 @@ Syncere-specific options:
                 Enable the experimentally-supported rsync options, see the
                 relevant section below.
 
+    --show-identical
+                Also list files that are not going to be transferred because
+                identical at the source and destination.
+
 Shared options:
     These options are passed to the internal rsync commands, but they are also
     used by syncere. Below only the syncere meaning is explained; refer to the
@@ -303,6 +307,7 @@ class CLIArgs:
                            default=tuple(Interface.TRANSFER_MODES.values())[0],
                            choices=Interface.TRANSFER_MODES.values())
         group.add_argument('--experimental', action='store_true')
+        group.add_argument('--show-identical', action='store_true')
 
     def _shared(self):
         group = self.parser.add_argument_group('shared')

@@ -106,6 +106,7 @@ class Syncere:
 
     def _parse_pending_changes(self):
         self.pending_changes = []
+        self.identical_files = []
 
         for ln, line in enumerate(self.stdout.splitlines()):
             if line[:9] == '{syncere}':
@@ -126,10 +127,16 @@ class Syncere:
                                     line)
 
                 if match:
-                    # TODO #26
-                    self.pending_changes.append(Change(
+                    if self.cliargs.namespace.show_identical or \
+                            not _m_re.match('\.[fdLDS] {9}$', match.group(1)):
+                        self.pending_changes.append(Change(
                                                 self.rules,
                                                 len(self.pending_changes) + 1,
+                                                *match.groups()))
+                    else:
+                        self.identical_files.append(Change(
+                                                self.rules,
+                                                len(self.identical_files) + 1,
                                                 *match.groups()))
                 else:
                     raise exceptions.UnrecognizedItemizedChangeError(line)

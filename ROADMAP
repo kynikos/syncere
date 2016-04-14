@@ -1,8 +1,6 @@
 v0.1.0
 
 Core:
-#26: Currently also the identical files are shown among the pending changes,
-     but they shouldn't be
 #5: The --ruleset option must work with set names in specific configuration
      directories, e.g. ~/.config/syncere/ ; currently instead it accepts a path
      to a file
