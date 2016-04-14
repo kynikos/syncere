@@ -33,8 +33,19 @@ class Interface:
     Proceed = type('Proceed', (Exception, ), {})
     Quit = type('Quit', (Exception, ), {})
     PROMPT = 'Command (h for help): '
+    CMD_TRANSFER = 'S'
+    TRANSFER_MODES = OrderedDict((
+        # The first item is considered the default mode, unless differently
+        # specified with the --default-mode option
+        ('e', 'exclude'),
+        ('ef', 'exclude-from'),
+        ('i', 'include'),
+        ('if', 'include-from'),
+        ('ff', 'files-from'),
+    ))
 
-    def __init__(self, pending_changes, test):
+    def __init__(self, cliargs, pending_changes, test):
+        self.cliargs = cliargs
         self.pending_changes = pending_changes
         self.test = test
 
@@ -48,8 +59,8 @@ class Interface:
                    'the synchronization')),
             ('?', (self.reset_change, 'reset the changes to an undecided '
                    'status')),
-            ('S', (self.synchronize, 'start the synchronization, then exit '
-                   'syncere')),
+            (self.CMD_TRANSFER, (self.transfer, 'start the synchronization, '
+                                 'then exit syncere')),
             ('q', (self.quit, 'exit syncere without synchronizing anything')),
             ('h', (self.help, 'show this help screen')),
         ))
@@ -176,7 +187,7 @@ class Interface:
         for change in self._select_changes(args):
             change.reset()
 
-    def synchronize(self, args):
+    def transfer(self, args):
         # TODO #31: This should also warn if some files are included, but their
         #       parent directories are not, resulting in the files actually
         #       being excluded
@@ -185,6 +196,14 @@ class Interface:
                 print('There are still undecided changes')
                 break
         else:
+            if args == '':
+                self.transfer_mode = self.cliargs.namespace.default_mode
+            else:
+                try:
+                    self.transfer_mode = self.TRANSFER_MODES[args]
+                except KeyError:
+                    print('Unrecognized transfer mode')
+                    return False
             raise self.Proceed()
 
     def help(self, args):

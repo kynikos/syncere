@@ -47,6 +47,7 @@ syncere was cloned:
 """
         raise
 
+from .interface import Interface
 from .exceptions import UnsupportedOptionError
 
 
@@ -90,6 +91,13 @@ Syncere-specific options:
                 discard recurrent file transfers. Repeat the option to load
                 more rule sets in the specified order. See syncere(1) for the
                 used syntax.
+
+    --default-mode=MODE
+                Define which transfer mode is the one associated to the
+                shortcut '{0}' interactive command; MODE is a string to be
+                chosen among {1},
+                {2}; the default MODE is '{3}'. See syncere(1) for details on
+                transfer modes.
 
     --experimental
                 Enable the experimentally-supported rsync options, see the
@@ -188,7 +196,12 @@ Unsupported options:
 Fully-supported options:
     All the rsync options that are not listed above are fully supported and
     used by both the internal "preview" and the "transfer" commands.\
-""")
+            """.format(Interface.CMD_TRANSFER,
+                       ', '.join("'" + mode + "'" for mode in
+                                 tuple(Interface.TRANSFER_MODES.values())[:3]),
+                       ', '.join("'" + mode + "'" for mode in
+                                 tuple(Interface.TRANSFER_MODES.values())[3:]),
+                       tuple(Interface.TRANSFER_MODES.values())[0]))
         _m_sys.exit(0)
 
     def _store_value(self, newvalue):
@@ -277,6 +290,9 @@ class CLIArgs:
         # TODO #5
         group.add_argument('--ruleset', action='append', dest='rulesets',
                            default=[])
+        group.add_argument('--default-mode',
+                           default=tuple(Interface.TRANSFER_MODES.values())[0],
+                           choices=Interface.TRANSFER_MODES.values())
         group.add_argument('--experimental', action='store_true')
 
     def _shared(self):

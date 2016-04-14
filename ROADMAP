@@ -1,9 +1,6 @@
 v0.1.0
 
 Core:
-#16: Allow choosing the transfer command type from the interface; it should
-     also be possible to set a default method to a shortcut interface command,
-     e.g. 'X', with a command-line option
 #26: Currently also the identical files are shown among the pending changes,
      but they shouldn't be
 #5: The --ruleset option must work with set names in specific configuration
@@ -72,11 +69,12 @@ Core:
       Also warn if the file already exists
 #24: Disable the transfer modes that use --exclude or --include options when
      the number of paths to be filtered is greater than a certain number
-     Make this compatible with the 'X' command from #16
+     Make this compatible with the --default-mode 'S' command
 
 Interface:
 #4: In the 'h' (help) screen document that some interactive options take
-    parameters (#,#-#,#,# or *)
+     parameters (#,#-#,#,# or *)
+    Also document the various S* transfer subcommands
 #25: If an interactive command doesn't accept arguments, it shouldn't execute
      if some are given; e.g. if 'qabc' or 'quit' are passed, 'q' shouldn't be
      executed; same goes for 'h'

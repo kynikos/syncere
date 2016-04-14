@@ -50,7 +50,8 @@ class Syncere:
         self._store_rules()
         self._parse_pending_changes()
         if self.pending_changes:
-            Interface(self.pending_changes, test)
+            self.transfer_mode = Interface(self.cliargs, self.pending_changes,
+                                           test).transfer_mode
             self._transfer()
         else:
             print("Nothing to do")
@@ -137,17 +138,17 @@ class Syncere:
                 print(line)
 
     def _transfer(self):
-        # TODO #16 #17
-        for args in (self._transfer_exclude(),
-                     self._transfer_exclude_from(),
-                     self._transfer_include(),
-                     self._transfer_include_from(),
-                     self._transfer_files_from()):
-            # TODO #14 #18
-            call = _m_subprocess.Popen(args)
+        # TODO #17
+        args = {'exclude': self._transfer_exclude,
+                'exclude-from': self._transfer_exclude_from,
+                'include': self._transfer_include,
+                'include-from': self._transfer_include_from,
+                'files-from': self._transfer_files_from}[self.transfer_mode]()
+        # TODO #14 #18
+        call = _m_subprocess.Popen(args)
 
-            # TODO #19 #23 (otherwise maybe calling 'wait' is unneeded?)
-            call.wait()
+        # TODO #19 #23 (otherwise maybe calling 'wait' is unneeded?)
+        call.wait()
 
     def _transfer_exclude(self):
         # TODO #24
