@@ -198,11 +198,11 @@ Fully-supported options:
     All the rsync options that are not listed above are fully supported and
     used by both the internal "preview" and the "transfer" commands.\
 """.format(Interface.CMD_TRANSFER,
-                       ', '.join("'" + mode + "'" for mode in
-                                 tuple(Interface.TRANSFER_MODES.values())[:3]),
-                       ', '.join("'" + mode + "'" for mode in
-                                 tuple(Interface.TRANSFER_MODES.values())[3:]),
-                       tuple(Interface.TRANSFER_MODES.values())[0]))
+           ', '.join("'" + mode + "'" for mode in
+                     tuple(Interface.TRANSFER_MODES.values())[:3]),
+           ', '.join("'" + mode + "'" for mode in
+                     tuple(Interface.TRANSFER_MODES.values())[3:]),
+           tuple(Interface.TRANSFER_MODES.values())[0]))
         _m_sys.exit(0)
 
     def _store_value(self, newvalue):

@@ -74,7 +74,7 @@ class TestCliArgsErrors(Utils):
                                           ('--from0', 'from0')))
     def test_experimental_disabled(self, arg, dest):
         with pytest.raises(exceptions.ExperimentalOptionWarning) as excinfo:
-            Syncere('./source/ ./destination/ {}'.format(arg))
+            Syncere('./source/ ./destination/ -av {} --delete'.format(arg))
         assert excinfo.value.args[0] == dest
 
     def test_missing_destination(self):
@@ -107,8 +107,8 @@ class TestTransferExecution(Utils):
     """
     def test_null_transfer(self):
         self.populate("""
-        mkdir source
-        mkdir destination
+        command mkdir source
+        command mkdir destination
         """)
         with pytest.raises(SystemExit) as excinfo:
             Syncere('./source/ ./destination/')
@@ -117,10 +117,10 @@ class TestTransferExecution(Utils):
 
     def test_default_transfer(self):
         self.populate("""
-        mkdir source
-        mkdir destination
-        cd source
-        echo "foo" > foo.txt
+        command mkdir source
+        command mkdir destination
+        command cd source
+        command echo "foo" > foo.txt
         """)
         # TODO [#2]: Don't use an experimental option here
         Syncere('./source/ ./destination/ -avv --experimental',
@@ -136,10 +136,10 @@ class TestInterface(Utils):
     """
     def test_basic_transfer(self):
         self.populate("""
-        mkdir source
-        mkdir destination
-        cd source
-        echo "foo" > foo.txt
+        command mkdir source
+        command mkdir destination
+        command cd source
+        command echo "foo" > foo.txt
         """)
         # TODO [#2]: Don't use an experimental option here
         Syncere('./source/ ./destination/ -avv --experimental')
