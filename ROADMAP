@@ -28,9 +28,10 @@ Core:
 #28: Implement more shared command-line options 
      --verbose could decide whether the non itemized-change lines should be
       printed when parsing the preview command results
-#29: Maybe there are some rsync options that can be specified multiple times,
-      but for the moment syncere accepts them only once; test what happens if
-      they're specified multiple times and properly modify cliargs.py as needed
+#29: Maybe there are some more rsync options that can be specified multiple
+      times, but for the moment syncere accepts them only once; test what
+      happens if they're specified multiple times and properly modify
+      cliargs.py as needed
 #3: Implement optimized options
      In order to avoid recalculating the checksums again, the
       transfer command could omit the --checksum argument, compile a
