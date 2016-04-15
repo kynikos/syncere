@@ -157,9 +157,6 @@ Optimized options:
     -c, --checksum
                 TODO
 
-    -y, --fuzzy
-                TODO
-
 Experimental options:
     These rsync options are disabled by default, as the effects in an
     interactive, "two-pass" rsync session are to be more thoroughly assessed.
@@ -347,7 +344,6 @@ class CLIArgs:
 
         # TODO #3
         group.add_argument('-c', '--checksum', action='store_true')
-        group.add_argument('-y', '--fuzzy', action='count')
 
     def _experimental(self):
         group = self.parser.add_argument_group('experimental')
@@ -514,6 +510,10 @@ class CLIArgs:
         group.add_argument('--include-from', action='append')
         group.add_argument('--files-from', action='append')
         group.add_argument('-T', '--temp-dir')
+
+        # TODO #36
+        group.add_argument('-y', '--fuzzy', action='count')
+
         group.add_argument('--compare-dest', action='append')
         group.add_argument('--copy-dest', action='append')
         group.add_argument('--link-dest', action='append')

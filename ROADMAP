@@ -37,9 +37,7 @@ Core:
      --files-from list instead of an --exclude-from list, and use
      --ignore-times to force updating the files whose size and
      timestamp are the same (the only difference is the checksum)
-    Should --fuzzy be treated similarly to --checksum?
-    The --checksum and --fuzzy options in the --help message still need a help
-     description
+    The --checksum option in the --help message still need a help description
     Investigate the behavior with link-related options, especially hard links,
      because excluding their copies/targets may generate synchronization issues
 #12: Preview rsync command: also capture stderr?
@@ -136,6 +134,9 @@ Core:
      https://docs.python.org/3.5/library/subprocess.html
 #27: Properly reflect rsync's ambivalent meaning of the -h option, and update
     --help's message to mention that it's supported
+#36: Is the --fuzzy option useful in the preview command? Would it slow the
+     command down for no advatage? If so, offer an option to use it only in
+     the transfer command
 #61: Ability to choose the synchronization direction per file if only one source is given (akin to Unison)
 
 Interface:
