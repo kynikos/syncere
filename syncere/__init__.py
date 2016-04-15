@@ -141,7 +141,7 @@ class Syncere:
                 else:
                     raise exceptions.UnrecognizedItemizedChangeError(line)
             else:
-                # TODO #3: Allow suppressing these lines
+                # TODO #28: Allow suppressing these lines
                 print(line)
 
     def _transfer(self):

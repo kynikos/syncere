@@ -13,13 +13,13 @@ class TestHelp(Utils):
         with pytest.raises(SystemExit) as excinfo:
             Syncere('--help')
         assert excinfo.value.code == 0
-        # TODO [#1]: Test that preview hasn't been started
+        # TODO #1: Test that preview hasn't been started
 
     def test_version(self):
         with pytest.raises(SystemExit) as excinfo:
             Syncere('--version')
         assert excinfo.value.code == 0
-        # TODO [#1]: Test that preview hasn't been started
+        # TODO #1: Test that preview hasn't been started
 
 
 class TestCliArgsErrors(Utils):
@@ -93,7 +93,7 @@ class TestPreviewErrors(Utils):
             Syncere('./source/ ./destination/')
         retcode = excinfo.value.args[0]
         assert isinstance(retcode, int) and retcode > 0
-        # TODO [#1]: Test that the interface hasn't been started
+        # TODO #1: Test that the interface hasn't been started
 
 
 @pytest.mark.usefixtures('testdir')
@@ -113,7 +113,7 @@ class TestTransferExecution(Utils):
         with pytest.raises(SystemExit) as excinfo:
             Syncere('./source/ ./destination/')
         assert excinfo.value.code == 0
-        # TODO [#1]: Test that the application has exited at the correct stage
+        # TODO #1: Test that the application has exited at the correct stage
 
     def test_default_transfer(self):
         self.populate("""
@@ -125,7 +125,7 @@ class TestTransferExecution(Utils):
         # TODO [#2]: Don't use an experimental option here
         Syncere('./source/ ./destination/ -avv --experimental',
                 test=['>*', 'S'])
-        # TODO [#1]: Test that the application has exited at the correct stage
+        # TODO #1: Test that the application has exited at the correct stage
 
 
 @pytest.mark.usefixtures('testdir')
@@ -143,4 +143,4 @@ class TestInterface(Utils):
         """)
         # TODO [#2]: Don't use an experimental option here
         Syncere('./source/ ./destination/ -avv --experimental')
-        # TODO [#1]: Test that the application has exited at the correct stage
+        # TODO #1: Test that the application has exited at the correct stage
