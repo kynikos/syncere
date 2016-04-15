@@ -10,6 +10,8 @@ Core:
      '/' in the value)
     Similarly, a --rule option could be used in the vein of the --filter,
      --exclude and --include options 
+    These options should however all respect the cascading order with each
+     other
 #6: Support all the ruleset path types and the itemized wildcards
     Use fnmatch for globbing patterns
 #7: Rules: allow wildcards in the itemized representation
@@ -23,9 +25,6 @@ Core:
     double quote is used, then the path is expected to end with '"$"
     Other supported characters/separators can be <>, all parentheses,
     or the path could be always started with '/', etc.
-#27: Properly reflect rsync's ambivalent meaning of the -h option, and update
-    --help's message to mention that it's supported
-    At least check that -h works as --human-readable
 #28: Implement more shared command-line options 
      --verbose could decide whether the non itemized-change lines should be
       printed when parsing the preview command results
@@ -135,6 +134,8 @@ Core:
 #22: Print the process' output in real time, but watch out for the
      deadlock problems!!!
      https://docs.python.org/3.5/library/subprocess.html
+#27: Properly reflect rsync's ambivalent meaning of the -h option, and update
+    --help's message to mention that it's supported
 #61: Ability to choose the synchronization direction per file if only one source is given (akin to Unison)
 
 Interface:
