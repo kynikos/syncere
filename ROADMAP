@@ -38,8 +38,6 @@ Core:
      --ignore-times to force updating the files whose size and
      timestamp are the same (the only difference is the checksum)
     The --checksum option in the --help message still need a help description
-    Investigate the behavior with link-related options, especially hard links,
-     because excluding their copies/targets may generate synchronization issues
 #12: Preview rsync command: also capture stderr?
 #13: Preview rsync command: Display a dynamic "processing..." message in a
       separate thread, using \r to refresh the line
@@ -87,8 +85,6 @@ Interface:
 
 Tests:
 #1: Test that the various application stages are reached
-#2: Use only fully-supported options to test basic functionality, don't use
-    experimental options
 #9: Check that all the raised exceptions and sys.exit calls are tested
 
 
@@ -101,9 +97,6 @@ Core:
      command-line options (this should be solved in forwarg actually)
 #41: Use a proper logging system
 #42: Test if the %B argument of --out-format shows ACLs like ls -l
-
-Tests:
-#50: Remove unneeded verify method in conftest.py.Utils?
 
 Docs:
 # Implement a man(1) page (also a separate (5) page for ruleset syntax?)

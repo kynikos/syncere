@@ -15,8 +15,6 @@ class Utils:
                               check=True)
 
     def verify(self, commands):
-        # TODO [#50]: Is this method needed? These tests shouldn't test the
-        # effectiveness of the rsync commands; that's up to the rsync devs
         # TODO: To retrieve a detailed list of the directory tree:
         #       find . -printf "%i\t%k\t%M\t%n\t%u\t%g\t%s\t%A+\t%C+\t%T+\t//\t%P\t//->\t%l\t//\n"
         assert subprocess.run(textwrap.dedent(commands), shell=True,

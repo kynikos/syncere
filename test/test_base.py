@@ -38,25 +38,7 @@ class TestCliArgsErrors(Utils):
             Syncere('./source/ ./destination/ -av {} --delete'.format(arg))
         assert excinfo.value.args[0] == dest
 
-    @pytest.mark.parametrize('arg,dest', (('-l', 'links'),
-                                          ('--links', 'links'),
-                                          ('--no-l', 'no_links'),
-                                          ('--no-links', 'no_links'),
-                                          ('-L', 'copy_links'),
-                                          ('--copy-links', 'copy_links'),
-                                          ('--copy-unsafe-links',
-                                           'copy_unsafe_links'),
-                                          ('--safe-links', 'safe_links'),
-                                          ('--munge-links', 'munge_links'),
-                                          ('-k', 'copy_dirlinks'),
-                                          ('--copy-dirlinks', 'copy_dirlinks'),
-                                          ('-K', 'keep_dirlinks'),
-                                          ('--keep-dirlinks', 'keep_dirlinks'),
-                                          ('-H', 'hard_links'),
-                                          ('--hard-links', 'hard_links'),
-                                          ('-a', 'archive'),
-                                          ('--archive', 'archive'),
-                                          ('--timeout=1', 'timeout'),
+    @pytest.mark.parametrize('arg,dest', (('--timeout=1', 'timeout'),
                                           ('--contimeout=1', 'contimeout'),
                                           ('-s', 'protect_args'),
                                           ('--protect-args', 'protect_args'),
@@ -122,10 +104,65 @@ class TestTransferExecution(Utils):
         command cd source
         command echo "foo" > foo.txt
         """)
-        # TODO [#2]: Don't use an experimental option here
-        Syncere('./source/ ./destination/ -avv --experimental',
-                test=['>*', 'S'])
+        Syncere('./source/ ./destination/ -a', test=['>*', 'S'])
         # TODO #1: Test that the application has exited at the correct stage
+
+    def test_hard_links(self):
+        """
+        This test proves that excluding one of a series of hard links breaks
+        them (known rsync behavior).
+        """
+        self.populate("""
+        command mkdir source
+        command mkdir destination
+        command cd source
+        command echo "foo" > foo.txt
+        command ln foo.txt bar.txt
+        """)
+        self.verify("""
+        command cd source
+        [ foo.txt -ef bar.txt ]
+        """)
+        Syncere('./source/ ./destination/ -a', test=['>*', 'S'])
+        # TODO #1: Test that the application has exited at the correct stage
+        self.verify("""
+        command cd destination
+        ! [ foo.txt -ef bar.txt ]
+        """)
+        Syncere('./source/ ./destination/ -aH', test=['>*', 'S'])
+        # TODO #1: Test that the application has exited at the correct stage
+        self.verify("""
+        command cd destination
+        [ foo.txt -ef bar.txt ]
+        """)
+        self.populate("""
+        command cd source
+        command echo "bar" >> foo.txt
+        """)
+        self.verify("""
+        command cd source
+        [ foo.txt -ef bar.txt ]
+        """)
+        Syncere('./source/ ./destination/ -aH', test=['>*', 'S'])
+        # TODO #1: Test that the application has exited at the correct stage
+        self.verify("""
+        command cd destination
+        [ foo.txt -ef bar.txt ]
+        """)
+        self.populate("""
+        command cd source
+        command echo "baz" >> foo.txt
+        """)
+        self.verify("""
+        command cd source
+        [ foo.txt -ef bar.txt ]
+        """)
+        Syncere('./source/ ./destination/ -aH', test=['>1', '!2', 'S'])
+        # TODO #1: Test that the application has exited at the correct stage
+        self.verify("""
+        command cd destination
+        ! [ foo.txt -ef bar.txt ]
+        """)
 
 
 @pytest.mark.usefixtures('testdir')
@@ -141,6 +178,5 @@ class TestInterface(Utils):
         command cd source
         command echo "foo" > foo.txt
         """)
-        # TODO [#2]: Don't use an experimental option here
-        Syncere('./source/ ./destination/ -avv --experimental')
+        Syncere('./source/ ./destination/ -a')
         # TODO #1: Test that the application has exited at the correct stage

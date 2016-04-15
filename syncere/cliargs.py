@@ -163,17 +163,6 @@ Experimental options:
     You can enable them by passing the --experimental flag. In a later syncere
     release, support for them will be either added or dropped definitively.
 
-    -l, --links
-    -L, --copy-links
-    --copy-unsafe-links
-    --safe-links
-    --munge-links
-    -k, --copy-dirlinks
-    -K, --keep-dirlinks
-    -H, --hard-links
-
-    -a, --archive
-
     --timeout
     --contimeout
     -s, --protect-args
@@ -196,7 +185,13 @@ Unsupported options:
 
 Fully-supported options:
     All the rsync options that are not listed above are fully supported and
-    used by both the internal "preview" and the "transfer" commands.\
+    used by both the internal "preview" and the "transfer" commands.
+
+    A special reminder must however be given for the -H/--hard-links option:
+    as also pointed out in rsync(1), if a series of hard links are
+    synchronized, they must be all included in the transfer command, otherwise
+    the linkage will be broken. Just like rsync, syncere will not try to
+    warn you if you partially exclude hard links from the synchronization.\
 """.format(Interface.CMD_TRANSFER,
            ', '.join("'" + mode + "'" for mode in
                      tuple(Interface.TRANSFER_MODES.values())[:3]),
@@ -348,37 +343,6 @@ class CLIArgs:
     def _experimental(self):
         group = self.parser.add_argument_group('experimental')
 
-        # TODO #3
-        group.add_argument('-l', '--links', action='store_true')
-
-        # TODO #3
-        group.add_argument('--no-links', '--no-l', action='store_true')
-
-        # TODO #3
-        group.add_argument('-L', '--copy-links', action='store_true')
-
-        # TODO #3
-        group.add_argument('--copy-unsafe-links', action='store_true')
-
-        # TODO #3
-        group.add_argument('--safe-links', action='store_true')
-
-        # TODO #3
-        group.add_argument('--munge-links', action='store_true')
-
-        # TODO #3
-        group.add_argument('-k', '--copy-dirlinks', action='store_true')
-
-        # TODO #3
-        group.add_argument('-K', '--keep-dirlinks', action='store_true')
-
-        # TODO #3
-        group.add_argument('-H', '--hard-links', action='store_true')
-
-
-        # TODO #3: --archive inherits the problems of 'l', if any
-        group.add_argument('-a', '--archive', action='store_true')
-
 
         # TODO #3
         group.add_argument('--timeout')
@@ -432,6 +396,7 @@ class CLIArgs:
         group.add_argument('-I', '--ignore-times', action='store_true')
         group.add_argument('--size-only', action='store_true')
         group.add_argument('--modify-window')
+        group.add_argument('-a', '--archive', action='store_true')
         group.add_argument('-r', '--recursive', action='store_true')
         group.add_argument('--no-recursive', '--no-r', action='store_true')
         group.add_argument('--no-inc-recursive', '--no-i-r',
@@ -453,6 +418,15 @@ class CLIArgs:
         group.add_argument('--append-verify', action='store_true')
         group.add_argument('-d', '--dirs', action='store_true')
         group.add_argument('--no-dirs', '--no-d', action='store_true')
+        group.add_argument('-l', '--links', action='store_true')
+        group.add_argument('--no-links', '--no-l', action='store_true')
+        group.add_argument('-L', '--copy-links', action='store_true')
+        group.add_argument('--copy-unsafe-links', action='store_true')
+        group.add_argument('--safe-links', action='store_true')
+        group.add_argument('--munge-links', action='store_true')
+        group.add_argument('-k', '--copy-dirlinks', action='store_true')
+        group.add_argument('-K', '--keep-dirlinks', action='store_true')
+        group.add_argument('-H', '--hard-links', action='store_true')
         group.add_argument('-p', '--perms', action='store_true')
         group.add_argument('--no-perms', '--no-p', action='store_true')
         group.add_argument('-E', '--executability', action='store_true')
