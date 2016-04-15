@@ -31,13 +31,14 @@ Core:
 #29: Maybe there are some rsync options that can be specified multiple times,
       but for the moment syncere accepts them only once; test what happens if
       they're specified multiple times and properly modify cliargs.py as needed
-#3: Implement more experimental and optimized options
-    In order to avoid recalculating the checksums again, the
-     transfer command could omit the --checksum argument, compile a
-     --files-from list instead of an --exclude-from list, and use
-     --ignore-times to force updating the files whose size and
-     timestamp are the same (the only difference is the checksum)
-    The --checksum option in the --help message still need a help description
+#3: Implement optimized options
+     In order to avoid recalculating the checksums again, the
+      transfer command could omit the --checksum argument, compile a
+      --files-from list instead of an --exclude-from list, and use
+      --ignore-times to force updating the files whose size and
+      timestamp are the same (the only difference is the checksum)
+     The --checksum option in the --help message still needs a help description
+#37: Implement experimental options
 #12: Preview rsync command: also capture stderr?
 #13: Preview rsync command: Display a dynamic "processing..." message in a
       separate thread, using \r to refresh the line
