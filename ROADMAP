@@ -139,9 +139,10 @@ Core:
 #21: Allow optionally bypassing the interface if there are no
      undecided pending changes left after applying the rules (i.e.
      sync without confirmation)
-#22: Print the process' output in real time, but watch out for the
-     deadlock problems!!!
+#22: Print the rsync preview process' output in real time, but watch out for
+     the deadlock problems!!!
      https://docs.python.org/3.5/library/subprocess.html
+     Is rsync's --outbuf option helpful?
 #27: Properly reflect rsync's ambivalent meaning of the -h option, and update
     --help's message to mention that it's supported
 #36: Is the --fuzzy option useful in the preview command? Would it slow the
