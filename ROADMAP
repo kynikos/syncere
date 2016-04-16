@@ -155,6 +155,8 @@ Core:
 #47: Allow removing the --log-file option in the preview rsync command
 #62: Reconsider enabling the -M/--remote-option flag as experimental or
      transfer-only
+#63: See if the --timeout and --contimeout options can be enabled also for the
+     preview command
 
 Interface:
 #30: In some interactive commands it should be possible to use filters, e.g.

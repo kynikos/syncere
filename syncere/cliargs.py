@@ -149,6 +149,8 @@ Transfer-only options:
 
     --msgs2stderr
     -q, --quiet
+    --timeout
+    --contimeout
 
 Optimized options:
     syncere will offer to optimize the usage of these rsync options when
@@ -163,11 +165,9 @@ Experimental options:
     You can enable them by passing the --experimental flag. In a later syncere
     release, support for them will be either added or dropped definitively.
 
-    --timeout
-    --contimeout
+    -0, --from0
     --outbuf
     -8, --8-bit-output
-    -0, --from0
 
 Unsupported options:
     These rsync options are not supported by syncere.
@@ -329,6 +329,8 @@ class CLIArgs:
 
         group.add_argument('--msgs2stderr', action='store_true')
         group.add_argument('-q', '--quiet', action='store_true')
+        group.add_argument('--timeout')
+        group.add_argument('--contimeout')
 
     def _optimized(self):
         group = self.parser.add_argument_group('optimized')
@@ -339,21 +341,15 @@ class CLIArgs:
     def _experimental(self):
         group = self.parser.add_argument_group('experimental')
 
-        # TODO #37
-        group.add_argument('--timeout')
-
-        # TODO #37
-        group.add_argument('--contimeout')
+        # TODO #37: This can create problems if the generated files use
+        #           different  delimiters
+        group.add_argument('-0', '--from0', action='store_true')
 
         # TODO #37
         group.add_argument('--outbuf')
 
         # TODO #37
         group.add_argument('-8', '--8-bit-output', action='store_true')
-
-        # TODO #37: This can create problems if the generated files use
-        #           different  delimiters
-        group.add_argument('-0', '--from0', action='store_true')
 
     def _unsupported(self):
         group = self.parser.add_argument_group('unsupported')

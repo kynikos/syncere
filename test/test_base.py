@@ -39,13 +39,11 @@ class TestCliArgsErrors(Utils):
             Syncere('./source/ ./destination/ -av {} --delete'.format(arg))
         assert excinfo.value.args[0] == dest
 
-    @pytest.mark.parametrize('arg,dest', (('--timeout=1', 'timeout'),
-                                          ('--contimeout=1', 'contimeout'),
+    @pytest.mark.parametrize('arg,dest', (('-0', 'from0'),
+                                          ('--from0', 'from0'),
                                           ('--outbuf=1', 'outbuf'),
                                           ('-8', '_8_bit_output'),
-                                          ('--8-bit-output', '_8_bit_output'),
-                                          ('-0', 'from0'),
-                                          ('--from0', 'from0')))
+                                          ('--8-bit-output', '_8_bit_output')))
     def test_experimental_disabled(self, arg, dest):
         with pytest.raises(exceptions.ExperimentalOptionWarning) as excinfo:
             Syncere('./source/ ./destination/ -av {} --delete'.format(arg))
