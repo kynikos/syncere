@@ -100,6 +100,7 @@ Interface:
 
 Tests:
 #1: Test that the various application stages are reached
+    Store more attributes and test them against expected values
 #9: Check that all the raised exceptions and sys.exit calls are tested
 #45: The TestRsyncOptions test could be skipped, since it doesn't depend on the
      development of syncere
