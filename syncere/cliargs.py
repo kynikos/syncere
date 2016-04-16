@@ -167,8 +167,6 @@ Experimental options:
     --contimeout
     --outbuf
     -8, --8-bit-output
-    --log-file
-    --log-file-format
     -0, --from0
 
 Unsupported options:
@@ -353,13 +351,6 @@ class CLIArgs:
         # TODO #37
         group.add_argument('-8', '--8-bit-output', action='store_true')
 
-        # TODO #37
-        group.add_argument('--log-file')
-
-        # TODO #37: Can this accept an empty string as a value? forwarg
-        #           wouldn't support that for the moment
-        group.add_argument('--log-file-format')
-
         # TODO #37: This can create problems if the generated files use
         #           different  delimiters
         group.add_argument('-0', '--from0', action='store_true')
@@ -506,6 +497,11 @@ class CLIArgs:
 
         group.add_argument('--blocking-io', action='store_true')
         group.add_argument('--no-blocking-io', action='store_true')
+        group.add_argument('--log-file')
+
+        # TODO #46
+        group.add_argument('--log-file-format')
+
         group.add_argument('-h', '--human-readable', action='count')
         group.add_argument('--no-human-readable', '--no-h',
                            action='store_true')

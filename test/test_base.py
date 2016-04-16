@@ -44,9 +44,6 @@ class TestCliArgsErrors(Utils):
                                           ('--outbuf=1', 'outbuf'),
                                           ('-8', '_8_bit_output'),
                                           ('--8-bit-output', '_8_bit_output'),
-                                          ('--log-file=1', 'log_file'),
-                                          ('--log-file-format=1',
-                                           'log_file_format'),
                                           ('-0', 'from0'),
                                           ('--from0', 'from0')))
     def test_experimental_disabled(self, arg, dest):
@@ -160,6 +157,29 @@ class TestRsyncOptions(Utils):
         self.verify("""
         command cd destination
         ! [ foo.txt -ef bar.txt ]
+        """)
+
+    def test_log_file(self):
+        """
+        This test proves that writing a log file doesn't affect rsync's output
+        on which syncere relies for providing the preview.
+        """
+        self.populate("""
+        command mkdir source
+        command mkdir destination
+        command cd source
+        command echo "foo" > foo.txt
+        command echo "bar" > bar.txt
+        """)
+        Syncere('./source/ ./destination/ -a --log-file ./log '
+                '--log-file-format="%C"', test=['>*', 'S'])
+        self.verify("""
+        command cd destination
+        [ -f foo.txt ]
+        """)
+        self.verify("""
+        command cd destination
+        [ -f bar.txt ]
         """)
 
 

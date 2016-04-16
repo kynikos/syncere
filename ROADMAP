@@ -149,6 +149,9 @@ Core:
      the transfer command
 #61: Ability to choose the synchronization direction per file if only one
      source is given (akin to Unison)
+#46: Can --log-file-format accept an empty string as a value? forwarg
+     wouldn't support that for the moment
+#47: Allow removing the --log-file option in the preview rsync command
 #62: Reconsider enabling the -M/--remote-option flag as experimental or
      transfer-only
 
