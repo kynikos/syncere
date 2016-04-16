@@ -102,6 +102,13 @@ class TestTransferExecution(Utils):
         Syncere('./source/ ./destination/ -a', test=['>*', 'S'])
         # TODO #1: Test that the application has exited at the correct stage
 
+
+# TODO #45
+@pytest.mark.usefixtures('testdir')
+class TestRsyncOptions(Utils):
+    """
+    Test specific rsync options whose effect on syncere is not so obvious.
+    """
     def test_hard_links(self):
         """
         This test proves that excluding one of a series of hard links breaks
@@ -119,13 +126,11 @@ class TestTransferExecution(Utils):
         [ foo.txt -ef bar.txt ]
         """)
         Syncere('./source/ ./destination/ -a', test=['>*', 'S'])
-        # TODO #1: Test that the application has exited at the correct stage
         self.verify("""
         command cd destination
         ! [ foo.txt -ef bar.txt ]
         """)
         Syncere('./source/ ./destination/ -aH', test=['>*', 'S'])
-        # TODO #1: Test that the application has exited at the correct stage
         self.verify("""
         command cd destination
         [ foo.txt -ef bar.txt ]
@@ -139,7 +144,6 @@ class TestTransferExecution(Utils):
         [ foo.txt -ef bar.txt ]
         """)
         Syncere('./source/ ./destination/ -aH', test=['>*', 'S'])
-        # TODO #1: Test that the application has exited at the correct stage
         self.verify("""
         command cd destination
         [ foo.txt -ef bar.txt ]
@@ -153,7 +157,6 @@ class TestTransferExecution(Utils):
         [ foo.txt -ef bar.txt ]
         """)
         Syncere('./source/ ./destination/ -aH', test=['>1', '!2', 'S'])
-        # TODO #1: Test that the application has exited at the correct stage
         self.verify("""
         command cd destination
         ! [ foo.txt -ef bar.txt ]
