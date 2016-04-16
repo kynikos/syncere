@@ -177,7 +177,7 @@ Unsupported options:
     --daemon
     --config
     -M, --dparam
-    -M', --remote-option
+    -M, --remote-option
     --list-only
     --no-detach
 
