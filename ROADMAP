@@ -75,6 +75,16 @@ Interface:
      executed; same goes for 'h'
      Also the commands that accept filters shouldn't execute at all if part of
      a filter is wrong; currently, something like '>5,a,6' does select 5 and 6
+#38: Allow testing the transfer command with the --dry-run option
+#39: Instead of using a --show-identical option, make that feature accessible
+     as a filter of list commands, see also #30
+#43: Instead of a --default-mode option, use a --configuration option (or just
+      override rsync's unsupported --config option) to pass a list of
+      configuration options
+     Similarly, implement a --configuration-from option (or --config-from)
+     Maybe also implement interactive configuration commands, and use the
+      --configuration option to pass some of these commands, separated by
+      commas
 
 
 v0.2.0
@@ -134,6 +144,8 @@ Core:
      the transfer command
 #61: Ability to choose the synchronization direction per file if only one
      source is given (akin to Unison)
+#62: Reconsider enabling the -M/--remote-option flag as experimental or
+     transfer-only
 
 Interface:
 #30: In some interactive commands it should be possible to use filters, e.g.
@@ -143,7 +155,8 @@ Interface:
      Maybe a directory tree should be created during the
       initial parse of the --itemize-changes output
      It would be nice to also recognize ranges that end with '-', e.g. "3-"
-     could mean "select from 3 to the end"
+      could mean "select from 3 to the end"
+     See also #39
 #31: When applying an interactive action on a directory, it should be possible
      to apply the change recursively to its descendants
      See also the related TODO comments in interface.py
