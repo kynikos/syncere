@@ -40,11 +40,6 @@ class TestCliArgsErrors(Utils):
 
     @pytest.mark.parametrize('arg,dest', (('--timeout=1', 'timeout'),
                                           ('--contimeout=1', 'contimeout'),
-                                          ('-s', 'protect_args'),
-                                          ('--protect-args', 'protect_args'),
-                                          ('--no-s', 'no_protect_args'),
-                                          ('--no-protect-args',
-                                           'no_protect_args'),
                                           ('--outbuf=1', 'outbuf'),
                                           ('-8', '_8_bit_output'),
                                           ('--8-bit-output', '_8_bit_output'),

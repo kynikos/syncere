@@ -165,7 +165,6 @@ Experimental options:
 
     --timeout
     --contimeout
-    -s, --protect-args
     --outbuf
     -8, --8-bit-output
     --log-file
@@ -349,12 +348,6 @@ class CLIArgs:
         group.add_argument('--contimeout')
 
         # TODO #37
-        group.add_argument('-s', '--protect-args', action='store_true')
-
-        # TODO #37
-        group.add_argument('--no-protect-args', '--no-s', action='store_true')
-
-        # TODO #37
         group.add_argument('--outbuf')
 
         # TODO #37
@@ -481,6 +474,8 @@ class CLIArgs:
         group.add_argument('--include-from', action='append')
         group.add_argument('--files-from', action='append')
         group.add_argument('-T', '--temp-dir')
+        group.add_argument('-s', '--protect-args', action='store_true')
+        group.add_argument('--no-protect-args', '--no-s', action='store_true')
 
         # TODO #36
         group.add_argument('-y', '--fuzzy', action='count')
