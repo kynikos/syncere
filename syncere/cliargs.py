@@ -169,7 +169,6 @@ Experimental options:
     -8, --8-bit-output
     --log-file
     --log-file-format
-    --list-only
     -0, --from0
 
 Unsupported options:
@@ -179,6 +178,7 @@ Unsupported options:
     --config
     -M, --dparam
     -M', --remote-option
+    --list-only
     --no-detach
 
 Fully-supported options:
@@ -360,9 +360,6 @@ class CLIArgs:
         #           wouldn't support that for the moment
         group.add_argument('--log-file-format')
 
-        # TODO #37
-        group.add_argument('--list-only', action='store_true')
-
         # TODO #37: This can create problems if the generated files use
         #           different  delimiters
         group.add_argument('-0', '--from0', action='store_true')
@@ -374,6 +371,7 @@ class CLIArgs:
         group.add_argument('--config', action=ActionUnsupported)
         group.add_argument('-M', '--remote-option', '--dparam',
                            action=ActionUnsupported)
+        group.add_argument('--list-only', action=ActionUnsupported)
         group.add_argument('--no-detach', action=ActionUnsupported)
 
     def _safe(self):

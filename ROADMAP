@@ -76,6 +76,9 @@ Interface:
      Also the commands that accept filters shouldn't execute at all if part of
      a filter is wrong; currently, something like '>5,a,6' does select 5 and 6
 #38: Allow testing the transfer command with the --dry-run option
+#44: Allow displaying the output of the preview command with the --list-only
+     option (and mention this in the --help message, because --list-only is in
+     the unsupported group)
 #39: Instead of using a --show-identical option, make that feature accessible
      as a filter of list commands, see also #30
 #43: Instead of a --default-mode option, use a --configuration option (or just

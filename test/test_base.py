@@ -30,6 +30,7 @@ class TestCliArgsErrors(Utils):
     @pytest.mark.parametrize('arg,dest', (('--daemon', 'daemon'),
                                           ('--config', 'config'),
                                           ('-M', 'remote_option'),
+                                          ('--list-only', 'list_only'),
                                           ('--dparam', 'remote_option'),
                                           ('--remote-option', 'remote_option'),
                                           ('--no-detach', 'no_detach')))
@@ -46,7 +47,6 @@ class TestCliArgsErrors(Utils):
                                           ('--log-file=1', 'log_file'),
                                           ('--log-file-format=1',
                                            'log_file_format'),
-                                          ('--list-only', 'list_only'),
                                           ('-0', 'from0'),
                                           ('--from0', 'from0')))
     def test_experimental_disabled(self, arg, dest):
