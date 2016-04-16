@@ -168,15 +168,15 @@ Experimental options:
     -0, --from0
     --outbuf
     -8, --8-bit-output
+    -M, --remote-option
 
 Unsupported options:
     These rsync options are not supported by syncere.
 
+    --list-only
     --daemon
     --config
-    -M, --dparam
-    -M, --remote-option
-    --list-only
+    --dparam
     --no-detach
 
 Fully-supported options:
@@ -351,14 +351,20 @@ class CLIArgs:
         # TODO #37
         group.add_argument('-8', '--8-bit-output', action='store_true')
 
+        # TODO #37: This option could be used to pass unsupported commands, but
+        #           let people decide for themselves, i.e. don't just put it
+        #           into the unsupported group, as syncere will probably work
+        #           in most cases
+        group.add_argument('-M', '--remote-option', action='append')
+
     def _unsupported(self):
         group = self.parser.add_argument_group('unsupported')
 
+        group.add_argument('--list-only', action=ActionUnsupported)
         group.add_argument('--daemon', action=ActionUnsupported)
         group.add_argument('--config', action=ActionUnsupported)
-        group.add_argument('-M', '--remote-option', '--dparam',
-                           action=ActionUnsupported)
-        group.add_argument('--list-only', action=ActionUnsupported)
+        # Note that -M is used for --remote-option
+        group.add_argument('--dparam', action=ActionUnsupported)
         group.add_argument('--no-detach', action=ActionUnsupported)
 
     def _safe(self):

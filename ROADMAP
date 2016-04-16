@@ -153,8 +153,6 @@ Core:
 #46: Can --log-file-format accept an empty string as a value? forwarg
      wouldn't support that for the moment
 #47: Allow removing the --log-file option in the preview rsync command
-#62: Reconsider enabling the -M/--remote-option flag as experimental or
-     transfer-only
 #63: See if the --timeout and --contimeout options can be enabled also for the
      preview command
 

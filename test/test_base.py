@@ -27,12 +27,10 @@ class TestCliArgsErrors(Utils):
     Test the errors in the command line itself that lead to the program
     exiting before anything can be done.
     """
-    @pytest.mark.parametrize('arg,dest', (('--daemon', 'daemon'),
+    @pytest.mark.parametrize('arg,dest', (('--list-only', 'list_only'),
+                                          ('--daemon', 'daemon'),
                                           ('--config', 'config'),
-                                          ('-M', 'remote_option'),
-                                          ('--list-only', 'list_only'),
-                                          ('--dparam', 'remote_option'),
-                                          ('--remote-option', 'remote_option'),
+                                          ('--dparam', 'dparam'),
                                           ('--no-detach', 'no_detach')))
     def test_unsupported(self, arg, dest):
         with pytest.raises(exceptions.UnsupportedOptionError) as excinfo:
@@ -43,7 +41,10 @@ class TestCliArgsErrors(Utils):
                                           ('--from0', 'from0'),
                                           ('--outbuf=1', 'outbuf'),
                                           ('-8', '_8_bit_output'),
-                                          ('--8-bit-output', '_8_bit_output')))
+                                          ('--8-bit-output', '_8_bit_output'),
+                                          ('-M=1', 'remote_option'),
+                                          ('--remote-option=1',
+                                           'remote_option')))
     def test_experimental_disabled(self, arg, dest):
         with pytest.raises(exceptions.ExperimentalOptionWarning) as excinfo:
             Syncere('./source/ ./destination/ -av {} --delete'.format(arg))
