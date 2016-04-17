@@ -1,6 +1,13 @@
 v0.1.0
 
 Core:
+#3: Implement optimized options
+     In order to avoid recalculating the checksums again, the
+      transfer command could omit the --checksum argument, compile a
+      --files-from list instead of an --exclude-from list, and use
+      --ignore-times to force updating the files whose size and
+      timestamp are the same (the only difference is the checksum)
+     The --checksum option in the --help message still needs a help description
 #5: The --ruleset option must work with set names in specific configuration
      directories, e.g. ~/.config/syncere/ ; currently instead it accepts a path
      to a file
@@ -25,26 +32,7 @@ Core:
     double quote is used, then the path is expected to end with '"$"
     Other supported characters/separators can be <>, all parentheses,
     or the path could be always started with '/', etc.
-#28: Implement more shared command-line options 
-     --verbose could decide whether the non itemized-change lines should be
-      printed when parsing the preview command results
-#29: Maybe there are some more rsync options that can be specified multiple
-      times, but for the moment syncere accepts them only once; test what
-      happens if they're specified multiple times and properly modify
-      cliargs.py as needed
-#3: Implement optimized options
-     In order to avoid recalculating the checksums again, the
-      transfer command could omit the --checksum argument, compile a
-      --files-from list instead of an --exclude-from list, and use
-      --ignore-times to force updating the files whose size and
-      timestamp are the same (the only difference is the checksum)
-     The --checksum option in the --help message still needs a help description
-#37: Implement experimental options
-#12: Preview rsync command: also capture stderr?
-#13: Preview rsync command: Display a dynamic "processing..." message in a
-      separate thread, using \r to refresh the line
-     What is the maximum size of the data that stdout
-      can host?
+#13: What is the maximum size of the data that stdout can host?
 #14: Check that terminating syncere with Ctrl+c (and other common ways?) also
      terminates the rsync commands
 #15: Preview rsync command: use sys.exit(call.returncode) instead of raising
@@ -65,6 +53,10 @@ Core:
 #24: Disable the transfer modes that use --exclude or --include options when
      the number of paths to be filtered is greater than a certain number
      Make this compatible with the --default-mode 'S' command
+#26: The default mode, unless changed with --default-mode, shoul be an "auto"
+      mode, choosing the best transfer mode based on the number of included or
+      excluded changes in the list
+     The command could be 'Sa' or 'S*'
 
 Interface:
 #4: In the 'h' (help) screen document that some interactive options take
@@ -91,6 +83,18 @@ Interface:
 
 
 v0.2.0
+
+Core:
+#12: Preview rsync command: Display a dynamic "processing..." message in a
+      separate thread, using \r to refresh the line
+#28: Implement more shared command-line options 
+     --verbose could decide whether the non itemized-change lines should be
+      printed when parsing the preview command results
+#29: Maybe there are some more rsync options that can be specified multiple
+      times, but for the moment syncere accepts them only once; test what
+      happens if they're specified multiple times and properly modify
+      cliargs.py as needed
+#37: Implement experimental options
 
 Interface:
 #10: Paginate the change preview lists in the interface; allow setting the
@@ -123,6 +127,9 @@ Docs:
   Note that syncere(1) is referred from the --help message
   Move most info from the --help message, keeping only very brief reminders
    there
+  http://pandoc.org/
+  https://github.com/rtomayko/ronn
+  https://github.com/sunaku/md2man
 # Suggest that it's possible to transfer the new data into an empty folder,
   and then process it separately (--compare-dest argument)
   Create a small utility that shows a diff for the files?

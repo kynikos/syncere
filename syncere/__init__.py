@@ -67,7 +67,7 @@ class Syncere:
             raise exceptions.MissingDestinationError()
 
     def _preview(self):
-        # TODO #12 #14
+        # TODO #14
         call = _m_subprocess.Popen(['rsync', *self.previewargs, '--dry-run',
                                     '--info',
                                     'backup4,copy4,del4,flist4,misc4,'
@@ -90,7 +90,7 @@ class Syncere:
 
         # Popen.communicate already waits for the process to terminate, there's
         # no need to call wait
-        # TODO #13 #22
+        # TODO #12 #13 #22
         self.stdout = call.communicate()[0]
 
         if call.returncode != 0:
