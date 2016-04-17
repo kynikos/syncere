@@ -113,12 +113,16 @@ Core:
      In InvalidRuleError also show the line number in the ruleset file
      Also check the sys.exit calls, and print a Usage line in case of bad
      command-line options (this should be solved in forwarg actually)
-#41: Use a proper logging system
+#41: Use a proper logging system (both on stdout and file)
+     Maybe share the --log-file option with rsync and append to the same file
+     See also #46 and #47
 #42: Test if the %B argument of --out-format shows ACLs like ls -l
 
 Docs:
 # Implement a man(1) page (also a separate (5) page for ruleset syntax?)
   Note that syncere(1) is referred from the --help message
+  Move most info from the --help message, keeping only very brief reminders
+   there
 # Suggest that it's possible to transfer the new data into an empty folder,
   and then process it separately (--compare-dest argument)
   Create a small utility that shows a diff for the files?
@@ -154,6 +158,7 @@ Core:
 #46: Can --log-file-format accept an empty string as a value? forwarg
      wouldn't support that for the moment
 #47: Allow removing the --log-file option in the preview rsync command
+     See also #41
 #63: See if the --timeout and --contimeout options can be enabled also for the
      preview command
 
