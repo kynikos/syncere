@@ -212,7 +212,11 @@ class ActionVersion(_m_forwarg.Action):
         from . import Syncere
 
         print("""\
-syncere {0} {1}
+  ___ _   _ _ __   ___ ___ _ __ ___
+ / __| | | | '_ \ / __/ _ \ '__/ _ \     version {0} ({1})
+ \__ \ |_| | | | | (_|  __/ | |  __/
+ |___/\__, |_| |_|\___\___|_|  \___|     http://www.syncere.org/
+      |___/
 
 Copyright (C) 2016 Dario Giovannetti <dev@dariogiovannetti.net>
 This program comes with ABSOLUTELY NO WARRANTY.

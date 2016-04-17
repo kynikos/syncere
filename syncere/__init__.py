@@ -32,7 +32,7 @@ class Syncere:
     commands.
     """
     VERSION_NUMBER = '0.1.0'
-    VERSION_DATE = '(2016-04-06)'
+    VERSION_DATE = '2016-04-17'
 
     def __init__(self, cliargs=None, test=False):
         self.cliargs = CLIArgs().parse(cliargs)
