@@ -30,13 +30,13 @@ class ExperimentalOptionWarning(SyncereError):
 
 
 class DependencyError(SyncereError):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.msg = """\
-syncere depends on the external 'forwarg' and 'typein' modules: if you are \
-trying to run syncere simply after cloning its repository, please also clone \
-'lib.py.forwarg' and 'lib.py.typein' in a folder as siblings (not children) \
-of the folder where syncere was cloned:
+    def __init__(self):
+        super().__init__("""
+
+README: syncere depends on the external 'forwarg' and 'typein' modules: if you
+are trying to run syncere simply after cloning its repository, please also
+clone 'lib.py.forwarg' and 'lib.py.typein' in a folder as siblings (not
+children) of the folder where syncere was cloned:
 
   $ git clone https://github.com/kynikos/syncere.git
   $ cd syncere
