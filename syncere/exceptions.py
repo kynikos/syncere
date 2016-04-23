@@ -29,6 +29,32 @@ class ExperimentalOptionWarning(SyncereError):
     pass
 
 
+class DependencyError(SyncereError):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.msg = """\
+syncere depends on the external 'forwarg' and 'typein' modules: if you are \
+trying to run syncere simply after cloning its repository, please also clone \
+'lib.py.forwarg' and 'lib.py.typein' in a folder as siblings (not children) \
+of the folder where syncere was cloned:
+
+  $ git clone https://github.com/kynikos/syncere.git
+  $ cd syncere
+  $ python -m syncere --help
+
+  Here you see this very error, now do:
+
+  $ cd ..
+  $ git clone https://github.com/kynikos/lib.py.forwarg.git
+  $ git clone https://github.com/kynikos/lib.py.typein.git
+  $ cd syncere
+  $ python -m syncere --help
+
+  This should make syncere run.
+
+"""
+
+
 class InsufficientTestCommands(SyncereError):
     pass
 

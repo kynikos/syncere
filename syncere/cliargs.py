@@ -19,35 +19,15 @@
 import sys as _m_sys
 import shlex as _m_shlex
 
+from .exceptions import UnsupportedOptionError, DependencyError
+
 try:
     import forwarg as _m_forwarg
 except ImportError:
     try:
         from . import forwarg as _m_forwarg
     except ImportError as excinfo:
-        excinfo.msg = """\
-syncere depends on the external 'forwarg' module: if you are trying to run \
-syncere simply after cloning its repository, please also clone \
-'lib.py.forwarg' in a folder as a sibling (not child) of the folder where \
-syncere was cloned:
-
-  $ git clone https://github.com/kynikos/syncere.git
-  $ cd syncere
-  $ python -m syncere --help
-
-  Here you see this very error, now do:
-
-  $ cd ..
-  $ git clone https://github.com/kynikos/lib.py.forwarg.git
-  $ cd syncere
-  $ python -m syncere --help
-
-  This should make syncere run.
-
-"""
-        raise
-
-from .exceptions import UnsupportedOptionError
+        raise DependencyError()
 
 
 class ActionHelp(_m_forwarg.Action):
