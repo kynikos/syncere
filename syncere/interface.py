@@ -19,9 +19,15 @@
 import sys as _m_sys
 from collections import OrderedDict
 
-from . import cmenu
-
 from . import exceptions
+
+try:
+    import typein as _m_typein
+except ImportError:
+    try:
+        from . import typein as _m_typein
+    except ImportError as excinfo:
+        raise exceptions.DependencyError()
 
 
 class Configuration:

@@ -11,8 +11,10 @@ url="https://github.com/${_authname}/${_projname}"
 license=('GPL3')
 depends=('python')
 source=("git://github.com/${_authname}/${_projname}.git"
-        "git://github.com/${_authname}/lib.py.forwarg.git")
+        "git://github.com/${_authname}/lib.py.forwarg.git"
+        "git://github.com/${_authname}/lib.py.typein.git")
 md5sums=('SKIP'
+         'SKIP'
          'SKIP')
 
 pkgver() {
