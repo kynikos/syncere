@@ -51,12 +51,7 @@ children) of the folder where syncere was cloned:
   $ python -m syncere --help
 
   This should make syncere run.
-
-"""
-
-
-class InsufficientTestCommands(SyncereError):
-    pass
+""")
 
 
 class InvalidRuleError(SyncereError):

@@ -21,7 +21,7 @@ import subprocess as _m_subprocess
 import re as _m_re
 
 from .cliargs import CLIArgs
-from .interface import MainMenu
+from .interface import Interface
 from . import exceptions
 
 
@@ -48,8 +48,8 @@ class Syncere:
         self._preview()
         self._parse_pending_changes()
         if self.pending_changes:
-            interface = MainMenu(self.pending_changes)
-            interface.start_loop(self.cliargs, commands, test)
+            interface = Interface(self.pending_changes)
+            interface.start(self.cliargs, commands, test)
             self._transfer(interface.transfer_mode)
         else:
             print("Nothing to do")

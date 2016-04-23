@@ -18,145 +18,72 @@
 
 import sys as _m_sys
 from collections import OrderedDict
+from inspect import getdoc as DOC
 
 from . import exceptions
 
 try:
-    import typein as _m_typein
+    import cmenu as _m_cmenu
 except ImportError:
     try:
-        from . import typein as _m_typein
+        from . import cmenu as _m_cmenu
     except ImportError as excinfo:
         raise exceptions.DependencyError()
 
 
 class Configuration:
-    # There's no point in making separate aliases for submenus like ConfigMenu
-    # *Warning:* if some built-in commands are overridden here, no warning is
-    #            issued, unlike when setting new aliases interactively!
-    # End the commands with a space next to the aliases that should allow
-    # the arguments to start without a separating space
-    aliases = {
-        '>': 'include ',
-        '!': 'exclude ',
-        '?': 'reset ',
-        'q': 'quit ',
-    }
+    # TODO ***************************************************************************
+    pass
 
 
-class _Menu(_m_cmd.Cmd):
-    empty = "Type 'help' to list available commands"
-
-    def emptyline(self):
-        # Override this method, otherwise the last non-empty command entered
-        # is repeated by default
-        print(self.empty)
-
-    def error(self, line):
-        # This method in practice does the job that normally 'default' does in
-        # cmd.Cmd, but 'default' is used to find aliases in this case
-        # There's no point in rewriting the command in the error message, the
-        # bad command is just above next to the prompt
-        print("Unrecognized command")
-        self.emptyline()
-
-    def do_help(self, args):
-        """
-        Show this help screen.
-
-        Type 'help <command>' for more information on a specific command.
-        Tab completion is always available in the menus.
-        """
-        if args:
-            super().do_help(args)
-        else:
-            print("""
-Type 'help <command>' for more information. Tab completion is available.
-""")
-
-            table = OrderedDict()
-            for attr in dir(self):
-                if attr[:3] == 'do_':
-                    table[attr[3:]] = _m_inspect.getdoc(getattr(self, attr)
-                                                        ).split('\n', 1)[0]
-            width = max(len(command) for command in table)
-            for command in table:
-                print('        {}    {}'.format(command.ljust(width),
-                                                table[command]))
-
-            try:
-                print(self.doc_notes)
-            except AttributeError:
-                print()
-
-
-class MainMenu(_Menu):
-    intro = _Menu.empty + '\n'
-    prompt = '(syncere) '
-
+class Interface:
     def __init__(self, pending_changes):
         # TODO #4 #25 #30 #31 #33 #34 #35 #56
-        super().__init__()
         self.pending_changes = pending_changes
-        self.configuration = Configuration()
-        self.configmenu = ConfigMenu()
+        self.mainmenu = MainMenu(pending_changes).menu
 
-    def start_loop(self, cliargs, commands, test):
+    def start(self, cliargs, commands, test):
+        self.mainmenu.run_line('list')
+        print("Type 'help' to list available commands\n")
+
         commands = commands or cliargs.namespace.commands
-        self.onecmd('list')
-        for command in commands:
-            # TODO #60
-            print(self.prompt, command, sep='')
-            if self.onecmd(command) is True:
-                return True
         if test:
-            # If testing, the last command should be 'transfer' or 'quit'
-            raise exceptions.InsufficientTestCommands()
-        self.cmdloop()
-
-    def default(self, line):
-        L = max(len(alias) for alias in self.configuration.aliases)
-        while L > 0:
-            try:
-                alias = line[:L]
-            except IndexError:
-                L -= 1
-                continue
-            try:
-                command = self.configuration.aliases[alias]
-            except KeyError:
-                L -= 1
-                continue
-            self.onecmd(command + line[L:])
-            break
+            # TODO #60 (move to typein.cmenu)
+            # This can raise _m_cmenu.InsufficientTestCommands: if testing, the
+            # last command should be 'transfer' or 'quit'
+            self.mainmenu.loop_test(commands)
         else:
-            self.error(line)
+            self.mainmenu.loop_lines(commands)
+            self.mainmenu.loop_input()
 
-    def precmd(self, line):
-        # Aliases must be handled in self.default, otherwise if they are a
-        # substring of a built-in command, they will always override it, using
-        # the rest of the string as an argument; for example, if 'q' is an
-        # alias for 'quit', issuing 'quit' would be translated to 'quituit'
-        # Nonetheless, handle '?' here because otherwise it's translated to
-        # 'help' by cmd.Cmd by default; if self.do_shell was defined, also '!'
-        # should be handled here
-        try:
-            qm = line[0]
-        except IndexError:
-            # Empty line
-            pass
-        else:
-            if qm == '?':
-                try:
-                    command = self.configuration.aliases['?']
-                except KeyError:
-                    pass
-                else:
-                    line = command + line[1:]
-        return line
 
-    def _select_changes(self, rawsel):
-        rawsel = rawsel.strip()
+class MainMenu:
+    def __init__(self, pending_changes):
+        """
+        Type 'help <command>' for more information. Tab completion is
+        available.
+        """
+        self.pending_changes = pending_changes
+
+        self.menu = _m_cmenu.RootMenu('syncere', DOC(self.__init__))
+        _m_cmenu.Action(self.menu, 'import', self.import_, DOC(self.import_))
+        _m_cmenu.Action(self.menu, 'list', self.list_, DOC(self.list_))
+        _m_cmenu.Action(self.menu, 'details', self.details, DOC(self.details))
+        ConfigMenu(self.menu, 'config')
+        _m_cmenu.Action(self.menu, 'include', self.include, DOC(self.include))
+        _m_cmenu.Alias(self.menu, '>', 'include')
+        _m_cmenu.Action(self.menu, 'exclude', self.exclude, DOC(self.exclude))
+        _m_cmenu.Alias(self.menu, '!', 'exclude')
+        _m_cmenu.Action(self.menu, 'reset', self.reset, DOC(self.reset))
+        _m_cmenu.Alias(self.menu, '?', 'reset')
+        _m_cmenu.Action(self.menu, 'transfer', self.transfer,
+                        DOC(self.transfer))
+        _m_cmenu.Help(self.menu, 'help', DOC(self.help))
+        _m_cmenu.Action(self.menu, 'quit', self.quit, DOC(self.quit))
+
+    def _select_changes(self, *args):
+        # TODO: Is this safe? ************************************************************
+        rawsel = ' '.join(args)
 
         if rawsel in ('', '*'):
             return self.pending_changes
@@ -197,21 +124,22 @@ class MainMenu(_Menu):
             raise ValueError()
         return id0
 
-    def do_import(self, args):
+    def import_(self, *args):
         """
         Run a series of commands from a script.
         """
-        with open(args, 'r') as script:
+        # TODO: Check args len ******************************************************
+        with open(*args, 'r') as script:
             for line in script:
                 self.onecmd(line)
 
-    def do_list(self, args):
+    def list_(self, *args):
         """
         List a selection of pending changes.
         """
         print()
 
-        changes = self._select_changes(args)
+        changes = self._select_changes(*args)
         width = len(str(changes[-1].id_))
 
         # TODO #10 #11
@@ -222,13 +150,13 @@ class MainMenu(_Menu):
 
         return False
 
-    def do_details(self, args):
+    def details(self, *args):
         """
         List a selection of pending changes with details.
         """
         print()
 
-        changes = self._select_changes(args)
+        changes = self._select_changes(*args)
         width = len(str(changes[-1].id_))
 
         # TODO #10 #11
@@ -240,60 +168,41 @@ class MainMenu(_Menu):
 
         return False
 
-    def do_configure(self, args):
-        """
-        Open the configuration menu or execute a configuration command.
-        """
-        if args:
-            self.configmenu.onecmd(args)
-        else:
-            self.configmenu.cmdloop()
-        return False
-
-    def complete_configure(self, text, line, begidx, endidx):
-        # TODO: Return a 1-item iterable to autocomplete ******************************
-        print()
-        print('text', text)
-        print('line', line)
-        print('begidx', begidx)
-        print('endidx', endidx)
-        return [attr[3:] for attr in dir(self.configmenu) if attr[:3] == 'do_']
-
-    def do_include(self, args):
+    def include(self, *args):
         """
         Include (confirm) the changes in the synchronization.
         """
         # TODO #31: This should also ask to include all the ancestor
         #       directories, if they aren't included already
-        for change in self._select_changes(args):
+        for change in self._select_changes(*args):
             change.include()
         return False
 
-    def do_exclude(self, args):
+    def exclude(self, *args):
         """
         Exclude (cancel) the changes from the synchronization.
         """
         # TODO #31: If this is a directory, this should also ask to exclude all
         #       the descendant files and directories, if they are still
         #       included
-        for change in self._select_changes(args):
+        for change in self._select_changes(*args):
             change.exclude()
         return False
 
-    def do_reset(self, args):
+    def reset(self, *args):
         """
         Reset the changes to an undecided status.
         """
         # TODO #31: If the path was included and was a directory, this should
         #       ask to reset all the descendants; if the path was excluded,
         #       this should ask to reset all the ancestor directories
-        for change in self._select_changes(args):
+        for change in self._select_changes(*args):
             change.reset()
         return False
 
-    def do_transfer(self, args):
+    def transfer(self, *args):
         """
-        Start the synchronization, then exit syncere.
+        Start the synchronization, then quit syncere.
         """
         # TODO: Allow setting the mode, or use a submenu *****************************************
         TRANSFER_MODES = OrderedDict((
@@ -311,79 +220,90 @@ class MainMenu(_Menu):
             if change.included not in (True, False):
                 print('There are still undecided changes')
                 return False
-        if args == '':
+        if not args:
             self.transfer_mode = tuple(TRANSFER_MODES.values())[0]
-        else:
+        elif len(args) == 1:
             try:
-                self.transfer_mode = self.TRANSFER_MODES[args]
+                self.transfer_mode = self.TRANSFER_MODES[args[0]]
             except KeyError:
                 print('Unrecognized transfer mode')
                 return False
+        else:
+            print('Unrecognized transfer mode')
+            return False
         return True
 
-    def do_quit(self, args):
+    def help(self):
         """
-        Exit syncere without synchronizing anything.
+        Show this help screen.
+
+        Type 'help <command>' for more information on a specific command.
+        Tab completion is always available in the menus.
         """
-        if args == '':
-            _m_sys.exit(0)
-        self.error(args)
+        pass
+        # TODO #4: Briefly introduce filters syntax
+        #          Or maybe do it in the specific 'command help' menus of
+        #          the commands that do support filters
+        print("""Filters syntax:
+        TODO
 
-    def do_help(self, args):
-        super().do_help(args)
+Aliases:""")
+        # TODO: List aliases in a separate table? *********************************
 
+    def quit(self, *args):
+        """
+        Quit syncere without synchronizing anything.
+        """
+        # TODO: Make a preset action in typein.cmenu *********************************
         if not args:
-            # TODO #4: Briefly introduce filters syntax
-            #          Or maybe do it in the specific 'command help' menus of
-            #          the commands that do support filters
-            print("""Filters syntax:
-            TODO
-
-    Aliases:""")
-            width = max(len(alias) for alias in self.configuration.aliases)
-            for alias in sorted(self.configuration.aliases.keys()):
-                print('        {}    {}'.format(
-                      alias.ljust(width), self.configuration.aliases[alias]))
-            print()
+            _m_sys.exit(0)
+        # TODO: error doesn't exist anymore ******************************************
+        self.error(*args)
 
 
-class ConfigMenu(_Menu):
-    prompt = '(syncere>config) '
+class ConfigMenu:
+    def __init__(self, parent, name):
+        """
+        Open the configuration menu or execute a configuration command.
+        """
+        menu = _m_cmenu.SubMenu(parent, name, DOC(self.__init__))
+        _m_cmenu.Action(menu, 'alias', self.alias, DOC(self.alias))
+        _m_cmenu.Action(menu, 'unalias', self.unalias, DOC(self.unalias))
+        _m_cmenu.Action(menu, 'unalias-all', self.unalias_all,
+                        DOC(self.unalias_all))
+        _m_cmenu.Action(menu, 'filter', self.filter_, DOC(self.filter_))
+        _m_cmenu.Help(menu, 'help', DOC(self.help))
+        _m_cmenu.Action(menu, 'exit', self.exit, DOC(self.exit))
 
-    def default(self, line):
-        # Note that there's no point in making separate aliases for submenus
-        # like ConfigMenu
-        self.error(line)
-
-    def do_alias(self, args):
+    def alias(self, *args):
         """
         Set a command alias.
         """
         # TODO Check that it's not overriding a built-in command ************************
         pass
 
-    def do_unalias(self, args):
+    def unalias(self, *args):
         """
         Unset a command alias.
         """
         # TODO *************************************************************************
         pass
 
-    def do_unalias_all(self, args):
+    def unalias_all(self, *args):
         """
         Unset all command aliases.
         """
         # TODO *************************************************************************
         pass
 
-    def do_filter(self, args):
+    def filter_(self, *args):
         """
         Edit the current list filter.
         """
         # TODO: Hide files that are not going to be transferred because ***************
         #       identical at the source and destination.
         #       Predefined rule: _m_re.match('\.[fdLDS] {9}$', match.group(1))
-        print('filter', args)
+        print('filter', *args)
         # From http://stackoverflow.com/a/2533142/645498
         _m_readline.set_startup_hook(lambda: _m_readline.insert_text('prefill'))
         try:
@@ -392,8 +312,21 @@ class ConfigMenu(_Menu):
             _m_readline.set_startup_hook()
         return False
 
-    def do_exit(self, args):
+    def help(self):
         """
-        Exit the configuration menu.
+        Show this help screen.
+
+        Type 'help <command>' for more information on a specific command.
+        Tab completion is always available in the menus.
         """
-        return True
+        pass
+
+    def exit(self, *args):
+        """
+        Go back to the parent configuration menu.
+        """
+        # TODO: Make a preset action in typein.cmenu *********************************
+        if not args:
+            return True
+        # TODO: error doesn't exist anymore ******************************************
+        self.error(*args)
