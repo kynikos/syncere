@@ -90,6 +90,7 @@ Tests:
 #9: Check that all the raised exceptions and sys.exit calls are tested
 #45: The TestRsyncOptions test could be skipped, since it doesn't depend on the
      development of syncere
+#49: Test with pexpect
 
 
 v1.0.0
