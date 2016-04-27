@@ -48,7 +48,7 @@ class Interface:
 
         commands = commands or cliargs.namespace.commands
         if test:
-            # TODO #60 (move to typein.cmenu)
+            # TODO #60
             # This can raise _m_cmenu.InsufficientTestCommands: if testing, the
             # last command should be 'transfer' or 'quit'
             self.mainmenu.loop_test(commands)

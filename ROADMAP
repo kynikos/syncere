@@ -184,7 +184,8 @@ Interface:
 #100: Internationalization: allow localizing all the messages
 
 Tests:
-#60: In the 'commands' parameter of the main Syncere class, used to pass
+#60: This feature request is actually for the typein.cmenu module
+     In the 'commands' parameter of the main Syncere class, used to pass
      automatic interactive commands for testing, support adding in the list a
      value such as 'True' to allow the user to enter a command interactively
      through the normal input prompt in the loop above (i.e. instead of having
