@@ -82,7 +82,6 @@ class MainMenu:
         _m_cmenu.Action(self.menu, 'quit', self.quit)
 
     def _select_changes(self, *args):
-        # TODO: Is this safe? ************************************************************
         rawsel = ' '.join(args)
 
         if rawsel in ('', '*'):
