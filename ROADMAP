@@ -28,9 +28,8 @@ Core:
       Also warn if the file already exists
 
 Interface:
-#4: In the 'h' (help) screen document that some interactive options take
-     parameters (#,#-#,#,# or *)
-    Also document the various S* transfer subcommands
+#4: Document the filters syntax in the 'help' message of the commands that
+     support it
 #6: Support all the ruleset path types and the itemized wildcards
     Use fnmatch for globbing patterns
     Allow wildcards in the itemized representation

@@ -67,11 +67,13 @@ class MainMenu:
         """
         self.interface = interface
 
+        # TODO #4: Introduce filters syntax in the specific 'help' messages of
+        #          the commands that do support filters
         self.menu = _m_cmenu.RootMenu('syncere', helpfull=self.__init__)
         _m_cmenu.Action(self.menu, 'import', self.import_)
         _m_cmenu.Action(self.menu, 'list', self.list_)
         _m_cmenu.Action(self.menu, 'details', self.details)
-        ConfigMenu(self.menu, 'config')
+        ConfigMenu(self.menu, 'config', interface)
         _m_cmenu.Action(self.menu, 'include', self.include)
         _m_cmenu.Alias(self.menu, '>', 'include')
         _m_cmenu.Action(self.menu, 'exclude', self.exclude)
@@ -80,7 +82,7 @@ class MainMenu:
         _m_cmenu.Alias(self.menu, '?', 'reset')
         TransferMenu(self.menu, 'transfer', interface)
         _m_cmenu.Help(self.menu, 'help', helpfull=self.help)
-        _m_cmenu.Action(self.menu, 'quit', self.quit)
+        _m_cmenu.Quit(self.menu, 'quit', helpfull=self.quit)
 
     def _select_changes(self, *args):
         rawsel = ' '.join(args)
@@ -217,76 +219,42 @@ class MainMenu:
         Tab completion is always available in the menus.
         """
         pass
-        # TODO #4: Briefly introduce filters syntax
-        #          Or maybe do it in the specific 'command help' menus of
-        #          the commands that do support filters
-        print("""Filters syntax:
-        TODO
 
-Aliases:""")
-        # TODO: List aliases in a separate table? *********************************
-
-    def quit(self, *args):
+    def quit(self):
         """
         Quit syncere without synchronizing anything.
         """
-        # TODO: Make a preset action in typein.cmenu *********************************
-        if not args:
-            _m_sys.exit(0)
-        # TODO: error doesn't exist anymore ******************************************
-        self.error(*args)
+        pass
 
 
 class ConfigMenu:
-    def __init__(self, parent, name):
+    def __init__(self, parent, name, interface):
         """
         Open the configuration menu or execute a configuration command.
 
         {command_list}
         """
+        self.interface = interface
+
         menu = _m_cmenu.SubMenu(parent, name, helpfull=self.__init__)
-        _m_cmenu.Action(menu, 'alias', self.alias)
-        _m_cmenu.Action(menu, 'unalias', self.unalias)
-        _m_cmenu.Action(menu, 'unalias-all', self.unalias_all)
-        _m_cmenu.Action(menu, 'filter', self.filter_)
+        AliasMenu(menu, 'alias', interface)
+        _m_cmenu.LineEditor(menu, 'filter', self.filter_in, self.filter_out)
         _m_cmenu.Help(menu, 'help', helpfull=self.help)
-        _m_cmenu.Action(menu, 'exit', self.exit)
+        _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
 
-    def alias(self, *args):
-        """
-        Set a command alias.
-        """
-        # TODO Check that it's not overriding a built-in command ************************
-        pass
-
-    def unalias(self, *args):
-        """
-        Unset a command alias.
-        """
-        # TODO *************************************************************************
-        pass
-
-    def unalias_all(self, *args):
-        """
-        Unset all command aliases.
-        """
-        # TODO *************************************************************************
-        pass
-
-    def filter_(self, *args):
+    def filter_in(self, *args):
         """
         Edit the current list filter.
         """
+        # TODO: ************************************************************************
+        return 'foobar'
+
+    def filter_out(self, string):
         # TODO: Hide files that are not going to be transferred because ***************
         #       identical at the source and destination.
         #       Predefined rule: _m_re.match('\.[fdLDS] {9}$', match.group(1))
-        print('filter', *args)
-        # From http://stackoverflow.com/a/2533142/645498
-        _m_readline.set_startup_hook(lambda: _m_readline.insert_text('prefill'))
-        try:
-            input()
-        finally:
-            _m_readline.set_startup_hook()
+        # FIXME
+        print(string)
         return False
 
     def help(self):
@@ -298,15 +266,64 @@ class ConfigMenu:
         """
         pass
 
-    def exit(self, *args):
+    def exit(self):
         """
         Go back to the parent configuration menu.
         """
-        # TODO: Make a preset action in typein.cmenu *********************************
-        if not args:
-            return True
-        # TODO: error doesn't exist anymore ******************************************
-        self.error(*args)
+        pass
+
+
+class AliasMenu:
+    def __init__(self, parent, name, interface):
+        """
+        Open the alias menu or execute an alias configuration command.
+
+        {command_list}
+        """
+        self.interface = interface
+
+        menu = _m_cmenu.SubMenu(parent, name, helpfull=self.__init__)
+        _m_cmenu.Action(menu, 'set', self.set_)
+        _m_cmenu.Action(menu, 'unset', self.unset)
+        _m_cmenu.Action(menu, 'unset-all', self.unset_all)
+        _m_cmenu.Help(menu, 'help', helpfull=self.help)
+        _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
+
+    def set_(self, *args):
+        """
+        Set a command alias.
+        """
+        # TODO Check that it's not overriding a built-in command ************************
+        pass
+
+    def unset(self, *args):
+        """
+        Unset a command alias.
+        """
+        # TODO *************************************************************************
+        pass
+
+    def unset_all(self, *args):
+        """
+        Unset all command aliases.
+        """
+        # TODO *************************************************************************
+        pass
+
+    def help(self):
+        """
+        Show this help screen.
+
+        Type 'help <command>' for more information on a specific command.
+        Tab completion is always available in the menus.
+        """
+        pass
+
+    def exit(self):
+        """
+        Go back to the parent configuration menu.
+        """
+        pass
 
 
 class TransferMenu:
@@ -325,7 +342,7 @@ class TransferMenu:
         _m_cmenu.Action(menu, 'include-from', self.include_from)
         _m_cmenu.Action(menu, 'files-from', self.files_from)
         _m_cmenu.Help(menu, 'help', helpfull=self.help)
-        _m_cmenu.Action(menu, 'exit', self.exit)
+        _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
 
     def _pre_transfer_checks(self, *args):
         # TODO #31: This should also warn if some files are included, but their
@@ -350,7 +367,7 @@ class TransferMenu:
         if self._pre_transfer_checks(*args) is not True:
             return False
         self.interface.transfer_mode = 'exclude'
-        return _m_cmenu.END_LOOP
+        return _m_cmenu.END_ALL_LOOPS
 
     def exclude_from(self, *args):
         """
@@ -364,7 +381,7 @@ class TransferMenu:
         if self._pre_transfer_checks(*args) is not True:
             return False
         self.interface.transfer_mode = 'exclude-from'
-        return _m_cmenu.END_LOOP
+        return _m_cmenu.END_ALL_LOOPS
 
     def include(self, *args):
         """
@@ -377,7 +394,7 @@ class TransferMenu:
         if self._pre_transfer_checks(*args) is not True:
             return False
         self.interface.transfer_mode = 'include'
-        return _m_cmenu.END_LOOP
+        return _m_cmenu.END_ALL_LOOPS
 
     def include_from(self, *args):
         """
@@ -391,7 +408,7 @@ class TransferMenu:
         if self._pre_transfer_checks(*args) is not True:
             return False
         self.interface.transfer_mode = 'include-from'
-        return _m_cmenu.END_LOOP
+        return _m_cmenu.END_ALL_LOOPS
 
     def files_from(self, *args):
         """
@@ -405,7 +422,7 @@ class TransferMenu:
         if self._pre_transfer_checks(*args) is not True:
             return False
         self.interface.transfer_mode = 'files-from'
-        return _m_cmenu.END_LOOP
+        return _m_cmenu.END_ALL_LOOPS
 
     def help(self):
         """
@@ -416,12 +433,8 @@ class TransferMenu:
         """
         pass
 
-    def exit(self, *args):
+    def exit(self):
         """
         Go back to the parent configuration menu.
         """
-        # TODO: Make a preset action in typein.cmenu *********************************
-        if not args:
-            return True
-        # TODO: error doesn't exist anymore ******************************************
-        self.error(*args)
+        pass
