@@ -18,7 +18,6 @@
 
 import sys as _m_sys
 from collections import OrderedDict
-from inspect import getdoc as DOC
 
 from . import exceptions
 
@@ -62,24 +61,25 @@ class MainMenu:
         """
         Type 'help <command>' for more information. Tab completion is
         available.
+
+        {command_list}
         """
         self.pending_changes = pending_changes
 
-        self.menu = _m_cmenu.RootMenu('syncere', DOC(self.__init__))
-        _m_cmenu.Action(self.menu, 'import', self.import_, DOC(self.import_))
-        _m_cmenu.Action(self.menu, 'list', self.list_, DOC(self.list_))
-        _m_cmenu.Action(self.menu, 'details', self.details, DOC(self.details))
+        self.menu = _m_cmenu.RootMenu('syncere', helpfull=self.__init__)
+        _m_cmenu.Action(self.menu, 'import', self.import_)
+        _m_cmenu.Action(self.menu, 'list', self.list_)
+        _m_cmenu.Action(self.menu, 'details', self.details)
         ConfigMenu(self.menu, 'config')
-        _m_cmenu.Action(self.menu, 'include', self.include, DOC(self.include))
+        _m_cmenu.Action(self.menu, 'include', self.include)
         _m_cmenu.Alias(self.menu, '>', 'include')
-        _m_cmenu.Action(self.menu, 'exclude', self.exclude, DOC(self.exclude))
+        _m_cmenu.Action(self.menu, 'exclude', self.exclude)
         _m_cmenu.Alias(self.menu, '!', 'exclude')
-        _m_cmenu.Action(self.menu, 'reset', self.reset, DOC(self.reset))
+        _m_cmenu.Action(self.menu, 'reset', self.reset)
         _m_cmenu.Alias(self.menu, '?', 'reset')
-        _m_cmenu.Action(self.menu, 'transfer', self.transfer,
-                        DOC(self.transfer))
-        _m_cmenu.Help(self.menu, 'help', DOC(self.help))
-        _m_cmenu.Action(self.menu, 'quit', self.quit, DOC(self.quit))
+        _m_cmenu.Action(self.menu, 'transfer', self.transfer)
+        _m_cmenu.Help(self.menu, 'help', helpfull=self.help)
+        _m_cmenu.Action(self.menu, 'quit', self.quit)
 
     def _select_changes(self, *args):
         # TODO: Is this safe? ************************************************************
@@ -265,15 +265,16 @@ class ConfigMenu:
     def __init__(self, parent, name):
         """
         Open the configuration menu or execute a configuration command.
+
+        {command_list}
         """
-        menu = _m_cmenu.SubMenu(parent, name, DOC(self.__init__))
-        _m_cmenu.Action(menu, 'alias', self.alias, DOC(self.alias))
-        _m_cmenu.Action(menu, 'unalias', self.unalias, DOC(self.unalias))
-        _m_cmenu.Action(menu, 'unalias-all', self.unalias_all,
-                        DOC(self.unalias_all))
-        _m_cmenu.Action(menu, 'filter', self.filter_, DOC(self.filter_))
-        _m_cmenu.Help(menu, 'help', DOC(self.help))
-        _m_cmenu.Action(menu, 'exit', self.exit, DOC(self.exit))
+        menu = _m_cmenu.SubMenu(parent, name, helpfull=self.__init__)
+        _m_cmenu.Action(menu, 'alias', self.alias)
+        _m_cmenu.Action(menu, 'unalias', self.unalias)
+        _m_cmenu.Action(menu, 'unalias-all', self.unalias_all)
+        _m_cmenu.Action(menu, 'filter', self.filter_)
+        _m_cmenu.Help(menu, 'help', helpfull=self.help)
+        _m_cmenu.Action(menu, 'exit', self.exit)
 
     def alias(self, *args):
         """
