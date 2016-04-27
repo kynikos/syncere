@@ -28,7 +28,6 @@ Core:
       Also warn if the file already exists
 
 Interface:
-#2: Protect the 'import' command from non-existing or unaccessible files
 #4: In the 'h' (help) screen document that some interactive options take
      parameters (#,#-#,#,# or *)
     Also document the various S* transfer subcommands

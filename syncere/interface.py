@@ -127,10 +127,19 @@ class MainMenu:
         """
         Run a series of commands from a script.
         """
-        # TODO: Check args len ******************************************************
-        with open(*args, 'r') as script:
-            for line in script:
-                self.onecmd(line)
+        if len(args) == 0:
+            print('File name not specified')
+        elif len(args) > 1:
+            print('Too many arguments')
+        else:
+            try:
+                script = open(args[0], 'r')
+            except OSError as exc:
+                print('The file cannot be opened: ' + exc.strerror)
+            else:
+                with script:
+                    for line in script:
+                        self.onecmd(line)
 
     def list_(self, *args):
         """
