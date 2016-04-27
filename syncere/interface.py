@@ -39,7 +39,8 @@ class Interface:
     def __init__(self, pending_changes):
         # TODO #4 #25 #30 #31 #33 #34 #35 #56
         self.pending_changes = pending_changes
-        self.mainmenu = MainMenu(pending_changes).menu
+        self.mainmenu = MainMenu(self).menu
+        self.transfer_mode = None
 
     def start(self, cliargs, commands, test):
         self.mainmenu.run_line('list')
@@ -57,14 +58,14 @@ class Interface:
 
 
 class MainMenu:
-    def __init__(self, pending_changes):
+    def __init__(self, interface):
         """
         Type 'help <command>' for more information. Tab completion is
         available.
 
         {command_list}
         """
-        self.pending_changes = pending_changes
+        self.interface = interface
 
         self.menu = _m_cmenu.RootMenu('syncere', helpfull=self.__init__)
         _m_cmenu.Action(self.menu, 'import', self.import_)
@@ -77,7 +78,7 @@ class MainMenu:
         _m_cmenu.Alias(self.menu, '!', 'exclude')
         _m_cmenu.Action(self.menu, 'reset', self.reset)
         _m_cmenu.Alias(self.menu, '?', 'reset')
-        _m_cmenu.Action(self.menu, 'transfer', self.transfer)
+        TransferMenu(self.menu, 'transfer', interface)
         _m_cmenu.Help(self.menu, 'help', helpfull=self.help)
         _m_cmenu.Action(self.menu, 'quit', self.quit)
 
@@ -85,7 +86,7 @@ class MainMenu:
         rawsel = ' '.join(args)
 
         if rawsel in ('', '*'):
-            return self.pending_changes
+            return self.interface.pending_changes
 
         changes = []
         lsel = rawsel.split(',')
@@ -95,7 +96,7 @@ class MainMenu:
             if len(rsel) == 1:
                 try:
                     id0 = self._get_0_based_id(isel)
-                    change = self.pending_changes[id0]
+                    change = self.interface.pending_changes[id0]
                 except (ValueError, IndexError):
                     print('Unrecognized selection')
                 else:
@@ -107,7 +108,7 @@ class MainMenu:
                 except ValueError:
                     print('Unrecognized selection')
                 else:
-                    for change in self.pending_changes[ids:ide + 1]:
+                    for change in self.interface.pending_changes[ids:ide + 1]:
                         changes.append(change)
 
             else:
@@ -208,39 +209,6 @@ class MainMenu:
             change.reset()
         return False
 
-    def transfer(self, *args):
-        """
-        Start the synchronization, then quit syncere.
-        """
-        # TODO: Allow setting the mode, or use a submenu *****************************************
-        TRANSFER_MODES = OrderedDict((
-            # The first item is considered the default mode
-            ('e', 'exclude'),
-            ('ef', 'exclude-from'),
-            ('i', 'include'),
-            ('if', 'include-from'),
-            ('ff', 'files-from'),
-        ))
-        # TODO #31: This should also warn if some files are included, but their
-        #       parent directories are not, resulting in the files actually
-        #       being excluded
-        for change in self.pending_changes:
-            if change.included not in (True, False):
-                print('There are still undecided changes')
-                return False
-        if not args:
-            self.transfer_mode = tuple(TRANSFER_MODES.values())[0]
-        elif len(args) == 1:
-            try:
-                self.transfer_mode = self.TRANSFER_MODES[args[0]]
-            except KeyError:
-                print('Unrecognized transfer mode')
-                return False
-        else:
-            print('Unrecognized transfer mode')
-            return False
-        return True
-
     def help(self):
         """
         Show this help screen.
@@ -320,6 +288,124 @@ class ConfigMenu:
         finally:
             _m_readline.set_startup_hook()
         return False
+
+    def help(self):
+        """
+        Show this help screen.
+
+        Type 'help <command>' for more information on a specific command.
+        Tab completion is always available in the menus.
+        """
+        pass
+
+    def exit(self, *args):
+        """
+        Go back to the parent configuration menu.
+        """
+        # TODO: Make a preset action in typein.cmenu *********************************
+        if not args:
+            return True
+        # TODO: error doesn't exist anymore ******************************************
+        self.error(*args)
+
+
+class TransferMenu:
+    def __init__(self, parent, name, interface):
+        """
+        Open the transfer menu or execute a transfer command and quit syncere.
+
+        {command_list}
+        """
+        self.interface = interface
+
+        menu = _m_cmenu.SubMenu(parent, name, helpfull=self.__init__)
+        _m_cmenu.Action(menu, 'exclude', self.exclude)
+        _m_cmenu.Action(menu, 'exclude-from', self.exclude_from)
+        _m_cmenu.Action(menu, 'include', self.include)
+        _m_cmenu.Action(menu, 'include-from', self.include_from)
+        _m_cmenu.Action(menu, 'files-from', self.files_from)
+        _m_cmenu.Help(menu, 'help', helpfull=self.help)
+        _m_cmenu.Action(menu, 'exit', self.exit)
+
+    def _pre_transfer_checks(self, *args):
+        # TODO #31: This should also warn if some files are included, but their
+        #       parent directories are not, resulting in the files actually
+        #       being excluded
+        if len(args) > 0:
+            print('No arguments are accepted')
+            return False
+        for change in self.interface.pending_changes:
+            if change.included not in (True, False):
+                print('There are still undecided changes')
+                return False
+        return True
+
+    def exclude(self, *args):
+        """
+        Start the synchronization in exclude mode, then quit syncere.
+
+        The original rsync command will be executed, but --exclude options will
+        be prepended to its options, one for each file interactively excluded.
+        """
+        if self._pre_transfer_checks(*args) is not True:
+            return False
+        self.interface.transfer_mode = 'exclude'
+        return _m_cmenu.END_LOOP
+
+    def exclude_from(self, *args):
+        """
+        Start the synchronization in exclude-from mode, then quit syncere.
+
+        The original rsync command will be executed, but a file will be written
+        with a list of the files interactively excluded, and an --exclude-from
+        option will be prepended to the original command's options to read the
+        exclude file.
+        """
+        if self._pre_transfer_checks(*args) is not True:
+            return False
+        self.interface.transfer_mode = 'exclude-from'
+        return _m_cmenu.END_LOOP
+
+    def include(self, *args):
+        """
+        Start the synchronization in include mode, then quit syncere.
+
+        The original rsync command will be executed, but --include options will
+        be prepended to its options, one for each file interactively included,
+        terminated by an --exclude=* option.
+        """
+        if self._pre_transfer_checks(*args) is not True:
+            return False
+        self.interface.transfer_mode = 'include'
+        return _m_cmenu.END_LOOP
+
+    def include_from(self, *args):
+        """
+        Start the synchronization in include-from mode, then quit syncere.
+
+        The original rsync command will be executed, but a file will be written
+        with a list of the files interactively included, and an --include-from
+        option will be prepended to the original command's options to read the
+        include file.
+        """
+        if self._pre_transfer_checks(*args) is not True:
+            return False
+        self.interface.transfer_mode = 'include-from'
+        return _m_cmenu.END_LOOP
+
+    def files_from(self, *args):
+        """
+        Start the synchronization in files-from mode, then quit syncere.
+
+        The original rsync command will be executed, but a file will be written
+        with a list of the files interactively included, and an --files-from
+        option will be prepended to the original command's options to read the
+        created file.
+        """
+        if self._pre_transfer_checks(*args) is not True:
+            return False
+        self.interface.transfer_mode = 'files-from'
+        return _m_cmenu.END_LOOP
 
     def help(self):
         """
