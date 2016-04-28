@@ -16,9 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with syncere.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys as _m_sys
-from collections import OrderedDict
-
 from . import exceptions
 
 try:
