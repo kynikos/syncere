@@ -49,9 +49,5 @@ class UnrecognizedItemizedChangeError(SyncereError):
     pass
 
 
-class UnrecognizedTestCommand(SyncereError):
-    pass
-
-
 class UnsupportedOptionError(SyncereError):
     pass

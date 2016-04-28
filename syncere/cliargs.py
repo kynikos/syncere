@@ -47,7 +47,6 @@ syncere was cloned:
 """
         raise
 
-from .interface import Interface
 from .exceptions import UnsupportedOptionError
 
 
@@ -86,26 +85,18 @@ Syncere-specific options:
     These options are only used by syncere, they will not be passed to the
     internal rsync commands.
 
-    --ruleset=FILE
-                Load a pre-saved set of rules to automatically confirm or
-                discard recurrent file transfers. Repeat the option to load
-                more rule sets in the specified order. See syncere(1) for the
-                used syntax.
-
-    --default-mode=MODE
-                Define which transfer mode is the one associated to the
-                shortcut '{0}' interactive command; MODE is a string to be
-                chosen among {1},
-                {2}; the default MODE is '{3}'. See syncere(1) for details on
-                transfer modes.
+    --command=COMMAND
+                As soon as syncere's interface is initialized, execute this
+                syncere command as if it was typed by the user. This is useful
+                for example to set a configuration option or to apply a
+                predefined filter on the pending changes. Repeat the option to
+                execute more commands in the specified order. See syncere(1)
+                for information on the available commands. To load a series of
+                commands from a script, use --command="import /path/to/script".
 
     --experimental
                 Enable the experimentally-supported rsync options, see the
                 relevant section below.
-
-    --show-identical
-                Also list files that are not going to be transferred because
-                identical at the source and destination.
 
 Shared options:
     These options are passed to the internal rsync commands, but they are also
@@ -143,6 +134,13 @@ Shared options:
                 "preview" command; if present, though, it will be normally
                 passed to the "transfer" command.
 
+Optimized options:
+    syncere will offer to optimize the usage of these rsync options when
+    possible.
+
+    -c, --checksum
+                TODO
+
 Transfer-only options:
     These rsync options are removed from the "preview" command, and only passed
     to the "transfer" command, where their meaning is unchanged.
@@ -151,13 +149,6 @@ Transfer-only options:
     -q, --quiet
     --timeout
     --contimeout
-
-Optimized options:
-    syncere will offer to optimize the usage of these rsync options when
-    possible.
-
-    -c, --checksum
-                TODO
 
 Experimental options:
     These rsync options are disabled by default, as the effects in an
@@ -188,12 +179,7 @@ Fully-supported options:
     synchronized, they must be all included in the transfer command, otherwise
     the linkage will be broken. Just like rsync, syncere will not try to
     warn you if you partially exclude hard links from the synchronization.\
-""".format(Interface.CMD_TRANSFER,
-           ', '.join("'" + mode + "'" for mode in
-                     tuple(Interface.TRANSFER_MODES.values())[:3]),
-           ', '.join("'" + mode + "'" for mode in
-                     tuple(Interface.TRANSFER_MODES.values())[3:]),
-           tuple(Interface.TRANSFER_MODES.values())[0]))
+""")
         _m_sys.exit(0)
 
     def _store_value(self, newvalue):
@@ -292,14 +278,9 @@ class CLIArgs:
     def _syncere(self):
         group = self.parser.add_argument_group('syncere')
 
-        # TODO #5
-        group.add_argument('--ruleset', action='append', dest='rulesets',
+        group.add_argument('--command', action='append', dest='commands',
                            default=[])
-        group.add_argument('--default-mode',
-                           default=tuple(Interface.TRANSFER_MODES.values())[0],
-                           choices=Interface.TRANSFER_MODES.values())
         group.add_argument('--experimental', action='store_true')
-        group.add_argument('--show-identical', action='store_true')
 
     def _shared(self):
         group = self.parser.add_argument_group('shared')

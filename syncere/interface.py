@@ -18,87 +18,136 @@
 
 import sys as _m_sys
 from collections import OrderedDict
-# simply importing readline is enough to enable command history by pressing
-# the up and down keys
-# TODO #80
-import readline as _m_readline  # NOQA <- this hides the lint error [F401]
+
+from . import cmenu
 
 from . import exceptions
 
 
-class Interface:
-    """
-    This is the interface for interactively filtering the pending changes.
-    """
-    Proceed = type('Proceed', (Exception, ), {})
-    Quit = type('Quit', (Exception, ), {})
-    PROMPT = 'Command (h for help): '
-    CMD_TRANSFER = 'S'
-    TRANSFER_MODES = OrderedDict((
-        # The first item is considered the default mode, unless differently
-        # specified with the --default-mode option
-        ('e', 'exclude'),
-        ('ef', 'exclude-from'),
-        ('i', 'include'),
-        ('if', 'include-from'),
-        ('ff', 'files-from'),
-    ))
+class Configuration:
+    # There's no point in making separate aliases for submenus like ConfigMenu
+    # *Warning:* if some built-in commands are overridden here, no warning is
+    #            issued, unlike when setting new aliases interactively!
+    # End the commands with a space next to the aliases that should allow
+    # the arguments to start without a separating space
+    aliases = {
+        '>': 'include ',
+        '!': 'exclude ',
+        '?': 'reset ',
+        'q': 'quit ',
+    }
 
-    def __init__(self, cliargs, pending_changes, test):
-        self.cliargs = cliargs
+
+class _Menu(_m_cmd.Cmd):
+    empty = "Type 'help' to list available commands"
+
+    def emptyline(self):
+        # Override this method, otherwise the last non-empty command entered
+        # is repeated by default
+        print(self.empty)
+
+    def error(self, line):
+        # This method in practice does the job that normally 'default' does in
+        # cmd.Cmd, but 'default' is used to find aliases in this case
+        # There's no point in rewriting the command in the error message, the
+        # bad command is just above next to the prompt
+        print("Unrecognized command")
+        self.emptyline()
+
+    def do_help(self, args):
+        """
+        Show this help screen.
+
+        Type 'help <command>' for more information on a specific command.
+        Tab completion is always available in the menus.
+        """
+        if args:
+            super().do_help(args)
+        else:
+            print("""
+Type 'help <command>' for more information. Tab completion is available.
+""")
+
+            table = OrderedDict()
+            for attr in dir(self):
+                if attr[:3] == 'do_':
+                    table[attr[3:]] = _m_inspect.getdoc(getattr(self, attr)
+                                                        ).split('\n', 1)[0]
+            width = max(len(command) for command in table)
+            for command in table:
+                print('        {}    {}'.format(command.ljust(width),
+                                                table[command]))
+
+            try:
+                print(self.doc_notes)
+            except AttributeError:
+                print()
+
+
+class MainMenu(_Menu):
+    intro = _Menu.empty + '\n'
+    prompt = '(syncere) '
+
+    def __init__(self, pending_changes):
+        # TODO #4 #25 #30 #31 #33 #34 #35 #56
+        super().__init__()
         self.pending_changes = pending_changes
-        self.test = test
+        self.configuration = Configuration()
+        self.configmenu = ConfigMenu()
 
-        # TODO #4 #30 #31 #32 #33 #34 #35 #56
-        self.actions = OrderedDict((
-            ('l', (self.list_summary, 'list pending changes')),
-            ('d', (self.list_details, 'list pending changes with details')),
-            ('>', (self.include_change, 'include (confirm) the changes in the '
-                   'synchronization')),
-            ('!', (self.exclude_change, 'exclude (cancel) the changes from '
-                   'the synchronization')),
-            ('?', (self.reset_change, 'reset the changes to an undecided '
-                   'status')),
-            (self.CMD_TRANSFER, (self.transfer, 'start the synchronization, '
-                                 'then exit syncere')),
-            ('q', (self.quit, 'exit syncere without synchronizing anything')),
-            ('h', (self.help, 'show this help screen')),
-        ))
+    def start_loop(self, cliargs, commands, test):
+        commands = commands or cliargs.namespace.commands
+        self.onecmd('list')
+        for command in commands:
+            # TODO #60
+            print(self.prompt, command, sep='')
+            if self.onecmd(command) is True:
+                return True
+        if test:
+            # If testing, the last command should be 'transfer' or 'quit'
+            raise exceptions.InsufficientTestCommands()
+        self.cmdloop()
 
-        self.list_summary('')
+    def default(self, line):
+        L = max(len(alias) for alias in self.configuration.aliases)
+        while L > 0:
+            try:
+                alias = line[:L]
+            except IndexError:
+                L -= 1
+                continue
+            try:
+                command = self.configuration.aliases[alias]
+            except KeyError:
+                L -= 1
+                continue
+            self.onecmd(command + line[L:])
+            break
+        else:
+            self.error(line)
 
-        # TODO #25
+    def precmd(self, line):
+        # Aliases must be handled in self.default, otherwise if they are a
+        # substring of a built-in command, they will always override it, using
+        # the rest of the string as an argument; for example, if 'q' is an
+        # alias for 'quit', issuing 'quit' would be translated to 'quituit'
+        # Nonetheless, handle '?' here because otherwise it's translated to
+        # 'help' by cmd.Cmd by default; if self.do_shell was defined, also '!'
+        # should be handled here
         try:
-            if self.test is False:
-                while True:
-                    command = input(self.PROMPT)
-                    try:
-                        action = self.actions[command[0]]
-                    except IndexError:
-                        # IndexError is raised if command is an empty string
-                        pass
-                    except KeyError:
-                        print("Unrecognized command, enter 'h' for help")
-                    else:
-                        action[0](command[1:])
-            else:
-                while True:
-                    try:
-                        command = test.pop(0)
-                    except IndexError:
-                        raise exceptions.InsufficientTestCommands()
-                    # TODO #60
-                    print(self.PROMPT, command, sep='')
-                    try:
-                        action = self.actions[command[0]]
-                    except (IndexError, KeyError):
-                        # IndexError is raised if command is an empty string
-                        raise exceptions.UnrecognizedTestCommand(command)
-                    action[0](command[1:])
-        except self.Quit:
-            _m_sys.exit(0)
-        except self.Proceed:
+            qm = line[0]
+        except IndexError:
+            # Empty line
             pass
+        else:
+            if qm == '?':
+                try:
+                    command = self.configuration.aliases['?']
+                except KeyError:
+                    pass
+                else:
+                    line = command + line[1:]
+        return line
 
     def _select_changes(self, rawsel):
         rawsel = rawsel.strip()
@@ -142,7 +191,18 @@ class Interface:
             raise ValueError()
         return id0
 
-    def list_summary(self, args):
+    def do_import(self, args):
+        """
+        Run a series of commands from a script.
+        """
+        with open(args, 'r') as script:
+            for line in script:
+                self.onecmd(line)
+
+    def do_list(self, args):
+        """
+        List a selection of pending changes.
+        """
         print()
 
         changes = self._select_changes(args)
@@ -154,7 +214,12 @@ class Interface:
 
         print()
 
-    def list_details(self, args):
+        return False
+
+    def do_details(self, args):
+        """
+        List a selection of pending changes with details.
+        """
         print()
 
         changes = self._select_changes(args)
@@ -167,52 +232,162 @@ class Interface:
 
         print()
 
-    def include_change(self, args):
+        return False
+
+    def do_configure(self, args):
+        """
+        Open the configuration menu or execute a configuration command.
+        """
+        if args:
+            self.configmenu.onecmd(args)
+        else:
+            self.configmenu.cmdloop()
+        return False
+
+    def complete_configure(self, text, line, begidx, endidx):
+        # TODO: Return a 1-item iterable to autocomplete ******************************
+        print()
+        print('text', text)
+        print('line', line)
+        print('begidx', begidx)
+        print('endidx', endidx)
+        return [attr[3:] for attr in dir(self.configmenu) if attr[:3] == 'do_']
+
+    def do_include(self, args):
+        """
+        Include (confirm) the changes in the synchronization.
+        """
         # TODO #31: This should also ask to include all the ancestor
         #       directories, if they aren't included already
         for change in self._select_changes(args):
             change.include()
+        return False
 
-    def exclude_change(self, args):
+    def do_exclude(self, args):
+        """
+        Exclude (cancel) the changes from the synchronization.
+        """
         # TODO #31: If this is a directory, this should also ask to exclude all
         #       the descendant files and directories, if they are still
         #       included
         for change in self._select_changes(args):
             change.exclude()
+        return False
 
-    def reset_change(self, args):
+    def do_reset(self, args):
+        """
+        Reset the changes to an undecided status.
+        """
         # TODO #31: If the path was included and was a directory, this should
         #       ask to reset all the descendants; if the path was excluded,
         #       this should ask to reset all the ancestor directories
         for change in self._select_changes(args):
             change.reset()
+        return False
 
-    def transfer(self, args):
+    def do_transfer(self, args):
+        """
+        Start the synchronization, then exit syncere.
+        """
+        # TODO: Allow setting the mode, or use a submenu *****************************************
+        TRANSFER_MODES = OrderedDict((
+            # The first item is considered the default mode
+            ('e', 'exclude'),
+            ('ef', 'exclude-from'),
+            ('i', 'include'),
+            ('if', 'include-from'),
+            ('ff', 'files-from'),
+        ))
         # TODO #31: This should also warn if some files are included, but their
         #       parent directories are not, resulting in the files actually
         #       being excluded
         for change in self.pending_changes:
             if change.included not in (True, False):
                 print('There are still undecided changes')
-                break
+                return False
+        if args == '':
+            self.transfer_mode = tuple(TRANSFER_MODES.values())[0]
         else:
-            if args == '':
-                self.transfer_mode = self.cliargs.namespace.default_mode
-            else:
-                try:
-                    self.transfer_mode = self.TRANSFER_MODES[args]
-                except KeyError:
-                    print('Unrecognized transfer mode')
-                    return False
-            raise self.Proceed()
+            try:
+                self.transfer_mode = self.TRANSFER_MODES[args]
+            except KeyError:
+                print('Unrecognized transfer mode')
+                return False
+        return True
 
-    def help(self, args):
-        print()
+    def do_quit(self, args):
+        """
+        Exit syncere without synchronizing anything.
+        """
+        if args == '':
+            _m_sys.exit(0)
+        self.error(args)
 
-        for akey in self.actions:
-            print('   {0}   {1}'.format(akey, self.actions[akey][1]))
+    def do_help(self, args):
+        super().do_help(args)
 
-        print()
+        if not args:
+            # TODO #4: Briefly introduce filters syntax
+            #          Or maybe do it in the specific 'command help' menus of
+            #          the commands that do support filters
+            print("""Filters syntax:
+            TODO
 
-    def quit(self, args):
-        raise self.Quit()
+    Aliases:""")
+            width = max(len(alias) for alias in self.configuration.aliases)
+            for alias in sorted(self.configuration.aliases.keys()):
+                print('        {}    {}'.format(
+                      alias.ljust(width), self.configuration.aliases[alias]))
+            print()
+
+
+class ConfigMenu(_Menu):
+    prompt = '(syncere>config) '
+
+    def default(self, line):
+        # Note that there's no point in making separate aliases for submenus
+        # like ConfigMenu
+        self.error(line)
+
+    def do_alias(self, args):
+        """
+        Set a command alias.
+        """
+        # TODO Check that it's not overriding a built-in command ************************
+        pass
+
+    def do_unalias(self, args):
+        """
+        Unset a command alias.
+        """
+        # TODO *************************************************************************
+        pass
+
+    def do_unalias_all(self, args):
+        """
+        Unset all command aliases.
+        """
+        # TODO *************************************************************************
+        pass
+
+    def do_filter(self, args):
+        """
+        Edit the current list filter.
+        """
+        # TODO: Hide files that are not going to be transferred because ***************
+        #       identical at the source and destination.
+        #       Predefined rule: _m_re.match('\.[fdLDS] {9}$', match.group(1))
+        print('filter', args)
+        # From http://stackoverflow.com/a/2533142/645498
+        _m_readline.set_startup_hook(lambda: _m_readline.insert_text('prefill'))
+        try:
+            input()
+        finally:
+            _m_readline.set_startup_hook()
+        return False
+
+    def do_exit(self, args):
+        """
+        Exit the configuration menu.
+        """
+        return True

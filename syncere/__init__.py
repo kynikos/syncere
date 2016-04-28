@@ -21,8 +21,7 @@ import subprocess as _m_subprocess
 import re as _m_re
 
 from .cliargs import CLIArgs
-from .rules import Rules
-from .interface import Interface
+from .interface import MainMenu
 from . import exceptions
 
 
@@ -34,7 +33,7 @@ class Syncere:
     VERSION_NUMBER = '0.1.0'
     VERSION_DATE = '2016-04-17'
 
-    def __init__(self, cliargs=None, test=False):
+    def __init__(self, cliargs=None, commands=[], test=False):
         self.cliargs = CLIArgs().parse(cliargs)
         self._check_arguments()
 
@@ -47,12 +46,11 @@ class Syncere:
                                 'experimental', 'safe'))
 
         self._preview()
-        self._store_rules()
         self._parse_pending_changes()
         if self.pending_changes:
-            self.transfer_mode = Interface(self.cliargs, self.pending_changes,
-                                           test).transfer_mode
-            self._transfer()
+            interface = MainMenu(self.pending_changes)
+            interface.start_loop(self.cliargs, commands, test)
+            self._transfer(interface.transfer_mode)
         else:
             print("Nothing to do")
             _m_sys.exit(0)
@@ -97,16 +95,8 @@ class Syncere:
             # TODO #15: Use sys.exit(call.returncode)?
             raise exceptions.RsyncError(call.returncode)
 
-    def _store_rules(self):
-        self.rules = Rules()
-
-        # TODO #5
-        for setname in self.cliargs.namespace.rulesets:
-            self.rules.parse_ruleset(setname)
-
     def _parse_pending_changes(self):
         self.pending_changes = []
-        self.identical_files = []
 
         for ln, line in enumerate(self.stdout.splitlines()):
             if line[:9] == '{syncere}':
@@ -127,16 +117,8 @@ class Syncere:
                                     line)
 
                 if match:
-                    if self.cliargs.namespace.show_identical or \
-                            not _m_re.match('\.[fdLDS] {9}$', match.group(1)):
-                        self.pending_changes.append(Change(
-                                                self.rules,
+                    self.pending_changes.append(Change(
                                                 len(self.pending_changes) + 1,
-                                                *match.groups()))
-                    else:
-                        self.identical_files.append(Change(
-                                                self.rules,
-                                                len(self.identical_files) + 1,
                                                 *match.groups()))
                 else:
                     raise exceptions.UnrecognizedItemizedChangeError(line)
@@ -144,13 +126,13 @@ class Syncere:
                 # TODO #28: Allow suppressing these lines
                 print(line)
 
-    def _transfer(self):
+    def _transfer(self, mode):
         # TODO #17
         args = {'exclude': self._transfer_exclude,
                 'exclude-from': self._transfer_exclude_from,
                 'include': self._transfer_include,
                 'include-from': self._transfer_include_from,
-                'files-from': self._transfer_files_from}[self.transfer_mode]()
+                'files-from': self._transfer_files_from}[mode]()
         # TODO #14 #18
         call = _m_subprocess.Popen(args)
 
@@ -247,9 +229,8 @@ class Change:
         True: '  >',
         False: '!  ',
     }
-    INV_STATUS = {v.strip(): k for k, v in STATUS.items()}
 
-    def __init__(self, rules, id_, ichange, operation, permissions, uid, gid,
+    def __init__(self, id_, ichange, operation, permissions, uid, gid,
                  length, tstamp, lfilename, sfilename, link, checksum):
         self.id_ = id_
         self.ichange = ichange
@@ -264,8 +245,7 @@ class Change:
         self.link = link
         self.checksum = checksum
 
-        self.included = self.INV_STATUS[rules.decide_change(self.ichange,
-                                                            self.sfilename)]
+        self.reset()
 
     def get_summary(self, width):
         pad = width - len(str(self.id_))

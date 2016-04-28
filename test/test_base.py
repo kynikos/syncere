@@ -11,13 +11,13 @@ class TestHelp(Utils):
     """
     def test_help(self):
         with pytest.raises(SystemExit) as excinfo:
-            Syncere('--help')
+            Syncere('--help', test=True)
         assert excinfo.value.code == 0
         # TODO #1: Test that preview hasn't been started
 
     def test_version(self):
         with pytest.raises(SystemExit) as excinfo:
-            Syncere('--version')
+            Syncere('--version', test=True)
         assert excinfo.value.code == 0
         # TODO #1: Test that preview hasn't been started
 
@@ -34,7 +34,8 @@ class TestCliArgsErrors(Utils):
                                           ('--no-detach', 'no_detach')))
     def test_unsupported(self, arg, dest):
         with pytest.raises(exceptions.UnsupportedOptionError) as excinfo:
-            Syncere('./source/ ./destination/ -av {} --delete'.format(arg))
+            Syncere('./source/ ./destination/ -av {} --delete'.format(arg),
+                    test=True)
         assert excinfo.value.args[0] == dest
 
     @pytest.mark.parametrize('arg,dest', (('-0', 'from0'),
@@ -47,12 +48,13 @@ class TestCliArgsErrors(Utils):
                                            'remote_option')))
     def test_experimental_disabled(self, arg, dest):
         with pytest.raises(exceptions.ExperimentalOptionWarning) as excinfo:
-            Syncere('./source/ ./destination/ -av {} --delete'.format(arg))
+            Syncere('./source/ ./destination/ -av {} --delete'.format(arg),
+                    test=True)
         assert excinfo.value.args[0] == dest
 
     def test_missing_destination(self):
         with pytest.raises(exceptions.MissingDestinationError):
-            Syncere('./source/')
+            Syncere('./source/', test=True)
 
 
 @pytest.mark.usefixtures('testdir')
@@ -63,7 +65,7 @@ class TestPreviewErrors(Utils):
     """
     def test_non_existing_folders(self):
         with pytest.raises(exceptions.RsyncError) as excinfo:
-            Syncere('./source/ ./destination/')
+            Syncere('./source/ ./destination/', test=True)
         retcode = excinfo.value.args[0]
         assert isinstance(retcode, int) and retcode > 0
         # TODO #1: Test that the interface hasn't been started
@@ -84,7 +86,7 @@ class TestTransferExecution(Utils):
         command mkdir destination
         """)
         with pytest.raises(SystemExit) as excinfo:
-            Syncere('./source/ ./destination/')
+            Syncere('./source/ ./destination/', test=True)
         assert excinfo.value.code == 0
         # TODO #1: Test that the application has exited at the correct stage
 
@@ -95,7 +97,8 @@ class TestTransferExecution(Utils):
         command cd source
         command echo "foo" > foo.txt
         """)
-        Syncere('./source/ ./destination/ -a', test=['>*', 'S'])
+        Syncere('./source/ ./destination/ -a', test=True,
+                commands=['include *', 'transfer'])
         # TODO #1: Test that the application has exited at the correct stage
 
 
@@ -121,12 +124,14 @@ class TestRsyncOptions(Utils):
         command cd source
         [ foo.txt -ef bar.txt ]
         """)
-        Syncere('./source/ ./destination/ -a', test=['>*', 'S'])
+        Syncere('./source/ ./destination/ -a', test=True,
+                commands=['include *', 'transfer'])
         self.verify("""
         command cd destination
         ! [ foo.txt -ef bar.txt ]
         """)
-        Syncere('./source/ ./destination/ -aH', test=['>*', 'S'])
+        Syncere('./source/ ./destination/ -aH', test=True,
+                commands=['include *', 'transfer'])
         self.verify("""
         command cd destination
         [ foo.txt -ef bar.txt ]
@@ -139,7 +144,8 @@ class TestRsyncOptions(Utils):
         command cd source
         [ foo.txt -ef bar.txt ]
         """)
-        Syncere('./source/ ./destination/ -aH', test=['>*', 'S'])
+        Syncere('./source/ ./destination/ -aH', test=True,
+                commands=['include *', 'transfer'])
         self.verify("""
         command cd destination
         [ foo.txt -ef bar.txt ]
@@ -152,7 +158,8 @@ class TestRsyncOptions(Utils):
         command cd source
         [ foo.txt -ef bar.txt ]
         """)
-        Syncere('./source/ ./destination/ -aH', test=['>1', '!2', 'S'])
+        Syncere('./source/ ./destination/ -aH', test=True,
+                commands=['include 1', 'exclude 2', 'transfer'])
         self.verify("""
         command cd destination
         ! [ foo.txt -ef bar.txt ]
@@ -171,10 +178,39 @@ class TestRsyncOptions(Utils):
         command echo "bar" > bar.txt
         """)
         Syncere('./source/ ./destination/ -a --log-file ./log '
-                '--log-file-format="%C"', test=['>*', 'S'])
+                '--log-file-format="%C"', test=True,
+                commands=['include *', 'transfer'])
         self.verify("""
         command cd destination
         [ -f foo.txt ]
+        """)
+        self.verify("""
+        command cd destination
+        [ -f bar.txt ]
+        """)
+
+
+@pytest.mark.usefixtures('testdir')
+class TestSyncereOptions(Utils):
+    """
+    Test the specific syncere options.
+    """
+    def test_import(self):
+        self.populate("""
+        command mkdir source
+        command mkdir destination
+        command cd source
+        command echo "foo" > foo.txt
+        command echo "bar" > bar.txt
+        command cd ..
+        command echo "!1" >> script
+        command echo ">2" >> script
+        """)
+        Syncere('./source/ ./destination/ -a', test=True,
+                commands=['transfer'])
+        self.verify("""
+        command cd destination
+        ! [ -f foo.txt ]
         """)
         self.verify("""
         command cd destination
@@ -195,5 +231,5 @@ class TestInterface(Utils):
         command cd source
         command echo "foo" > foo.txt
         """)
-        Syncere('./source/ ./destination/ -a')
+        Syncere('./source/ ./destination/ -a', test=True)
         # TODO #1: Test that the application has exited at the correct stage

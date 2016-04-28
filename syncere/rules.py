@@ -25,24 +25,26 @@ class Rules:
     """
     Main rule container: parses rulesets and applies rules to pending changes.
     """
+    # TODO *************************************************************************
     IGNORE = r'(#|\s*$)'
 
     def __init__(self):
         self.rules = []
 
     def parse_ruleset(self, setname):
-        # TODO #5
+        # TODO *************************************************************************
         with open(setname, 'r') as ruleset:
             for line in ruleset:
                 if not _m_re.match(self.IGNORE, line):
                     self.rules.append(Rule(line))
 
     def decide_change(self, ichange, sfilename):
+        # TODO *************************************************************************
         # TODO #56
         dec = '?'
 
         for rule in self.rules:
-            # TODO #6 #20
+            # TODO #20
             if ichange == rule.itemized and sfilename == rule.path:
                 dec = rule.action
 
@@ -53,7 +55,7 @@ class Rule:
     """
     Parse a rule line.
     """
-    # TODO #7 #8
+    # TODO #6 #8
     ITEMIZED = (r'[<>ch.*][fdLDS](?:[.c][.s][.tT][.p][.o][.g][.u][.a][.x]|'
                 r'[+ ?]{9}|\*deleting)')
     SYNTAX = r'\s*([!?>])\s*({0})\s*(pi?|P|gi?|G|ri?|R):(.+)$'.format(ITEMIZED)
@@ -64,7 +66,6 @@ class Rule:
             # TODO #40
             raise exceptions.InvalidRuleError(line)
 
-        # TODO #6
         self.action = match.group(1)
         self.itemized = match.group(2)
         self.path_type = match.group(3)

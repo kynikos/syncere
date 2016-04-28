@@ -8,36 +8,12 @@ Core:
       --ignore-times to force updating the files whose size and
       timestamp are the same (the only difference is the checksum)
      The --checksum option in the --help message still needs a help description
-#5: The --ruleset option must work with set names in specific configuration
-     directories, e.g. ~/.config/syncere/ ; currently instead it accepts a path
-     to a file
-    A --rules-from option could anyway be added to really point to a file.
-    Alternatively a path could be checked if no rulesets with the given name
-     are found in the configuration directories (a path can be forced by using
-     '/' in the value)
-    Similarly, a --rule option could be used in the vein of the --filter,
-     --exclude and --include options 
-    These options should however all respect the cascading order with each
-     other
-#6: Support all the ruleset path types and the itemized wildcards
-    Use fnmatch for globbing patterns
-#7: Rules: allow wildcards in the itemized representation
-    Allow to omit the itemized representation if only the path should
-    be tested
-#8: Rules: allow enclosing the path in some character, e.g. in quotes, for
-    example for paths that end with spaces, since they would be at risk
-    of being trimmed by text editors
-    The syntax could be e.g. 'p"path/to/file"', i.e. if a colon is
-    used, than the path is expected to end at the line break; if a
-    double quote is used, then the path is expected to end with '"$"
-    Other supported characters/separators can be <>, all parentheses,
-    or the path could be always started with '/', etc.
 #13: What is the maximum size of the data that stdout can host?
 #14: Check that terminating syncere with Ctrl+c (and other common ways?) also
      terminates the rsync commands
 #15: Preview rsync command: use sys.exit(call.returncode) instead of raising
      RsyncError?
-#17: Also allow writing file objects and feeding them to the
+#17: Add a transfer mode that writes a file object and feeds it to the
      transfer command's --*-from options with stdinput; of course this
      requires that stdinput is not used for some other reason (see also #18)
 #18: Pass the original sys.stdin, if present, to the transfer command (see also
@@ -50,18 +26,32 @@ Core:
      Protect from exceptions that may be raised when creating them
       (permissions etc.)
       Also warn if the file already exists
-#24: Disable the transfer modes that use --exclude or --include options when
-     the number of paths to be filtered is greater than a certain number
-     Make this compatible with the --default-mode 'S' command
-#26: The default mode, unless changed with --default-mode, shoul be an "auto"
-      mode, choosing the best transfer mode based on the number of included or
-      excluded changes in the list
-     The command could be 'Sa' or 'S*'
 
 Interface:
+#2: Protect the 'import' command from non-existing or unaccessible files
 #4: In the 'h' (help) screen document that some interactive options take
      parameters (#,#-#,#,# or *)
     Also document the various S* transfer subcommands
+#6: Support all the ruleset path types and the itemized wildcards
+    Use fnmatch for globbing patterns
+    Allow wildcards in the itemized representation
+    Allow to omit the itemized representation if only the path should
+    be tested
+#8: Rules: allow enclosing the path in some character, e.g. in quotes, for
+    example for paths that end with spaces, since they would be at risk
+    of being trimmed by text editors
+    The syntax could be e.g. 'p"path/to/file"', i.e. if a colon is
+    used, than the path is expected to end at the line break; if a
+    double quote is used, then the path is expected to end with '"$"
+    Other supported characters/separators can be <>, all parentheses,
+    or the path could be always started with '/', etc.
+#24: Disable the transfer modes that use --exclude or --include options when
+     the number of paths to be filtered is greater than a certain number
+     Make this compatible with the --default-mode 'S' command
+#26: The default transfer mode should be an "auto" mode, choosing the best
+      transfer mode based on the number of included or excluded changes in the
+      list
+     The command could be 'Sa' or 'S*'
 #25: If an interactive command doesn't accept arguments, it shouldn't execute
      if some are given; e.g. if 'qabc' or 'quit' are passed, 'q' shouldn't be
      executed; same goes for 'h'
@@ -71,18 +61,6 @@ Interface:
 #44: Allow displaying the output of the preview command with the --list-only
      option (and mention this in the --help message, because --list-only is in
      the unsupported group)
-#39: Instead of using a --show-identical option, make that feature accessible
-      as a filter of list commands, see also #30
-     Maybe remove the --info=skip option from the preview command instead?
-     Or, just use the 'l' command filters to decide what to show in a more
-      consistent way
-#43: Instead of a --default-mode option, use a --configuration option (or just
-      override rsync's unsupported --config option) to pass a list of
-      configuration options
-     Similarly, implement a --configuration-from option (or --config-from)
-     Maybe also implement interactive configuration commands, and use the
-      --configuration option to pass some of these commands, separated by
-      commas
 
 
 v0.2.0
@@ -98,6 +76,7 @@ Core:
       happens if they're specified multiple times and properly modify
       cliargs.py as needed
 #37: Implement experimental options
+#48: Move most shared options to transfer-only
 
 Interface:
 #10: Paginate the change preview lists in the interface; allow setting the
@@ -136,6 +115,10 @@ Docs:
 # Suggest that it's possible to transfer the new data into an empty folder,
   and then process it separately (--compare-dest argument)
   Create a small utility that shows a diff for the files?
+# Suggest that it's possoble to bypass the interface if there are no
+      undecided pending changes left after applying the rules (i.e.
+      sync without confirmation) by simply adding the 'transfer' command to
+      the --command options
 # Mention syncere in http://superuser.com/questions/282942/make-rsync-wait-for-a-confirmation-before-actually-changing-files
 
 
@@ -151,9 +134,6 @@ v1.1.0
 Core:
 #20: Allow choosing whether rulesets are applied in a cascading
      (last one wins) or rsync mode (first one wins)
-#21: Allow optionally bypassing the interface if there are no
-     undecided pending changes left after applying the rules (i.e.
-     sync without confirmation)
 #22: Print the rsync preview process' output in real time, but watch out for
      the deadlock problems!!!
      https://docs.python.org/3.5/library/subprocess.html
@@ -163,6 +143,7 @@ Core:
 #36: Is the --fuzzy option useful in the preview command? Would it slow the
      command down for no advatage? If so, offer an option to use it only in
      the transfer command
+#39: Optionally remove the --info=skip option from the preview command?
 #61: Ability to choose the synchronization direction per file if only one
      source is given (akin to Unison)
 #46: Can --log-file-format accept an empty string as a value? forwarg
@@ -171,9 +152,17 @@ Core:
      See also #41
 #63: See if the --timeout and --contimeout options can be enabled also for the
      preview command
+#64: Maybe make the Interface the main object, and manage everything from there
+     For example also make a 'preview' command, calling it the first time
+      automatically, but also allowing to call it again without having to
+      restart syncere. Another possible name could be 'refresh'
+     In this case, the 'transfer' command shouldn't quit syncere
+     Also allow editing the commands interactively
+     The preset pending-change rules should be re-executed after a refresh;
+      maybe the whole configuration script should be reloaded?
 
 Interface:
-#30: In some interactive commands it should be possible to use filters, e.g.
+#30: Add more filters to the commands that act on a selection of changes, e.g.
       only show included, excluded or undecided changes
      Other possible filters: show only the root items; show only the children
       of a directory; show only the descendants of a directory
@@ -181,12 +170,9 @@ Interface:
       initial parse of the --itemize-changes output
      It would be nice to also recognize ranges that end with '-', e.g. "3-"
       could mean "select from 3 to the end"
-     See also #39
 #31: When applying an interactive action on a directory, it should be possible
      to apply the change recursively to its descendants
      See also the related TODO comments in interface.py
-#32: Also allow specifying transfer rules (like in rule sets) through
-     interactive commands
 #33: Allow opening and editing the pending changes in an external text
      editor (chosen with the $EDITOR environment variable)
 #34: Add an interactive command to preview the actual rsync command that
@@ -194,20 +180,13 @@ Interface:
      escaping characters
 #35: It should be possible to write a files-from or exclude-from
      file from the interactive menu (i.e. without necessarily executing 'S')
+#100: Internationalization: allow localizing all the messages
 
 Tests:
-#60: In the 'test' parameter of the main Syncere class, used to pass automatic
-     interactive commands for testing, support adding in the list a value such
-     as 'True' to allow the user to enter a command interactively through the
-     normal input prompt in the loop above (i.e. instead of having the command
-     added automatically); maybe a new special interactive command should also
-     be added for testing sessions, to restart the execution of the 'test' list
-     (e.g. 'T: resume the testing commands list')
-
-
-v1.8.0
-
-#80: interface.py imports readline to enable the history of interactive
-     commands; it's however possible to go beyond this and enable a completer
-     etc., see the documentation
-#100: Internationalization: allow localizing all the messages
+#60: In the 'commands' parameter of the main Syncere class, used to pass
+     automatic interactive commands for testing, support adding in the list a
+     value such as 'True' to allow the user to enter a command interactively
+     through the normal input prompt in the loop above (i.e. instead of having
+     the command added automatically); maybe a new special interactive command
+     should also be added for testing sessions, to restart the execution of the
+     'test' list (e.g. 'T: resume the testing commands list')
