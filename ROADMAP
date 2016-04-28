@@ -67,6 +67,10 @@ Interface:
      Also allow editing the commands interactively
      The preset pending-change rules should be re-executed after a refresh;
       maybe the whole configuration script should be reloaded?
+     Maybe if the --command option is given, no other commands should be run
+      by default, e.g. 'preview' or 'list'; this would also allow setting
+      preview parameters normally through syncere commands, without the need
+      for additional command-line options
 
 
 
