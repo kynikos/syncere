@@ -159,8 +159,6 @@ class MainMenu:
 
         print()
 
-        return False
-
     def details(self, *args):
         """
         List a selection of pending changes with details.
@@ -177,8 +175,6 @@ class MainMenu:
 
         print()
 
-        return False
-
     def include(self, *args):
         """
         Include (confirm) the changes in the synchronization.
@@ -187,7 +183,6 @@ class MainMenu:
         #       directories, if they aren't included already
         for change in self._select_changes(*args):
             change.include()
-        return False
 
     def exclude(self, *args):
         """
@@ -198,7 +193,6 @@ class MainMenu:
         #       included
         for change in self._select_changes(*args):
             change.exclude()
-        return False
 
     def reset(self, *args):
         """
@@ -209,7 +203,6 @@ class MainMenu:
         #       this should ask to reset all the ancestor directories
         for change in self._select_changes(*args):
             change.reset()
-        return False
 
     def help(self):
         """
@@ -255,7 +248,6 @@ class ConfigMenu:
         #       Predefined rule: _m_re.match('\.[fdLDS] {9}$', match.group(1))
         # FIXME
         print(string)
-        return False
 
     def help(self):
         """
@@ -355,7 +347,6 @@ class TransferMenu:
             if change.included not in (True, False):
                 print('There are still undecided changes')
                 return False
-        return True
 
     def exclude(self, *args):
         """
@@ -364,10 +355,9 @@ class TransferMenu:
         The original rsync command will be executed, but --exclude options will
         be prepended to its options, one for each file interactively excluded.
         """
-        if self._pre_transfer_checks(*args) is not True:
-            return False
-        self.interface.transfer_mode = 'exclude'
-        return _m_cmenu.END_ALL_LOOPS
+        if self._pre_transfer_checks(*args) is not False:
+            self.interface.transfer_mode = 'exclude'
+            raise self.interface.mainmenu.EndLoops(2)
 
     def exclude_from(self, *args):
         """
@@ -378,10 +368,9 @@ class TransferMenu:
         option will be prepended to the original command's options to read the
         exclude file.
         """
-        if self._pre_transfer_checks(*args) is not True:
-            return False
-        self.interface.transfer_mode = 'exclude-from'
-        return _m_cmenu.END_ALL_LOOPS
+        if self._pre_transfer_checks(*args) is not False:
+            self.interface.transfer_mode = 'exclude-from'
+            raise self.interface.mainmenu.EndLoops(2)
 
     def include(self, *args):
         """
@@ -391,10 +380,9 @@ class TransferMenu:
         be prepended to its options, one for each file interactively included,
         terminated by an --exclude=* option.
         """
-        if self._pre_transfer_checks(*args) is not True:
-            return False
-        self.interface.transfer_mode = 'include'
-        return _m_cmenu.END_ALL_LOOPS
+        if self._pre_transfer_checks(*args) is not False:
+            self.interface.transfer_mode = 'include'
+            raise self.interface.mainmenu.EndLoops(2)
 
     def include_from(self, *args):
         """
@@ -405,10 +393,9 @@ class TransferMenu:
         option will be prepended to the original command's options to read the
         include file.
         """
-        if self._pre_transfer_checks(*args) is not True:
-            return False
-        self.interface.transfer_mode = 'include-from'
-        return _m_cmenu.END_ALL_LOOPS
+        if self._pre_transfer_checks(*args) is not False:
+            self.interface.transfer_mode = 'include-from'
+            raise self.interface.mainmenu.EndLoops(2)
 
     def files_from(self, *args):
         """
@@ -419,10 +406,9 @@ class TransferMenu:
         option will be prepended to the original command's options to read the
         created file.
         """
-        if self._pre_transfer_checks(*args) is not True:
-            return False
-        self.interface.transfer_mode = 'files-from'
-        return _m_cmenu.END_ALL_LOOPS
+        if self._pre_transfer_checks(*args) is not False:
+            self.interface.transfer_mode = 'files-from'
+            raise self.interface.mainmenu.EndLoops(2)
 
     def help(self):
         """
