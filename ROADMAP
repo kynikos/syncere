@@ -26,6 +26,7 @@ Core:
      Protect from exceptions that may be raised when creating them
       (permissions etc.)
       Also warn if the file already exists
+#39: Optionally remove the --info=skip option from the preview command?
 
 Interface:
 #4: Document the filters syntax in the 'help' message of the commands that
@@ -55,6 +56,10 @@ Interface:
      executed; same goes for 'h'
      Also the commands that accept filters shouldn't execute at all if part of
      a filter is wrong; currently, something like '>5,a,6' does select 5 and 6
+#34: Add an interactive command to preview the actual rsync command that
+     would be used with 'S', but remind that Popen takes care of
+     escaping characters
+     See also #64
 #38: Allow testing the transfer command with the --dry-run option
 #44: Allow displaying the output of the preview command with the --list-only
      option (and mention this in the --help message, because --list-only is in
@@ -71,7 +76,7 @@ Interface:
       by default, e.g. 'preview' or 'list'; this would also allow setting
       preview parameters normally through syncere commands, without the need
       for additional command-line options
-
+     See also #34
 
 
 v0.2.0
@@ -155,7 +160,6 @@ Core:
 #36: Is the --fuzzy option useful in the preview command? Would it slow the
      command down for no advatage? If so, offer an option to use it only in
      the transfer command
-#39: Optionally remove the --info=skip option from the preview command?
 #61: Ability to choose the synchronization direction per file if only one
      source is given (akin to Unison)
 #46: Can --log-file-format accept an empty string as a value? forwarg
@@ -179,9 +183,6 @@ Interface:
      See also the related TODO comments in interface.py
 #33: Allow opening and editing the pending changes in an external text
      editor (chosen with the $EDITOR environment variable)
-#34: Add an interactive command to preview the actual rsync command that
-     would be used with 'S', but remind that Popen takes care of
-     escaping characters
 #35: It should be possible to write a files-from or exclude-from
      file from the interactive menu (i.e. without necessarily executing 'S')
 #100: Internationalization: allow localizing all the messages
