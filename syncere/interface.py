@@ -272,7 +272,6 @@ class AliasMenu:
 
         Syntax: set alias_name "command arg arg ..."
         """
-        # TODO Check that it's not overriding a built-in command ************************
         pass
 
     def unset(self, *args):
@@ -281,14 +280,12 @@ class AliasMenu:
 
         Syntax: unset alias_name
         """
-        # TODO *************************************************************************
         pass
 
     def unset_all(self, *args):
         """
         Unset all command aliases.
         """
-        # TODO *************************************************************************
         pass
 
     def help(self):
