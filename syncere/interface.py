@@ -75,11 +75,14 @@ class MainMenu:
         _m_cmenu.Action(self.menu, 'details', self.details)
         ConfigMenu(self.menu, 'config', interface)
         _m_cmenu.Action(self.menu, 'include', self.include)
-        _m_cmenu.Alias(self.menu, '>', 'include')
+        # Don't use an Alias because this shouldn't be editable
+        _m_cmenu.Action(self.menu, '>', self.include)
         _m_cmenu.Action(self.menu, 'exclude', self.exclude)
-        _m_cmenu.Alias(self.menu, '!', 'exclude')
+        # Don't use an Alias because this shouldn't be editable
+        _m_cmenu.Action(self.menu, '!', self.exclude)
         _m_cmenu.Action(self.menu, 'reset', self.reset)
-        _m_cmenu.Alias(self.menu, '?', 'reset')
+        # Don't use an Alias because this shouldn't be editable
+        _m_cmenu.Action(self.menu, '?', self.reset)
         TransferMenu(self.menu, 'transfer', interface)
         _m_cmenu.Help(self.menu, 'help', helpfull=self.help)
         _m_cmenu.Quit(self.menu, 'quit', helpfull=self.quit)
