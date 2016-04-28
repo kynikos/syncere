@@ -59,6 +59,15 @@ Interface:
 #44: Allow displaying the output of the preview command with the --list-only
      option (and mention this in the --help message, because --list-only is in
      the unsupported group)
+#64: Make the Interface the main object, and manage everything from there
+     For example also make a 'preview' command, calling it the first time
+      automatically, but also allowing to call it again without having to
+      restart syncere. Another possible name could be 'refresh'
+     In this case, the 'transfer' command shouldn't quit syncere
+     Also allow editing the commands interactively
+     The preset pending-change rules should be re-executed after a refresh;
+      maybe the whole configuration script should be reloaded?
+
 
 
 v0.2.0
@@ -151,14 +160,6 @@ Core:
      See also #41
 #63: See if the --timeout and --contimeout options can be enabled also for the
      preview command
-#64: Maybe make the Interface the main object, and manage everything from there
-     For example also make a 'preview' command, calling it the first time
-      automatically, but also allowing to call it again without having to
-      restart syncere. Another possible name could be 'refresh'
-     In this case, the 'transfer' command shouldn't quit syncere
-     Also allow editing the commands interactively
-     The preset pending-change rules should be re-executed after a refresh;
-      maybe the whole configuration script should be reloaded?
 
 Interface:
 #30: Add more filters to the commands that act on a selection of changes, e.g.
