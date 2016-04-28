@@ -67,10 +67,10 @@ class MainMenu:
         # TODO #4: Introduce filters syntax in the specific 'help' messages of
         #          the commands that do support filters
         self.menu = _m_cmenu.RootMenu('syncere', helpfull=self.__init__)
-        _m_cmenu.Action(self.menu, 'import', self.import_)
+        _m_cmenu.RunScript(self.menu, 'import', helpfull=self.import_)
         _m_cmenu.Action(self.menu, 'list', self.list_)
         _m_cmenu.Action(self.menu, 'details', self.details)
-        ConfigMenu(self.menu, 'config', interface)
+        ConfigMenu(self.menu, 'config', self.menu)
         _m_cmenu.Action(self.menu, 'include', self.include)
         # Don't use an Alias because this shouldn't be editable
         _m_cmenu.Action(self.menu, '>', self.include)
@@ -130,19 +130,7 @@ class MainMenu:
         """
         Run a series of commands from a script.
         """
-        if len(args) == 0:
-            print('File name not specified')
-        elif len(args) > 1:
-            print('Too many arguments')
-        else:
-            try:
-                script = open(args[0], 'r')
-            except OSError as exc:
-                print('The file cannot be opened: ' + exc.strerror)
-            else:
-                with script:
-                    for line in script:
-                        self.onecmd(line)
+        pass
 
     def list_(self, *args):
         """
@@ -221,16 +209,14 @@ class MainMenu:
 
 
 class ConfigMenu:
-    def __init__(self, parent, name, interface):
+    def __init__(self, parent, name, rootmenu):
         """
         Open the configuration menu or execute a configuration command.
 
         {command_list}
         """
-        self.interface = interface
-
         menu = _m_cmenu.SubMenu(parent, name, helpfull=self.__init__)
-        AliasMenu(menu, 'alias', interface)
+        AliasMenu(menu, 'alias', rootmenu)
         _m_cmenu.LineEditor(menu, 'filter', self.filter_in, self.filter_out)
         _m_cmenu.Help(menu, 'help', helpfull=self.help)
         _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
@@ -266,24 +252,25 @@ class ConfigMenu:
 
 
 class AliasMenu:
-    def __init__(self, parent, name, interface):
+    def __init__(self, parent, name, rootmenu):
         """
         Open the alias menu or execute an alias configuration command.
 
         {command_list}
         """
-        self.interface = interface
-
         menu = _m_cmenu.SubMenu(parent, name, helpfull=self.__init__)
-        _m_cmenu.Action(menu, 'set', self.set_)
-        _m_cmenu.Action(menu, 'unset', self.unset)
-        _m_cmenu.Action(menu, 'unset-all', self.unset_all)
+        _m_cmenu.AliasSet(menu, 'set', rootmenu, helpfull=self.set_)
+        _m_cmenu.AliasUnset(menu, 'unset', rootmenu, helpfull=self.unset)
+        _m_cmenu.AliasUnsetAll(menu, 'unset-all', rootmenu,
+                               helpfull=self.unset_all)
         _m_cmenu.Help(menu, 'help', helpfull=self.help)
         _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
 
     def set_(self, *args):
         """
         Set a command alias.
+
+        Syntax: set alias_name "command arg arg ..."
         """
         # TODO Check that it's not overriding a built-in command ************************
         pass
@@ -291,6 +278,8 @@ class AliasMenu:
     def unset(self, *args):
         """
         Unset a command alias.
+
+        Syntax: unset alias_name
         """
         # TODO *************************************************************************
         pass
