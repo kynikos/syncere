@@ -98,7 +98,8 @@ class TestTransferExecution(Utils):
         command echo "foo" > foo.txt
         """)
         Syncere('./source/ ./destination/ -a', test=True,
-                commands=['include *', 'transfer'])
+                # TODO #26: Use 'transfer auto' when implemented
+                commands=['preview', 'include *', 'transfer exclude', 'quit'])
         # TODO #1: Test that the application has exited at the correct stage
 
 
@@ -125,13 +126,15 @@ class TestRsyncOptions(Utils):
         [ foo.txt -ef bar.txt ]
         """)
         Syncere('./source/ ./destination/ -a', test=True,
-                commands=['include *', 'transfer'])
+                # TODO #26: Use 'transfer auto' when implemented
+                commands=['preview', 'include *', 'transfer exclude', 'quit'])
         self.verify("""
         command cd destination
         ! [ foo.txt -ef bar.txt ]
         """)
         Syncere('./source/ ./destination/ -aH', test=True,
-                commands=['include *', 'transfer'])
+                # TODO #26: Use 'transfer auto' when implemented
+                commands=['preview', 'include *', 'transfer exclude', 'quit'])
         self.verify("""
         command cd destination
         [ foo.txt -ef bar.txt ]
@@ -145,7 +148,8 @@ class TestRsyncOptions(Utils):
         [ foo.txt -ef bar.txt ]
         """)
         Syncere('./source/ ./destination/ -aH', test=True,
-                commands=['include *', 'transfer'])
+                # TODO #26: Use 'transfer auto' when implemented
+                commands=['preview', 'include *', 'transfer exclude', 'quit'])
         self.verify("""
         command cd destination
         [ foo.txt -ef bar.txt ]
@@ -159,7 +163,9 @@ class TestRsyncOptions(Utils):
         [ foo.txt -ef bar.txt ]
         """)
         Syncere('./source/ ./destination/ -aH', test=True,
-                commands=['include 1', 'exclude 2', 'transfer'])
+                commands=['preview', 'include 1', 'exclude 2',
+                          # TODO #26: Use 'transfer auto' when implemented
+                          'transfer exclude', 'quit'])
         self.verify("""
         command cd destination
         ! [ foo.txt -ef bar.txt ]
@@ -179,7 +185,8 @@ class TestRsyncOptions(Utils):
         """)
         Syncere('./source/ ./destination/ -a --log-file ./log '
                 '--log-file-format="%C"', test=True,
-                commands=['include *', 'transfer'])
+                # TODO #26: Use 'transfer auto' when implemented
+                commands=['preview', 'include *', 'transfer exclude', 'quit'])
         self.verify("""
         command cd destination
         [ -f foo.txt ]
@@ -196,6 +203,7 @@ class TestSyncereOptions(Utils):
     Test the specific syncere options.
     """
     def test_import(self):
+        # TODO #26: Use 'transfer auto' when implemented
         self.populate("""
         command mkdir source
         command mkdir destination
@@ -203,11 +211,14 @@ class TestSyncereOptions(Utils):
         command echo "foo" > foo.txt
         command echo "bar" > bar.txt
         command cd ..
-        command echo "!1" >> script
-        command echo ">2" >> script
+        command echo "preview" >> script
+        command echo "! 1" >> script
+        command echo "> 2" >> script
+        command echo "transfer exclude" >> script
+        command echo "quit" >> script
         """)
         Syncere('./source/ ./destination/ -a', test=True,
-                commands=['transfer'])
+                commands=['import ./script'])
         self.verify("""
         command cd destination
         ! [ -f foo.txt ]

@@ -21,6 +21,8 @@ Core:
 #19: Test what happens in case of an error in the transfer rsync commands
      Ensure that rsync's return code is the one returned when the whole syncere
      process exits
+#21: The transfer commands should accept a 'quit' argument that quits syncere
+      as soon as the rsync process terminates (with success?)
 #23: Optionally delete the *-from files after the transfer command completes
      Allow choosing at what path they are created
      Protect from exceptions that may be raised when creating them
@@ -48,12 +50,12 @@ Interface:
 #24: Disable the transfer modes that use --exclude or --include options when
      the number of paths to be filtered is greater than a certain number
      Make this compatible with the --default-mode 'S' command
+#25: The commands that accept filters shouldn't execute at all if part of
+     a filter is wrong; currently, something like '>5,a,6' does select 5 and 6
 #26: The default transfer mode should be an "auto" mode, choosing the best
       transfer mode based on the number of included or excluded changes in the
       list
      The command could be 'Sa' or 'S*'
-#25: The commands that accept filters shouldn't execute at all if part of
-     a filter is wrong; currently, something like '>5,a,6' does select 5 and 6
 #34: Add an interactive command to preview the actual rsync command that
      would be used with 'S', but remind that Popen takes care of
      escaping characters

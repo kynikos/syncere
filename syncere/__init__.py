@@ -74,7 +74,7 @@ class Syncere:
         if test:
             # TODO #60
             # This can raise _m_cmenu.InsufficientTestCommands: if testing, the
-            # last command should be 'transfer' or 'quit'
+            # last command should be one that quits syncere
             self.mainmenu.loop_test(commands)
         else:
             self.mainmenu.loop_lines(commands)
