@@ -221,7 +221,7 @@ class ConfigMenu:
         _m_cmenu.Help(menu, 'help', helpfull=self.help)
         _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
 
-    def filter_in(self, *args):
+    def filter_in(self):
         """
         Edit the current list filter.
         """
