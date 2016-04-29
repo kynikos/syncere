@@ -26,7 +26,8 @@ Core:
      Protect from exceptions that may be raised when creating them
       (permissions etc.)
       Also warn if the file already exists
-#39: Optionally remove the --info=skip option from the preview command?
+#39: Remove the --info=skip option from the preview command
+     Allow optionally readding it with #64
 
 Interface:
 #4: Document the filters syntax in the 'help' message of the commands that
@@ -51,10 +52,7 @@ Interface:
       transfer mode based on the number of included or excluded changes in the
       list
      The command could be 'Sa' or 'S*'
-#25: If an interactive command doesn't accept arguments, it shouldn't execute
-     if some are given; e.g. if 'qabc' or 'quit' are passed, 'q' shouldn't be
-     executed; same goes for 'h'
-     Also the commands that accept filters shouldn't execute at all if part of
+#25: The commands that accept filters shouldn't execute at all if part of
      a filter is wrong; currently, something like '>5,a,6' does select 5 and 6
 #34: Add an interactive command to preview the actual rsync command that
      would be used with 'S', but remind that Popen takes care of
@@ -64,18 +62,12 @@ Interface:
 #44: Allow displaying the output of the preview command with the --list-only
      option (and mention this in the --help message, because --list-only is in
      the unsupported group)
-#64: Make the Interface the main object, and manage everything from there
-     For example also make a 'preview' command, calling it the first time
-      automatically, but also allowing to call it again without having to
-      restart syncere. Another possible name could be 'refresh'
-     In this case, the 'transfer' command shouldn't quit syncere
-     Also allow editing the commands interactively
+#56: The interactive menu commands and the '?' '!' '>' symbols shouldn't be
+     hard-coded, but centralized constants should be used in their place
+#64: Allow editing the rsyn commands interactively, but note that they must be
+      always validated
      The preset pending-change rules should be re-executed after a refresh;
       maybe the whole configuration script should be reloaded?
-     Maybe if the --command option is given, no other commands should be run
-      by default, e.g. 'preview' or 'list'; this would also allow setting
-      preview parameters normally through syncere commands, without the need
-      for additional command-line options
      See also #34
 
 
@@ -87,7 +79,7 @@ Core:
 #28: Implement more shared command-line options 
      --verbose could decide whether the non itemized-change lines should be
       printed when parsing the preview command results
-#29: Maybe there are some more rsync options that can be specified multiple
+#29: There may be some more rsync options that can be specified multiple
       times, but for the moment syncere accepts them only once; test what
       happens if they're specified multiple times and properly modify
       cliargs.py as needed
@@ -132,18 +124,11 @@ Docs:
 # Suggest that it's possible to transfer the new data into an empty folder,
   and then process it separately (--compare-dest argument)
   Create a small utility that shows a diff for the files?
-# Suggest that it's possoble to bypass the interface if there are no
+# Suggest that it's possible to bypass the interface if there are no
       undecided pending changes left after applying the rules (i.e.
       sync without confirmation) by simply adding the 'transfer' command to
       the --command options
 # Mention syncere in http://superuser.com/questions/282942/make-rsync-wait-for-a-confirmation-before-actually-changing-files
-
-
-v1.0.1
-
-Style:
-#56: The interactive menu commands and the '?' '!' '>' symbols shouldn't be
-     hard-coded, but centralized constants should be used in their place
 
 
 v1.1.0

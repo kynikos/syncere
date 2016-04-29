@@ -73,6 +73,11 @@ Syncere-specific options:
                 execute more commands in the specified order. See syncere(1)
                 for information on the available commands. To load a series of
                 commands from a script, use --command="import /path/to/script".
+                Note that syncere by default executes the 'preview quit' and
+                'list' commands sequentially as soon as it is started, but only
+                if no --command options are given; if you specify a --command
+                option and still want those two commands executed at startup,
+                you will have to add them explicitly.
 
     --experimental
                 Enable the experimentally-supported rsync options, see the
