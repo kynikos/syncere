@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with syncere.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys as _m_sys
 import subprocess as _m_subprocess
 import re as _m_re
 
@@ -197,7 +196,7 @@ class MainMenu:
             # TODO #21
             print('Nothing to do')
             if quit:
-                _m_sys.exit(0)
+                self.menu.break_loops(True)
 
     def import_(self, *args):
         """

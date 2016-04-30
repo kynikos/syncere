@@ -85,9 +85,7 @@ class TestTransferExecution(Utils):
         command mkdir source
         command mkdir destination
         """)
-        with pytest.raises(SystemExit) as excinfo:
-            Syncere('./source/ ./destination/', test=True)
-        assert excinfo.value.code == 0
+        Syncere('./source/ ./destination/', test=True)
         # TODO #1: Test that the application has exited at the correct stage
 
     def test_default_transfer(self):
