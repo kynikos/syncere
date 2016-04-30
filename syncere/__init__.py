@@ -81,8 +81,8 @@ class Syncere:
 class MainMenu:
     def __init__(self, rootapp, test):
         """
-        Type 'help <command>' for more information. Tab completion is
-        available.
+        Type 'help <command>' for more information.
+        Tab completion is available.
 
         {command_list}
         """
