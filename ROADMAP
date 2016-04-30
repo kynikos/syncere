@@ -173,13 +173,3 @@ Interface:
 #35: It should be possible to write a files-from or exclude-from
      file from the interactive menu (i.e. without necessarily executing 'S')
 #100: Internationalization: allow localizing all the messages
-
-Tests:
-#60: This feature request is actually for the typein.cmenu module
-     In the 'commands' parameter of the main Syncere class, used to pass
-     automatic interactive commands for testing, support adding in the list a
-     value such as 'True' to allow the user to enter a command interactively
-     through the normal input prompt in the loop above (i.e. instead of having
-     the command added automatically); maybe a new special interactive command
-     should also be added for testing sessions, to restart the execution of the
-     'test' list (e.g. 'T: resume the testing commands list')

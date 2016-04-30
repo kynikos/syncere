@@ -1,6 +1,6 @@
 import pytest
 
-from .syncere import Syncere, exceptions
+from .syncere import Syncere, exceptions, _m_cmenu
 from .conftest import Utils
 
 
@@ -240,5 +240,8 @@ class TestInterface(Utils):
         command cd source
         command echo "foo" > foo.txt
         """)
-        Syncere('./source/ ./destination/ -a', test=True)
+        Syncere('./source/ ./destination/ -a', test=True,
+                commands=[_m_cmenu.TestInteract(repeat=True,
+                                                message="\nFree testing!"),
+                          'quit'])
         # TODO #1: Test that the application has exited at the correct stage

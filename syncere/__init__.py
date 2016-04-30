@@ -38,7 +38,7 @@ class Syncere:
     """
     VERSION_NUMBER = '0.1.0'
     VERSION_DATE = '2016-04-17'
-    DEFAULT_STARTUP_COMMANDS = ('preview quit', 'list')
+    DEFAULT_STARTUP_COMMANDS = ['preview quit', 'list']
 
     def __init__(self, cliargs=None, commands=[], test=False):
         self._parse_arguments(cliargs)
@@ -66,23 +66,20 @@ class Syncere:
 
     def _start_interface(self, commands, test):
         # TODO #4 #25 #30 #31 #33 #34 #35 #56
-        self.mainmenu = MainMenu(self).menu
+        self.mainmenu = MainMenu(self, test).menu
 
+        # When testing, we don't want the original DEFAULT_STARTUP_COMMANDS to
+        # be modified directly by the tests, so clone it
         commands = commands or self.cliargs.namespace.commands or \
-            self.DEFAULT_STARTUP_COMMANDS
-        if test:
-            # TODO #60
-            # This can raise _m_cmenu.InsufficientTestCommands: if testing, the
-            # last command should be one that quits syncere
-            self.mainmenu.loop_test(commands)
-        else:
-            self.mainmenu.loop_lines(commands)
-            print("Type 'help' to list available commands\n")
-            self.mainmenu.loop_input()
+            self.DEFAULT_STARTUP_COMMANDS[:]
+        # This can raise _m_cmenu.InsufficientTestCommands: if testing, the
+        # last command should be one that quits syncere
+        self.mainmenu.loop(intro="Type 'help' to list available commands\n",
+                           cmdlines=commands, test=test)
 
 
 class MainMenu:
-    def __init__(self, rootapp):
+    def __init__(self, rootapp, test):
         """
         Type 'help <command>' for more information. Tab completion is
         available.
@@ -112,6 +109,9 @@ class MainMenu:
         _m_cmenu.Action(self.menu, '?', self.reset,
                         helpshort='Built-in alias for <reset>')
         TransferMenu(self.menu, 'transfer', rootapp)
+        if test:
+            _m_cmenu.ResumeTest(self.menu, 'resume-test',
+                                helpfull=self.resume_test)
         _m_cmenu.Help(self.menu, 'help', helpfull=self.help)
         _m_cmenu.Quit(self.menu, 'quit', helpfull=self.quit)
 
@@ -308,6 +308,12 @@ class MainMenu:
         #       this should ask to reset all the ancestor directories
         for change in self._select_changes(*args):
             change.reset()
+
+    def resume_test(self):
+        """
+        Resume the automatic execution of test commands.
+        """
+        pass
 
     def help(self):
         """
