@@ -20,6 +20,26 @@ import re as _m_re
 
 from . import exceptions
 
+# TODO *******************************************************************************
+"""
+# Rules example
+
+? .d..t...... p:./
+
+ ?  >f+++++++++ p:aaa
+
+ ? cd+++++++++p: dir with spaces /
+!   >f+++++++++ p: dir with spaces / file with spaces
+
+>cd+++++++++   p:one space/
+  > >f+++++++++ p:one space/file 1 2 3
+
+?cd+++++++++p:test1/
+?  >f+++++++++ p:test1/foo1
+?  cd+++++++++   p:test1/somedir33/
+ ?>f+++++++++ p:test1/somedir33/blabla
+"""
+
 
 class Rules:
     """
