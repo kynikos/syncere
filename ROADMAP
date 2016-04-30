@@ -1,6 +1,11 @@
 v0.1.0
 
 Core:
+#2: Review all the help messages, for example the header of a single 'help'
+    command should be different from the header of a 'help menu' command.
+    Also centralize the messages which at the moment are coded directly in
+    typein.cmenu: libraries should raise exceptions, or at least have
+    configurable messages, not hardcode them
 #3: Implement optimized options
      In order to avoid recalculating the checksums again, the
       transfer command could omit the --checksum argument, compile a
