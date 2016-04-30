@@ -39,9 +39,14 @@ class Syncere:
     VERSION_NUMBER = '0.1.0'
     VERSION_DATE = '2016-04-17'
     DEFAULT_STARTUP_COMMANDS = ['preview quit', 'list']
+    DEFAULT_CONFIG = {
+        'preview-info-flags': 'backup4,copy4,del4,flist4,misc4,mount4,name1,'
+                              'remove4,symsafe4',
+    }
 
     def __init__(self, cliargs=None, commands=[], test=False):
         self._parse_arguments(cliargs)
+        self.configuration = self.DEFAULT_CONFIG.copy()
         self.pending_changes = []
         self._start_interface(commands, test)
 
@@ -95,7 +100,7 @@ class MainMenu:
         _m_cmenu.RunScript(self.menu, 'import', helpfull=self.import_)
         _m_cmenu.Action(self.menu, 'list', self.list_)
         _m_cmenu.Action(self.menu, 'details', self.details)
-        ConfigMenu(self.menu, 'config', self.menu)
+        ConfigMenu(self.menu, 'config', self.menu, rootapp)
         _m_cmenu.Action(self.menu, 'include', self.include)
         # Don't use an Alias because this shouldn't be editable
         _m_cmenu.Action(self.menu, '>', self.include,
@@ -134,8 +139,9 @@ class MainMenu:
         # TODO #14
         call = _m_subprocess.Popen(['rsync', *self.rootapp.previewargs,
                                     '--dry-run',
-                                    '--info=backup4,copy4,del4,flist4,misc4,'
-                                    'mount4,name1,remove4,symsafe4',
+                                    '--info={}'.format(
+                                                    self.rootapp.configuration[
+                                                        'preview-info-flags']),
                                     '--out-format='
                                     '{syncere}%i '  # itemized changes
                                     '%o '  # operation
@@ -331,7 +337,7 @@ class MainMenu:
 
 
 class ConfigMenu:
-    def __init__(self, parent, name, rootmenu):
+    def __init__(self, parent, name, rootmenu, rootapp):
         """
         Open the configuration menu or execute a configuration command.
 
@@ -339,23 +345,10 @@ class ConfigMenu:
         """
         menu = _m_cmenu.SubMenu(parent, name, helpfull=self.__init__)
         AliasMenu(menu, 'alias', rootmenu)
-        _m_cmenu.LineEditor(menu, 'filter', self.filter_in, self.filter_out)
+        for option in rootapp.configuration:
+            ConfigOptionMenu(menu, option, rootapp)
         _m_cmenu.Help(menu, 'help', helpfull=self.help)
         _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
-
-    def filter_in(self):
-        """
-        Edit the current list filter.
-        """
-        # TODO: ************************************************************************
-        return 'foobar'
-
-    def filter_out(self, string):
-        # TODO: Hide files that are not going to be transferred because ***************
-        #       identical at the source and destination.
-        #       Predefined rule: _m_re.match('\.[fdLDS] {9}$', match.group(1))
-        # FIXME
-        print(string)
 
     def help(self):
         """
@@ -409,6 +402,57 @@ class AliasMenu:
         Unset all command aliases.
         """
         pass
+
+    def help(self):
+        """
+        Show this help screen.
+
+        Type 'help <command>' for more information on a specific command.
+        Tab completion is always available in the menus.
+        """
+        pass
+
+    def exit(self):
+        """
+        Go back to the parent configuration menu.
+        """
+        pass
+
+
+class ConfigOptionMenu:
+    def __init__(self, parent, name, rootapp):
+        """
+        Open the configuration option's menu or execute an option command.
+
+        {command_list}
+        """
+        self.name = name
+        self.rootapp = rootapp
+
+        menu = _m_cmenu.SubMenu(parent, name, helpfull=self.__init__)
+        _m_cmenu.LineEditor(menu, 'change', self.value_in, self.value_out)
+        _m_cmenu.Action(menu, 'default', self.default)
+        _m_cmenu.Help(menu, 'help', helpfull=self.help)
+        _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
+
+    def value_in(self):
+        """
+        Edit the current option's value.
+        """
+        return self.rootapp.configuration[self.name]
+
+    def value_out(self, string):
+        self.rootapp.configuration[self.name] = string
+
+    def default(self, *args):
+        """
+        Restore the default option's value.
+        """
+        if len(args) > 0:
+            print('Unrecognized arguments')
+            return False
+        self.rootapp.configuration[self.name] = self.rootapp.DEFAULT_CONFIG[
+                                                                    self.name]
 
     def help(self):
         """

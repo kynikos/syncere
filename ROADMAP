@@ -13,6 +13,8 @@ Core:
       --ignore-times to force updating the files whose size and
       timestamp are the same (the only difference is the checksum)
      The --checksum option in the --help message still needs a help description
+#5: Change the 'include' term to 'confirm', and 'exclude' to 'except', to avoid
+     confusion with rsync's terminology
 #13: What is the maximum size of the data that stdout can host?
 #14: Check that terminating syncere with Ctrl+c (and other common ways?) also
      terminates the rsync commands
@@ -58,11 +60,13 @@ Interface:
 #26: The default transfer mode should be an "auto" mode, choosing the best
       transfer mode based on the number of included or excluded changes in the
       list
-     The command could be 'Sa' or 'S*'
 #34: Add an interactive command to preview the actual rsync command that
-     would be used with 'S', but remind that Popen takes care of
+     would be used with 'transfer', but remind that Popen takes care of
      escaping characters
      See also #64
+#35: It should be possible to write a files-from or exclude-from
+     file from the interactive menu (i.e. without necessarily executing
+     'transfer')
 #38: Allow testing the transfer command with the --dry-run option
 #44: Allow displaying the output of the preview command with the --list-only
      option (and mention this in the --help message, because --list-only is in
@@ -96,6 +100,8 @@ Interface:
      limit of changes per page
 #11: Use colors to show the pending changes in the interface; allow disabling
      them
+#43: The values entered for configuration options, such as
+      'config>preview-info-flags', should be validated
 
 Tests:
 #1: Test that the various application stages are reached
@@ -173,6 +179,4 @@ Interface:
      See also the related TODO comments in interface.py
 #33: Allow opening and editing the pending changes in an external text
      editor (chosen with the $EDITOR environment variable)
-#35: It should be possible to write a files-from or exclude-from
-     file from the interactive menu (i.e. without necessarily executing 'S')
 #100: Internationalization: allow localizing all the messages
