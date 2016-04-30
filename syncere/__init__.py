@@ -296,7 +296,7 @@ class MainMenu:
 
     def exclude(self, *args):
         """
-        Exclude (cancel) the changes from the synchronization.
+        Exclude (except) the changes from the synchronization.
         """
         # TODO #31: If this is a directory, this should also ask to exclude all
         #       the descendant files and directories, if they are still
