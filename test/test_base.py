@@ -210,8 +210,8 @@ class TestSyncereOptions(Utils):
         command echo "bar" > bar.txt
         command cd ..
         command echo "preview" >> script
-        command echo "! 1" >> script
-        command echo "> 2" >> script
+        command echo "> 1" >> script
+        command echo "! 2" >> script
         command echo "transfer exclude" >> script
         command echo "quit" >> script
         """)

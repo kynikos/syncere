@@ -28,8 +28,6 @@ Core:
      Protect from exceptions that may be raised when creating them
       (permissions etc.)
       Also warn if the file already exists
-#39: Remove the --info=skip option from the preview command
-     Allow optionally readding it with #64
 
 Interface:
 #4: Document the filters syntax in the 'help' message of the commands that
@@ -66,7 +64,7 @@ Interface:
      the unsupported group)
 #56: The interactive menu commands and the '?' '!' '>' symbols shouldn't be
      hard-coded, but centralized constants should be used in their place
-#64: Allow editing the rsyn commands interactively, but note that they must be
+#64: Allow editing the rsync commands interactively, but note that they must be
       always validated
      The preset pending-change rules should be re-executed after a refresh;
       maybe the whole configuration script should be reloaded?

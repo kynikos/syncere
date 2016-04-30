@@ -134,9 +134,8 @@ class MainMenu:
         # TODO #14
         call = _m_subprocess.Popen(['rsync', *self.rootapp.previewargs,
                                     '--dry-run',
-                                    '--info='
-                                    'backup4,copy4,del4,flist4,misc4,'
-                                    'mount4,name4,remove4,skip4,symsafe4',
+                                    '--info=backup4,copy4,del4,flist4,misc4,'
+                                    'mount4,name1,remove4,symsafe4',
                                     '--out-format='
                                     '{syncere}%i '  # itemized changes
                                     '%o '  # operation
