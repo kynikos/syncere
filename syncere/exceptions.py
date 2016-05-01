@@ -54,10 +54,6 @@ children) of the folder where syncere was cloned:
 """)
 
 
-class InvalidRuleError(SyncereError):
-    pass
-
-
 class MissingDestinationError(SyncereError):
     pass
 

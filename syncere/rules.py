@@ -64,7 +64,6 @@ class Rules:
         dec = '?'
 
         for rule in self.rules:
-            # TODO #20
             if ichange == rule.itemized and sfilename == rule.path:
                 dec = rule.action
 

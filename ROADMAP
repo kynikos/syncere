@@ -110,6 +110,8 @@ v1.0.0
 #42: Test if the %B argument of --out-format shows ACLs like ls -l
 #56: The interactive menu commands and the '?' '!' '>' symbols shouldn't be
      hard-coded, but centralized constants should be used in their place
+#50: If UnrecognizedItemizedChangeError is raised, a message should be printed
+      to suggest reporting a bug
 
 Docs:
 # Implement a man(1) page (also a separate (5) page for ruleset syntax?)
@@ -131,8 +133,6 @@ Docs:
 
 v1.1.0
 
-#20: Allow choosing whether rulesets are applied in a cascading
-     (last one wins) or rsync mode (first one wins)
 #22: Print the rsync preview process' output in real time, but watch out for
      the deadlock problems!!!
      https://docs.python.org/3.5/library/subprocess.html

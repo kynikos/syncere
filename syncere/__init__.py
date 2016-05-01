@@ -19,7 +19,7 @@
 import subprocess as _m_subprocess
 import re as _m_re
 
-from .cliargs import CLIArgs
+from .cliargs import _m_forwarg, CLIArgs
 from . import exceptions
 
 try:
@@ -83,6 +83,94 @@ class Syncere:
                            cmdlines=commands, test=test)
 
 
+class _ChangeFilter:
+    def __init__(self, pending_changes):
+        self.pending_changes = pending_changes
+
+        self.parser = _m_forwarg.ArgumentParser()
+        self.parser.add_argument('ids', nargs='*')
+        self.parser.add_argument('-i', '--itemized-change', action='append')
+        self.parser.add_argument('-o', '--operation', action='append')
+        self.parser.add_argument('-p', '--permissions', action='append')
+        self.parser.add_argument('-u', '--owner-id', action='append')
+        self.parser.add_argument('-g', '--group-id', action='append')
+        self.parser.add_argument('-s', '--size', action='append')
+        self.parser.add_argument('-t', '--timestamp', action='append')
+        self.parser.add_argument('-f', '--exact-path', action='append')
+        self.parser.add_argument('-F', '--exact-path-icase', action='append')
+        self.parser.add_argument('-x', '--regex-path', action='append')
+        self.parser.add_argument('-X', '--regex-path-icase', action='append')
+        self.parser.add_argument('-w', '--glob-path', action='append')
+        self.parser.add_argument('-W', '--glob-path-icase', action='append')
+
+    def select(self, *args):
+        if not self.pending_changes:
+            print('There are no pending changes')
+            return self.pending_changes
+
+        try:
+            sargs = self.parser.parse_args(args)
+        except _m_forwarg.ForwargError:
+            print('Bad filter syntax')
+            return []
+
+        changes = self._select_changes_by_id(sargs.namespace.ids)
+        if changes is False:
+            print('Unrecognized selection')
+            return []
+
+        if not changes:
+            print('No changes selected')
+
+        return changes
+
+    @staticmethod
+    def _get_0_based_id(selid):
+        # This line itself can raise ValueError
+        id0 = int(selid) - 1
+        if id0 < 0:
+            raise ValueError()
+        return id0
+
+    def _select_changes_by_id(self, ids):
+        if not ids:
+            return self.pending_changes[:]
+
+        changes = []
+
+        for rawsel in ids:
+            if rawsel == '*':
+                return self.pending_changes[:]
+
+            lsel = rawsel.split(',')
+
+            for isel in lsel:
+                rsel = isel.split('-')
+
+                if len(rsel) == 1:
+                    try:
+                        id0 = self._get_0_based_id(isel)
+                        change = self.pending_changes[id0]
+                    except (ValueError, IndexError):
+                        return False
+                    else:
+                        changes.append(change)
+
+                elif len(rsel) == 2:
+                    try:
+                        ids, ide = [self._get_0_based_id(rid) for rid in rsel]
+                    except ValueError:
+                        return False
+                    else:
+                        for change in self.pending_changes[ids:ide + 1]:
+                            changes.append(change)
+
+                else:
+                    return False
+
+        return changes
+
+
 class MainMenu:
     def __init__(self, rootapp, test):
         """
@@ -92,6 +180,8 @@ class MainMenu:
         {command_list}
         """
         self.rootapp = rootapp
+
+        self.change_filter = _ChangeFilter(rootapp.pending_changes)
 
         # TODO #4: Introduce filters syntax in the specific 'help' messages of
         #          the commands that do support filters
@@ -209,63 +299,11 @@ class MainMenu:
         """
         pass
 
-    def _select_changes(self, *args):
-        if not self.rootapp.pending_changes:
-            print('There are no pending changes')
-            return self.rootapp.pending_changes
-
-        rawsel = ' '.join(args)
-
-        if rawsel in ('', '*'):
-            return self.rootapp.pending_changes
-
-        changes = []
-        lsel = rawsel.split(',')
-        for isel in lsel:
-            rsel = isel.split('-')
-
-            if len(rsel) == 1:
-                try:
-                    id0 = self._get_0_based_id(isel)
-                    change = self.rootapp.pending_changes[id0]
-                except (ValueError, IndexError):
-                    print('Unrecognized selection')
-                    return []
-                else:
-                    changes.append(change)
-
-            elif len(rsel) == 2:
-                try:
-                    ids, ide = [self._get_0_based_id(rid) for rid in rsel]
-                except ValueError:
-                    print('Unrecognized selection')
-                    return []
-                else:
-                    for change in self.rootapp.pending_changes[ids:ide + 1]:
-                        changes.append(change)
-
-            else:
-                print('Unrecognized selection')
-                return []
-
-        if not changes:
-            print('No changes selected')
-
-        return changes
-
-    @staticmethod
-    def _get_0_based_id(selid):
-        # This line itself can raise ValueError
-        id0 = int(selid) - 1
-        if id0 < 0:
-            raise ValueError()
-        return id0
-
     def list_(self, *args):
         """
         List a selection of pending changes.
         """
-        changes = self._select_changes(*args)
+        changes = self.change_filter.select(*args)
         if changes:
             print()
             width = len(str(changes[-1].id_))
@@ -278,7 +316,7 @@ class MainMenu:
         """
         List a selection of pending changes with details.
         """
-        changes = self._select_changes(*args)
+        changes = self.change_filter.select(*args)
         if changes:
             print()
             width = len(str(changes[-1].id_))
@@ -294,7 +332,7 @@ class MainMenu:
         """
         # TODO #31: This should also ask to include all the ancestor
         #       directories, if they aren't included already
-        for change in self._select_changes(*args):
+        for change in self.change_filter.select(*args):
             change.include()
 
     def exclude(self, *args):
@@ -304,7 +342,7 @@ class MainMenu:
         # TODO #31: If this is a directory, this should also ask to exclude all
         #       the descendant files and directories, if they are still
         #       included
-        for change in self._select_changes(*args):
+        for change in self.change_filter.select(*args):
             change.exclude()
 
     def reset(self, *args):
@@ -314,7 +352,7 @@ class MainMenu:
         # TODO #31: If the path was included and was a directory, this should
         #       ask to reset all the descendants; if the path was excluded,
         #       this should ask to reset all the ancestor directories
-        for change in self._select_changes(*args):
+        for change in self.change_filter.select(*args):
             change.reset()
 
     def resume_test(self):
