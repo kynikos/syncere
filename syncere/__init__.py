@@ -18,6 +18,7 @@
 
 import subprocess as _m_subprocess
 import re as _m_re
+import fnmatch as _m_fnmatch
 
 from .cliargs import _m_forwarg, CLIArgs
 from . import exceptions
@@ -121,17 +122,6 @@ class _ChangeFilter:
             'glob_path_icase': self._select_changes_by_glob_path_icase,
         }
 
-    # Decorator
-    def _safe_selection(func):
-        def inner(self, *args, **kwargs):
-            try:
-                return func(self, *args, **kwargs)
-            except self.BadFilter:
-                print('Unrecognized selection')
-                return []
-        return inner
-
-    @_safe_selection
     def select(self, *args):
         if not self.pending_changes:
             print('There are no pending changes')
@@ -143,20 +133,24 @@ class _ChangeFilter:
             print('Bad filter syntax')
             return []
 
-        # Process id ranges first, thus initializing the changes list
-        # All the other filters will instead subtract from it
-        changes = self._select_changes_by_id(sargs.namespace.ids)
+        try:
+            # Process id ranges first, thus initializing the changes list
+            # All the other filters will instead subtract from it
+            changes = self._select_changes_by_id(sargs.namespace.ids)
 
-        for change in changes[:]:
-            for arg, filter_ in self.arg_to_filter.items():
-                tests = vars(sargs.namespace)[arg]
-                if tests:
-                    for test in tests:
-                        if filter_(change, test) is True:
+            for change in changes[:]:
+                for arg, filter_ in self.arg_to_filter.items():
+                    tests = vars(sargs.namespace)[arg]
+                    if tests:
+                        for test in tests:
+                            if filter_(change, test) is True:
+                                break
+                        else:
+                            changes.remove(change)
                             break
-                    else:
-                        changes.remove(change)
-                        break
+        except self.BadFilter:
+            print('Unrecognized selection')
+            return []
 
         if not changes:
             print('No changes selected')
@@ -212,71 +206,49 @@ class _ChangeFilter:
         return changes
 
     def _select_changes_by_itemized_change(self, change, test):
-        # TODO: Implement (allow wildcards)
-        #       r'[<>ch.*][fdLDS](?:[.c][.s][.tT][.p][.o][.g][.u][.a][.x]|'
-        #       r'[+ ?]{9}|\*deleting)'
-        #       Raise self.BadFilter when needed
-        return True
+        return test == change.ichange
 
     def _select_changes_by_operation(self, change, test):
-        # TODO: Implement
-        #       Raise self.BadFilter when needed
-        return True
+        return test == change.operation
 
     def _select_changes_by_permissions(self, change, test):
-        # TODO: Implement
-        #       Raise self.BadFilter when needed
-        return True
+        return test == change.permissions
 
     def _select_changes_by_owner_id(self, change, test):
-        # TODO: Implement
-        #       Raise self.BadFilter when needed
-        return True
+        return test == change.uid
 
     def _select_changes_by_group_id(self, change, test):
-        # TODO: Implement
-        #       Raise self.BadFilter when needed
-        return True
+        return test == change.gid
 
     def _select_changes_by_size(self, change, test):
-        # TODO: Implement
-        #       Raise self.BadFilter when needed
-        return True
+        return test == change.length
 
     def _select_changes_by_timestamp(self, change, test):
-        # TODO: Implement
-        #       Raise self.BadFilter when needed
-        return True
+        return test == change.tstamp
 
     def _select_changes_by_exact_path(self, change, test):
-        # TODO: Implement
-        #       Raise self.BadFilter when needed
-        return True
+        return test == change.sfilename
 
     def _select_changes_by_exact_path_icase(self, change, test):
-        # TODO: Implement
-        #       Raise self.BadFilter when needed
-        return True
+        return test.lower() == change.sfilename.lower()
 
     def _select_changes_by_regex_path(self, change, test):
-        # TODO: Implement
-        #       Raise self.BadFilter when needed
-        return True
+        try:
+            return bool(_m_re.search(test, change.sfilename))
+        except _m_re.error:
+            raise self.BadFilter()
 
     def _select_changes_by_regex_path_icase(self, change, test):
-        # TODO: Implement
-        #       Raise self.BadFilter when needed
-        return True
+        try:
+            return bool(_m_re.search(test, change.sfilename, flags=_m_re.I))
+        except _m_re.error:
+            raise self.BadFilter()
 
     def _select_changes_by_glob_path(self, change, test):
-        # TODO: Implement (use fnmatch)
-        #       Raise self.BadFilter when needed
-        return True
+        return _m_fnmatch.fnmatch(change.sfilename, test)
 
     def _select_changes_by_glob_path_icase(self, change, test):
-        # TODO: Implement (use fnmatch)
-        #       Raise self.BadFilter when needed
-        return True
+        return _m_fnmatch.fnmatch(change.sfilename.lower(), test.lower())
 
 
 class MainMenu:

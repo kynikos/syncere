@@ -16,19 +16,6 @@ v0.1.0
      support it
 #5: Change the 'include' term to 'confirm', and 'exclude' to 'except', to avoid
      confusion with rsync's terminology
-#6: Support all the ruleset path types and the itemized wildcards
-    Use fnmatch for globbing patterns
-    Allow wildcards in the itemized representation
-    Allow to omit the itemized representation if only the path should
-    be tested
-#8: Rules: allow enclosing the path in some character, e.g. in quotes, for
-    example for paths that end with spaces, since they would be at risk
-    of being trimmed by text editors
-    The syntax could be e.g. 'p"path/to/file"', i.e. if a colon is
-    used, than the path is expected to end at the line break; if a
-    double quote is used, then the path is expected to end with '"$"
-    Other supported characters/separators can be <>, all parentheses,
-    or the path could be always started with '/', etc.
 #11: Use colors to show the pending changes in the interface; allow disabling
      them
 #13: What is the maximum size of the data that stdout can host?
@@ -93,6 +80,7 @@ Tests:
 #7: Test transfers with all the transfer modes
     Test setting configuration options and aliases
 #9: Check that all the raised exceptions and sys.exit calls are tested
+#16: Test the pending change filters
 #45: The TestRsyncOptions test could be skipped, since it doesn't depend on the
      development of syncere
 #49: Test with pexpect
@@ -103,6 +91,11 @@ v1.0.0
 #6: Allow comments in script files
     Disallow commands and aliases from starting with '#'
     Also add an 'echo' command?
+#8: Allow wildcards when filtering the pending changes by itemized change or
+     permissions
+    Allow choosing ranges when filtering the pending changes by size or
+     timestamp
+    Remember to raise _ChangeFilter.BadFilter when needed
 #40: Improve error messages, show more information to ease troubleshooting
      In InvalidRuleError also show the line number in the ruleset file
      Also check the sys.exit calls, and print a Usage line in case of bad
