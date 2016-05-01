@@ -69,8 +69,6 @@ v0.2.0
       Also warn if the file already exists
 #24: Disable the transfer modes that use --exclude or --include options when
      the number of paths to be filtered is greater than a certain number
-#25: The commands that accept filters shouldn't execute at all if part of
-     a filter is wrong; currently, something like '>5,a,6' does select 5 and 6
 #28: Implement more shared command-line options 
      --verbose could decide whether the non itemized-change lines should be
       printed when parsing the preview command results

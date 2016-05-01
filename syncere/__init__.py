@@ -70,7 +70,7 @@ class Syncere:
                                 'experimental', 'safe'))
 
     def _start_interface(self, commands, test):
-        # TODO #4 #25 #30 #31 #33 #34 #35 #56
+        # TODO #4 #30 #31 #33 #34 #35 #56
         self.mainmenu = MainMenu(self, test).menu
 
         # When testing, we don't want the original DEFAULT_STARTUP_COMMANDS to
@@ -230,6 +230,7 @@ class MainMenu:
                     change = self.rootapp.pending_changes[id0]
                 except (ValueError, IndexError):
                     print('Unrecognized selection')
+                    return []
                 else:
                     changes.append(change)
 
@@ -238,12 +239,14 @@ class MainMenu:
                     ids, ide = [self._get_0_based_id(rid) for rid in rsel]
                 except ValueError:
                     print('Unrecognized selection')
+                    return []
                 else:
                     for change in self.rootapp.pending_changes[ids:ide + 1]:
                         changes.append(change)
 
             else:
                 print('Unrecognized selection')
+                return []
 
         if not changes:
             print('No changes selected')
