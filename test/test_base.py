@@ -239,6 +239,12 @@ class TestInterface(Utils):
         command mkdir destination
         command cd source
         command echo "foo" > foo.txt
+        command echo "bar" > bar.txt
+        command mkdir abc
+        command cd abc
+        command echo "blabla\nmorebla" > some.file
+        command ln -s foo.txt some.symlink
+        command ln some.file some.hardlink
         """)
         Syncere('./source/ ./destination/ -a', test=True,
                 commands=[_m_cmenu.TestInteract(repeat=True,
