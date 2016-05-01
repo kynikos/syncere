@@ -100,6 +100,9 @@ Tests:
 
 v1.0.0
 
+#6: Allow comments in script files
+    Disallow commands and aliases from starting with '#'
+    Also add an 'echo' command?
 #40: Improve error messages, show more information to ease troubleshooting
      In InvalidRuleError also show the line number in the ruleset file
      Also check the sys.exit calls, and print a Usage line in case of bad
