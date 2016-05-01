@@ -84,6 +84,8 @@ class Syncere:
 
 
 class _ChangeFilter:
+    BadFilter = type('BadFilter', (Exception, ), {})
+
     def __init__(self, pending_changes):
         self.pending_changes = pending_changes
 
@@ -103,6 +105,33 @@ class _ChangeFilter:
         self.parser.add_argument('-w', '--glob-path', action='append')
         self.parser.add_argument('-W', '--glob-path-icase', action='append')
 
+        self.arg_to_filter = {
+            'itemized_change': self._select_changes_by_itemized_change,
+            'operation': self._select_changes_by_operation,
+            'permissions': self._select_changes_by_permissions,
+            'owner_id': self._select_changes_by_owner_id,
+            'group_id': self._select_changes_by_group_id,
+            'size': self._select_changes_by_size,
+            'timestamp': self._select_changes_by_timestamp,
+            'exact_path': self._select_changes_by_exact_path,
+            'exact_path_icase': self._select_changes_by_exact_path_icase,
+            'regex_path': self._select_changes_by_regex_path,
+            'regex_path_icase': self._select_changes_by_regex_path_icase,
+            'glob_path': self._select_changes_by_glob_path,
+            'glob_path_icase': self._select_changes_by_glob_path_icase,
+        }
+
+    # Decorator
+    def _safe_selection(func):
+        def inner(self, *args, **kwargs):
+            try:
+                return func(self, *args, **kwargs)
+            except self.BadFilter:
+                print('Unrecognized selection')
+                return []
+        return inner
+
+    @_safe_selection
     def select(self, *args):
         if not self.pending_changes:
             print('There are no pending changes')
@@ -114,10 +143,20 @@ class _ChangeFilter:
             print('Bad filter syntax')
             return []
 
+        # Process id ranges first, thus initializing the changes list
+        # All the other filters will instead subtract from it
         changes = self._select_changes_by_id(sargs.namespace.ids)
-        if changes is False:
-            print('Unrecognized selection')
-            return []
+
+        for change in changes[:]:
+            for arg, filter_ in self.arg_to_filter.items():
+                tests = vars(sargs.namespace)[arg]
+                if tests:
+                    for test in tests:
+                        if filter_(change, test) is True:
+                            break
+                    else:
+                        changes.remove(change)
+                        break
 
         if not changes:
             print('No changes selected')
@@ -152,23 +191,92 @@ class _ChangeFilter:
                         id0 = self._get_0_based_id(isel)
                         change = self.pending_changes[id0]
                     except (ValueError, IndexError):
-                        return False
+                        raise self.BadFilter()
                     else:
-                        changes.append(change)
+                        if change not in changes:
+                            changes.append(change)
 
                 elif len(rsel) == 2:
                     try:
                         ids, ide = [self._get_0_based_id(rid) for rid in rsel]
                     except ValueError:
-                        return False
+                        raise self.BadFilter()
                     else:
                         for change in self.pending_changes[ids:ide + 1]:
-                            changes.append(change)
+                            if change not in changes:
+                                changes.append(change)
 
                 else:
-                    return False
+                    raise self.BadFilter()
 
         return changes
+
+    def _select_changes_by_itemized_change(self, change, test):
+        # TODO: Implement (allow wildcards)
+        #       r'[<>ch.*][fdLDS](?:[.c][.s][.tT][.p][.o][.g][.u][.a][.x]|'
+        #       r'[+ ?]{9}|\*deleting)'
+        #       Raise self.BadFilter when needed
+        return True
+
+    def _select_changes_by_operation(self, change, test):
+        # TODO: Implement
+        #       Raise self.BadFilter when needed
+        return True
+
+    def _select_changes_by_permissions(self, change, test):
+        # TODO: Implement
+        #       Raise self.BadFilter when needed
+        return True
+
+    def _select_changes_by_owner_id(self, change, test):
+        # TODO: Implement
+        #       Raise self.BadFilter when needed
+        return True
+
+    def _select_changes_by_group_id(self, change, test):
+        # TODO: Implement
+        #       Raise self.BadFilter when needed
+        return True
+
+    def _select_changes_by_size(self, change, test):
+        # TODO: Implement
+        #       Raise self.BadFilter when needed
+        return True
+
+    def _select_changes_by_timestamp(self, change, test):
+        # TODO: Implement
+        #       Raise self.BadFilter when needed
+        return True
+
+    def _select_changes_by_exact_path(self, change, test):
+        # TODO: Implement
+        #       Raise self.BadFilter when needed
+        return True
+
+    def _select_changes_by_exact_path_icase(self, change, test):
+        # TODO: Implement
+        #       Raise self.BadFilter when needed
+        return True
+
+    def _select_changes_by_regex_path(self, change, test):
+        # TODO: Implement
+        #       Raise self.BadFilter when needed
+        return True
+
+    def _select_changes_by_regex_path_icase(self, change, test):
+        # TODO: Implement
+        #       Raise self.BadFilter when needed
+        return True
+
+    def _select_changes_by_glob_path(self, change, test):
+        # TODO: Implement (use fnmatch)
+        #       Raise self.BadFilter when needed
+        return True
+
+    def _select_changes_by_glob_path_icase(self, change, test):
+        # TODO: Implement (use fnmatch)
+        #       Raise self.BadFilter when needed
+        return True
 
 
 class MainMenu:
