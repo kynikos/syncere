@@ -27,7 +27,7 @@ try:
 except ImportError:
     try:
         from . import cmenu as _m_cmenu
-    except ImportError as excinfo:
+    except ImportError:
         raise exceptions.DependencyError()
 
 

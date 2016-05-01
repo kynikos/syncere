@@ -26,7 +26,7 @@ try:
 except ImportError:
     try:
         from . import forwarg as _m_forwarg
-    except ImportError as excinfo:
+    except ImportError:
         raise DependencyError()
 
 
