@@ -465,10 +465,14 @@ class ConfigMenu:
 
         {command_list}
         """
+        self.rootapp = rootapp
+
         menu = _m_cmenu.SubMenu(parent, name, helpfull=self.__init__)
         _m_cmenu.AliasConfig(menu, 'alias', rootmenu, helpfull=self.alias)
         for option in rootapp.configuration:
-            ConfigOptionMenu(menu, option, rootapp)
+            _m_cmenu.LineEditorDefault(menu, option, self.value_in(option),
+                                       self.value_out(option),
+                                       self.value_restore(option))
         _m_cmenu.Help(menu, 'help', helpfull=self.help)
         _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
 
@@ -482,56 +486,24 @@ class ConfigMenu:
         """
         pass
 
-    def help(self):
-        """
-        Show this help screen.
+    def value_in(self, option):
+        def inner():
+            """
+            Edit the current option's value.
+            """
+            return self.rootapp.configuration[option]
+        return inner
 
-        Type 'help <command>' for more information on a specific command.
-        Tab completion is always available in the menus.
-        """
-        pass
+    def value_out(self, option):
+        def inner(string):
+            self.rootapp.configuration[option] = string
+        return inner
 
-    def exit(self):
-        """
-        Go back to the parent configuration menu.
-        """
-        pass
-
-
-class ConfigOptionMenu:
-    def __init__(self, parent, name, rootapp):
-        """
-        Open the configuration option's menu or execute an option command.
-
-        {command_list}
-        """
-        self.name = name
-        self.rootapp = rootapp
-
-        menu = _m_cmenu.SubMenu(parent, name, helpfull=self.__init__)
-        _m_cmenu.LineEditor(menu, 'change', self.value_in, self.value_out)
-        _m_cmenu.Action(menu, 'default', self.default)
-        _m_cmenu.Help(menu, 'help', helpfull=self.help)
-        _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
-
-    def value_in(self):
-        """
-        Edit the current option's value.
-        """
-        return self.rootapp.configuration[self.name]
-
-    def value_out(self, string):
-        self.rootapp.configuration[self.name] = string
-
-    def default(self, *args):
-        """
-        Restore the default option's value.
-        """
-        if len(args) > 0:
-            print('Unrecognized arguments')
-            return False
-        self.rootapp.configuration[self.name] = self.rootapp.DEFAULT_CONFIG[
-                                                                    self.name]
+    def value_restore(self, option):
+        def inner():
+            self.rootapp.configuration[option] = \
+                self.rootapp.DEFAULT_CONFIG[option]
+        return inner
 
     def help(self):
         """
