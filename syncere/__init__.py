@@ -300,12 +300,12 @@ class MainMenu:
         found.
         """
         quit = False
-        if len(args) > 0:
-            if args[0] == 'quit':
-                quit = True
-            else:
-                print('Unrecognized arguments:', *args)
-                return False
+        # TODO #39
+        if len(args) == 1 and args[0] == 'quit':
+            quit = True
+        elif len(args) > 0:
+            print('Unrecognized arguments:', *args)
+            return False
 
         # TODO #14
         call = _m_subprocess.Popen(['rsync', *self.rootapp.previewargs,
