@@ -466,62 +466,19 @@ class ConfigMenu:
         {command_list}
         """
         menu = _m_cmenu.SubMenu(parent, name, helpfull=self.__init__)
-        AliasMenu(menu, 'alias', rootmenu)
+        _m_cmenu.AliasConfig(menu, 'alias', rootmenu, helpfull=self.alias)
         for option in rootapp.configuration:
             ConfigOptionMenu(menu, option, rootapp)
         _m_cmenu.Help(menu, 'help', helpfull=self.help)
         _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
 
-    def help(self):
+    def alias(self, *args):
         """
-        Show this help screen.
+        Manage command aliases.
 
-        Type 'help <command>' for more information on a specific command.
-        Tab completion is always available in the menus.
-        """
-        pass
-
-    def exit(self):
-        """
-        Go back to the parent configuration menu.
-        """
-        pass
-
-
-class AliasMenu:
-    def __init__(self, parent, name, rootmenu):
-        """
-        Open the alias menu or execute an alias configuration command.
-
-        {command_list}
-        """
-        menu = _m_cmenu.SubMenu(parent, name, helpfull=self.__init__)
-        _m_cmenu.AliasSet(menu, 'set', rootmenu, helpfull=self.set_)
-        _m_cmenu.AliasUnset(menu, 'unset', rootmenu, helpfull=self.unset)
-        _m_cmenu.AliasUnsetAll(menu, 'unset-all', rootmenu,
-                               helpfull=self.unset_all)
-        _m_cmenu.Help(menu, 'help', helpfull=self.help)
-        _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
-
-    def set_(self, *args):
-        """
-        Set a command alias.
-
-        Syntax: set alias_name "command arg arg ..."
-        """
-        pass
-
-    def unset(self, *args):
-        """
-        Unset a command alias.
-
-        Syntax: unset alias_name
-        """
-        pass
-
-    def unset_all(self, *args):
-        """
-        Unset all command aliases.
+        Syntax: alias set alias_name "command arg arg ..."
+        Syntax: alias unset alias_name
+        Syntax: alias unset-all
         """
         pass
 
