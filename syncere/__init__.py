@@ -266,7 +266,8 @@ class MainMenu:
         # TODO #4: Introduce filters syntax in the specific 'help' messages of
         #          the commands that do support filters
         self.menu = _m_cmenu.RootMenu('syncere', helpfull=self.__init__)
-        _m_cmenu.Action(self.menu, 'preview', self.preview)
+        _m_cmenu.Action(self.menu, 'preview', self.preview,
+                        accepted_flags=['quit'])
         _m_cmenu.RunScript(self.menu, 'import', helpfull=self.import_)
         _m_cmenu.Action(self.menu, 'list', self.list_)
         _m_cmenu.Action(self.menu, 'details', self.details)
