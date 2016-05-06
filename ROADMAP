@@ -1,10 +1,12 @@
 v0.1.0
 
 #2: Review all the help messages, for example the header of a single 'help'
-    command should be different from the header of a 'help menu' command.
+     command should be different from the header of a 'help menu' command.
     Also centralize the messages which at the moment are coded directly in
-    typein.cmenu: libraries should raise exceptions, or at least have
-    configurable messages, not hardcode them
+     typein.cmenu: libraries should raise exceptions, or at least have
+     configurable messages, not hardcode them
+    Document the filters syntax in the 'help' message of the commands that
+     support it
 #3: Implement optimized options
      In order to avoid recalculating the checksums again, the
       transfer command could omit the --checksum argument, compile a
@@ -12,8 +14,6 @@ v0.1.0
       --ignore-times to force updating the files whose size and
       timestamp are the same (the only difference is the checksum)
      The --checksum option in the --help message still needs a help description
-#4: Document the filters syntax in the 'help' message of the commands that
-     support it
 #5: Change the 'include' term to 'confirm', and 'exclude' to 'except', to avoid
      confusion with rsync's terminology
 #11: Use colors to show the pending changes in the interface; allow disabling
@@ -26,13 +26,24 @@ v0.1.0
 #19: Test what happens in case of an error in the transfer rsync commands
      Ensure that rsync's return code is the one returned when the whole syncere
      process exits
+#21: The transfer commands should accept a 'quit' argument that quits syncere
+      as soon as the rsync process terminates (with success?)
+#23: Optionally delete the *-from files after the transfer command completes
+     Protect from exceptions that may be raised when creating them
+      (permissions etc.)
+      Also warn if the file already exists
 #26: The default transfer mode should be an "auto" mode, choosing the best
       transfer mode based on the number of included or excluded changes in the
       list
+#32: Allow choosing at what path the --*-from transfer commands create the
+      list files
 #34: Add an interactive command to preview the actual rsync command that
      would be used with 'transfer', but remind that Popen takes care of
      escaping characters
      See also #64
+#35: It should be possible to write a files-from or exclude-from
+     file from the interactive menu (i.e. without necessarily executing
+     'transfer')
 #38: Allow testing the transfer command with the --dry-run option
 
 
@@ -47,13 +58,6 @@ v0.2.0
      requires that stdinput is not used for some other reason (see also #18)
 #18: Pass the original sys.stdin, if present, to the transfer command (see also
      #17)
-#21: The transfer commands should accept a 'quit' argument that quits syncere
-      as soon as the rsync process terminates (with success?)
-#23: Optionally delete the *-from files after the transfer command completes
-     Allow choosing at what path they are created
-     Protect from exceptions that may be raised when creating them
-      (permissions etc.)
-      Also warn if the file already exists
 #24: Disable the transfer modes that use --exclude or --include options when
      the number of paths to be filtered is greater than a certain number
 #28: Implement more shared command-line options 
@@ -63,9 +67,6 @@ v0.2.0
       times, but for the moment syncere accepts them only once; test what
       happens if they're specified multiple times and properly modify
       cliargs.py as needed
-#35: It should be possible to write a files-from or exclude-from
-     file from the interactive menu (i.e. without necessarily executing
-     'transfer')
 #37: Implement experimental options
 #48: Move most shared options to transfer-only
 #43: The values entered for configuration options, such as
