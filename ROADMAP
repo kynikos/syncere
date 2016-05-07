@@ -1,4 +1,4 @@
-v0.1.0
+v0.8.0
 
 #2: Review all the help messages, for example the header of a single 'help'
      command should be different from the header of a 'help menu' command.
@@ -18,7 +18,7 @@ v0.1.0
      terminates the rsync commands
 
 
-v0.2.0
+v0.9.0
 
 #10: Paginate the change preview lists in the interface; allow setting the
      limit of changes per page

@@ -3,7 +3,7 @@
 _projname=syncere
 _authname=kynikos
 pkgname=${_projname}-git
-pkgver=0.1.0
+pkgver=0.8.0
 pkgrel=1
 pkgdesc='Interactive rsync-based data synchronization'
 arch=('any')

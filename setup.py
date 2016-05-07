@@ -20,7 +20,7 @@ from setuptools import setup
 
 setup(
     name='syncere',
-    version='0.1.0',
+    version='0.8.0',
     description='Interactive rsync-based data synchronization.',
     author='Dario Giovannetti',
     author_email='dev@dariogiovannetti.net',

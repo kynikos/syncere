@@ -39,8 +39,8 @@ class Syncere:
     The main class, primarily responsible for managing the internal rsync
     commands.
     """
-    VERSION_NUMBER = '0.1.0'
-    VERSION_DATE = '2016-04-17'
+    VERSION_NUMBER = '0.8.0'
+    VERSION_DATE = '2016-05-07'
     DEFAULT_STARTUP_COMMANDS = ['preview quit', 'list']
     DEFAULT_CONFIG = {
         'max-inline-filters': '12',
