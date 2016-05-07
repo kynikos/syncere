@@ -14,7 +14,6 @@ v0.1.0
      confusion with rsync's terminology
 #11: Use colors to show the pending changes in the interface; allow disabling
      them
-#13: What is the maximum size of the data that stdout can host?
 #14: Check that terminating syncere with Ctrl+c (and other common ways?) also
      terminates the rsync commands
 #15: Preview rsync command: use sys.exit(call.returncode) instead of raising

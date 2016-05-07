@@ -658,7 +658,10 @@ class MainMenu:
 
         # Popen.communicate already waits for the process to terminate, there's
         # no need to call wait
-        # TODO #12 #13 #22
+        # According to the docs, Popen.communicate reads from stdout and
+        # buffers the data in memory, so there shouldn't be problems with long
+        # rsync outputs
+        # TODO #12 #22
         self.stdout = call.communicate()[0]
 
         if call.returncode != 0:
