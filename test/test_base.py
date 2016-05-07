@@ -64,10 +64,9 @@ class TestPreviewErrors(Utils):
     application to exit *before* the interactive interface is brought up.
     """
     def test_non_existing_folders(self):
-        with pytest.raises(exceptions.RsyncError) as excinfo:
+        with pytest.raises(SystemExit) as excinfo:
             Syncere('./source/ ./destination/', test=True)
-        retcode = excinfo.value.args[0]
-        assert isinstance(retcode, int) and retcode > 0
+        assert excinfo.value.code > 0
         # TODO #1: Test that the interface hasn't been started
 
 

@@ -16,13 +16,6 @@ v0.1.0
      them
 #14: Check that terminating syncere with Ctrl+c (and other common ways?) also
      terminates the rsync commands
-#15: Preview rsync command: use sys.exit(call.returncode) instead of raising
-     RsyncError?
-#19: Test what happens in case of an error in the transfer rsync commands
-     Ensure that rsync's return code is the one returned when the whole syncere
-     process exits
-#21: The 'transfer --quit' command should quit only if the rsync transfer
-      command exits with success
 
 
 v0.2.0

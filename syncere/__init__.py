@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with syncere.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys as _m_sys
 import os as _m_os
 import subprocess as _m_subprocess
 import re as _m_re
@@ -410,14 +411,16 @@ class TransferCommand:
         else:
             # TODO #14 #18
             call = _m_subprocess.Popen(targs)
-            # TODO #19 #23 (otherwise maybe calling 'wait' is unneeded?)
             call.wait()
 
             if file and not pargs.namespace.keep_list:
                 _m_os.remove(file)
 
-            # TODO #21
-            if pargs.namespace.quit:
+            if call.returncode != 0:
+                print('rsync error:', call.returncode)
+                if pargs.namespace.quit:
+                    _m_sys.exit(call.returncode)
+            elif pargs.namespace.quit:
                 self.menu.break_loops(True)
 
     def _exclude(self, included_changes, excluded_changes, pargs,
@@ -665,8 +668,7 @@ class MainMenu:
         self.stdout = call.communicate()[0]
 
         if call.returncode != 0:
-            # TODO #15: Use sys.exit(call.returncode)?
-            raise exceptions.RsyncError(call.returncode)
+            _m_sys.exit(call.returncode)
 
         self.rootapp.pending_changes.clear()
 
