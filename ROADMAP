@@ -7,6 +7,9 @@ v0.1.0
      configurable messages, not hardcode them
     Document the filters syntax in the 'help' message of the commands that
      support it
+    Document the 'transfer' command options
+    When using 'transfer --view-only' document that Popen takes care of
+     escaping characters
 #3: Implement optimized options
      In order to avoid recalculating the checksums again, the
       transfer command could omit the --checksum argument, compile a
@@ -26,25 +29,8 @@ v0.1.0
 #19: Test what happens in case of an error in the transfer rsync commands
      Ensure that rsync's return code is the one returned when the whole syncere
      process exits
-#21: The transfer commands should accept a 'quit' argument that quits syncere
-      as soon as the rsync process terminates (with success?)
-#23: Optionally delete the *-from files after the transfer command completes
-     Protect from exceptions that may be raised when creating them
-      (permissions etc.)
-      Also warn if the file already exists
-#26: The default transfer mode should be an "auto" mode, choosing the best
-      transfer mode based on the number of included or excluded changes in the
-      list
-#32: Allow choosing at what path the --*-from transfer commands create the
-      list files
-#34: Add an interactive command to preview the actual rsync command that
-     would be used with 'transfer', but remind that Popen takes care of
-     escaping characters
-     See also #64
-#35: It should be possible to write a files-from or exclude-from
-     file from the interactive menu (i.e. without necessarily executing
-     'transfer')
-#38: Allow testing the transfer command with the --dry-run option
+#21: The 'transfer --quit' command should quit only if the rsync transfer
+      command exits with success
 
 
 v0.2.0
@@ -58,6 +44,7 @@ v0.2.0
      requires that stdinput is not used for some other reason (see also #18)
 #18: Pass the original sys.stdin, if present, to the transfer command (see also
      #17)
+#23: *-from transfer commands: warn if the file already exists
 #24: Disable the transfer modes that use --exclude or --include options when
      the number of paths to be filtered is greater than a certain number
 #28: Implement more shared command-line options 
@@ -78,7 +65,7 @@ v0.2.0
 Tests:
 #1: Test that the various application stages are reached
     Store more attributes and test them against expected values
-#7: Test transfers with all the transfer modes
+#7: Test transfers with all the transfer modes and other options
     Test setting configuration options and aliases
 #9: Check that all the raised exceptions and sys.exit calls are tested
 #16: Test the pending change filters
@@ -104,6 +91,9 @@ v1.0.0
 #41: Use a proper logging system (both on stdout and file)
      Maybe share the --log-file option with rsync and append to the same file
      See also #46 and #47
+#38: The commands with dashed options, e.g. 'transfer' and the filters, should
+      have those options tab-completed like the other commands with "plain"
+      flags (solve in typein.cmeu?)
 #39: Command flags should support initial-substring-match-only like with menu
       entries, e.g. 'p q' should be enough to mean 'preview quit' (should be
       solved in typein.cmenu)
