@@ -190,6 +190,46 @@ class TestRsyncOptions(Utils):
 
 
 @pytest.mark.usefixtures('testdir')
+class TestComposedCommands(Utils):
+    """
+    Test that syncere composes the correct preview and transfer commands based
+    on the passed command-line arguments and the entered interactive commands.
+    """
+    def test_checksum(self):
+        self.populate("""
+        command mkdir source
+        command mkdir destination
+        command cd source
+        command echo "foo" > foo.txt
+        command cd ../destination
+        command echo "bar" > foo.txt
+        command cd ..
+        command touch source/foo.txt destination/foo.txt
+        """)
+        self.verify("""
+        s=$(md5sum source/foo.txt | head -c 32)
+        d=$(md5sum destination/foo.txt | head -c 32)
+        [ $s != $d ]
+        """)
+        Syncere('./source/ ./destination/ -a', test=True,
+                commands=['preview', 'include *', 'transfer', 'quit'])
+        # TODO #1: Test that the application has exited at the correct stage
+        self.verify("""
+        s=$(md5sum source/foo.txt | head -c 32)
+        d=$(md5sum destination/foo.txt | head -c 32)
+        [ $s != $d ]
+        """)
+        Syncere('./source/ ./destination/ -a --checksum', test=True,
+                commands=['preview', 'include *', 'transfer', 'quit'])
+        # TODO #1: Test that the application has exited at the correct stage
+        self.verify("""
+        s=$(md5sum source/foo.txt | head -c 32)
+        d=$(md5sum destination/foo.txt | head -c 32)
+        [ $s == $d ]
+        """)
+
+
+@pytest.mark.usefixtures('testdir')
 class TestSyncereOptions(Utils):
     """
     Test the specific syncere options.
@@ -210,6 +250,7 @@ class TestSyncereOptions(Utils):
         """)
         Syncere('./source/ ./destination/ -a', test=True,
                 commands=['import ./script'])
+        # TODO #1: Test that the application has exited at the correct stage
         self.verify("""
         command cd destination
         ! [ -f foo.txt ]
@@ -243,4 +284,3 @@ class TestInterface(Utils):
                 commands=[_m_cmenu.TestInteract(repeat=True,
                                                 message="\nFree testing!"),
                           'quit'])
-        # TODO #1: Test that the application has exited at the correct stage

@@ -10,13 +10,6 @@ v0.1.0
     Document the 'transfer' command options
     When using 'transfer --view-only' document that Popen takes care of
      escaping characters
-#3: Implement optimized options
-     In order to avoid recalculating the checksums again, the
-      transfer command could omit the --checksum argument, compile a
-      --files-from list instead of an --exclude-from list, and use
-      --ignore-times to force updating the files whose size and
-      timestamp are the same (the only difference is the checksum)
-     The --checksum option in the --help message still needs a help description
 #5: Change the 'include' term to 'confirm', and 'exclude' to 'except', to avoid
      confusion with rsync's terminology
 #11: Use colors to show the pending changes in the interface; allow disabling

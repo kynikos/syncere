@@ -32,7 +32,6 @@ except ImportError:
 
 class ActionHelp(_m_forwarg.Action):
     def _process_flag(self):
-        # TODO #3: Note that there are some TODOs in the message
         print("""\
 Usage: syncere [syncere_options] [rsync_options] [src [src]...] [dest]
 
@@ -124,7 +123,13 @@ Optimized options:
     possible.
 
     -c, --checksum
-                TODO
+                When this option is used, by default only the internal
+                "preview" command calculates the checksum of the files; the
+                "transfer" command instead omits the --checksum argument, and
+                only includes the files that are selected to be transferred,
+                adding the --ignore-times option to ensure that also the files
+                that differ only by checksum (size and timestamp are the same)
+                are still actually synchronized.
 
 Transfer-only options:
     These rsync options are removed from the "preview" command, and only passed
@@ -239,7 +244,7 @@ class CLIArgs:
         self._syncere()
         self._shared()
         self._transfer_only()
-        self._optimized()
+        self._checksum()
         self._experimental()
         self._unsupported()
         self._safe()
@@ -302,10 +307,9 @@ class CLIArgs:
         group.add_argument('--timeout')
         group.add_argument('--contimeout')
 
-    def _optimized(self):
-        group = self.parser.add_argument_group('optimized')
+    def _checksum(self):
+        group = self.parser.add_argument_group('checksum')
 
-        # TODO #3
         group.add_argument('-c', '--checksum', action='store_true')
 
     def _experimental(self):

@@ -64,14 +64,6 @@ class Syncere:
         if len(self.cliargs.namespace.locations) < 2:
             raise exceptions.MissingDestinationError()
 
-        # If experimental is disabled and some of its options have been
-        # specified, the program has already exited in _check_arguments
-        self.previewargs = self.cliargs.filter_whitelist(groups=(
-                                'shared', 'optimized', 'experimental', 'safe'))
-        self.transferargs = self.cliargs.filter_whitelist(groups=(
-                                'shared', 'transfer-only', 'optimized',
-                                'experimental', 'safe'))
-
     def _start_interface(self, commands, test):
         # TODO #30 #31 #33 #56
         self.mainmenu = MainMenu(self, test).menu
@@ -280,6 +272,13 @@ class TransferCommand:
         # chosen automatically, and max-inline-filters is exceeded, the
         # automatic mode won't be able to see the default file name
         self.parser.add_argument('-F', '--files-from', nargs='?', const=True)
+        self.parser.add_argument('-c', '--checksum', action='store_true')
+        # Don't define a default file name here, e.g. const='./exclude-from'
+        # because otherwise when no mode is specified and the mode to use is
+        # chosen automatically, and max-inline-filters is exceeded, the
+        # automatic mode won't be able to see the default file name
+        self.parser.add_argument('-C', '--checksum-from', nargs='?',
+                                 const=True)
         self.parser.add_argument('-k', '--keep-list', action='store_true')
         self.parser.add_argument('-v', '--view-only', action='store_true')
         self.parser.add_argument('-n', '--dry-run', action='store_true')
@@ -352,11 +351,18 @@ class TransferCommand:
             return False
 
         modecheck = set(['exclude', 'exclude_from', 'include', 'include_from',
-                         'files_from']) & set(key for key, value in vars(
-                                pargs.namespace).items() if value is not None)
+                         'files_from', 'checksum', 'checksum_from']) & \
+            set(key for key, value in vars(pargs.namespace).items()
+                if value is not None)
         if len(modecheck) == 0:
             # Choose the best method automatically
-            if len(included_changes) < len(excluded_changes):
+            if self.rootapp.cliargs.namespace.checksum:
+                if len(included_changes) <= int(self.rootapp.configuration[
+                                                        'max-inline-filters']):
+                    mode = 'checksum'
+                else:
+                    mode = 'checksum_from'
+            elif len(included_changes) < len(excluded_changes):
                 if len(included_changes) <= int(self.rootapp.configuration[
                                                         'max-inline-filters']):
                     mode = 'include'
@@ -374,6 +380,15 @@ class TransferCommand:
             print('Transfer modes are mutually exclusive')
             return False
 
+        if mode in ('checksum', 'checksum_from'):
+            transferargs = self.rootapp.cliargs.filter_whitelist(groups=(
+                                'shared', 'transfer-only',
+                                'experimental', 'safe'))
+        else:
+            transferargs = self.rootapp.cliargs.filter_whitelist(groups=(
+                                'shared', 'transfer-only', 'checksum',
+                                'experimental', 'safe'))
+
         # TODO #17
         targs, file = {
             'exclude': self._exclude,
@@ -381,7 +396,9 @@ class TransferCommand:
             'include': self._include,
             'include_from': self._include_from,
             'files_from': self._files_from,
-        }[mode](included_changes, excluded_changes, pargs)
+            'checksum': self._checksum,
+            'checksum_from': self._checksum_from,
+        }[mode](included_changes, excluded_changes, pargs, transferargs)
 
         if pargs.namespace.dry_run:
             targs.append('--dry-run')
@@ -403,7 +420,8 @@ class TransferCommand:
             if pargs.namespace.quit:
                 self.menu.break_loops(True)
 
-    def _exclude(self, included_changes, excluded_changes, pargs):
+    def _exclude(self, included_changes, excluded_changes, pargs,
+                 transferargs):
         # TODO #24
 
         # Note that Popen already does all the necessary escaping on the
@@ -415,9 +433,10 @@ class TransferCommand:
         # Prepend, not append, excludes, since the original rsync command
         # may have other include/exclude/filter rules, and rsync stops at
         # the first match that it finds
-        return (['rsync', *excludes, *self.rootapp.transferargs], None)
+        return (['rsync', *excludes, *transferargs], None)
 
-    def _exclude_from(self, included_changes, excluded_changes, pargs):
+    def _exclude_from(self, included_changes, excluded_changes, pargs,
+                      transferargs):
         # Don't define a default file name in the const argument of the
         # --exclude-from option, e.g. const='./exclude-from', and then read it
         # here from there, because this method can also be executed when the
@@ -440,10 +459,11 @@ class TransferCommand:
         # Prepend, not append, excludes, since the original rsync command
         # may have other include/exclude/filter rules, and rsync stops at
         # the first match that it finds
-        return (['rsync', '--exclude-from', file, *self.rootapp.transferargs],
+        return (['rsync', '--exclude-from', file, *transferargs],
                 file)
 
-    def _include(self, included_changes, excluded_changes, pargs):
+    def _include(self, included_changes, excluded_changes, pargs,
+                 transferargs):
         # TODO #24
 
         # Note that Popen already does all the necessary escaping on the
@@ -455,10 +475,10 @@ class TransferCommand:
         # Prepend, not append, includes, since the original rsync command
         # may have other include/exclude/filter rules, and rsync stops at
         # the first match that it finds
-        return (['rsync', *includes, '--exclude', '*',
-                 *self.rootapp.transferargs], None)
+        return (['rsync', *includes, '--exclude', '*', *transferargs], None)
 
-    def _include_from(self, included_changes, excluded_changes, pargs):
+    def _include_from(self, included_changes, excluded_changes, pargs,
+                      transferargs):
         # Don't define a default file name in the const argument of the
         # --exclude-from option, e.g. const='./exclude-from', and then read it
         # here from there, because this method can also be executed when the
@@ -482,9 +502,10 @@ class TransferCommand:
         # may have other include/exclude/filter rules, and rsync stops at
         # the first match that it finds
         return (['rsync', '--include-from', file, '--exclude', '*',
-                 *self.rootapp.transferargs], file)
+                 *transferargs], file)
 
-    def _files_from(self, included_changes, excluded_changes, pargs):
+    def _files_from(self, included_changes, excluded_changes, pargs,
+                    transferargs):
         # Don't define a default file name in the const argument of the
         # --exclude-from option, e.g. const='./exclude-from', and then read it
         # here from there, because this method can also be executed when the
@@ -504,8 +525,50 @@ class TransferCommand:
                 for change in included_changes:
                     filefrom.write(change.sfilename + '\n')
 
-        return (['rsync', '--files-from', file, *self.rootapp.transferargs],
-                file)
+        return (['rsync', '--files-from', file, *transferargs], file)
+
+    def _checksum(self, included_changes, excluded_changes, pargs,
+                  transferargs):
+        # TODO #24
+
+        # Note that Popen already does all the necessary escaping on the
+        # arguments
+        includes = []
+        for change in included_changes:
+            includes.extend(['--include', change.sfilename])
+
+        # Prepend, not append, includes, since the original rsync command
+        # may have other include/exclude/filter rules, and rsync stops at
+        # the first match that it finds
+        return (['rsync', *includes, '--exclude', '*', *transferargs,
+                 '--ignore-times'], None)
+
+    def _checksum_from(self, included_changes, excluded_changes, pargs,
+                       transferargs):
+        # Don't define a default file name in the const argument of the
+        # --exclude-from option, e.g. const='./exclude-from', and then read it
+        # here from there, because this method can also be executed when the
+        # mode is chosen automatically because it hasn't been specified through
+        # options, and max-inline-filters is exceeded, which would leave the
+        # value of the option as None
+        # TODO #23
+        file = self.DEFAULT_INCLUDE_FROM_FILE
+
+        try:
+            # Use 'w' instead of 'a' to make sure the file is empty
+            filefrom = open(file, 'w')
+        except OSError as exc:
+            print(file, 'cannot be written:', exc.strerror)
+        else:
+            with filefrom:
+                for change in included_changes:
+                    filefrom.write(change.sfilename + '\n')
+
+        # Prepend, not append, includes, since the original rsync command
+        # may have other include/exclude/filter rules, and rsync stops at
+        # the first match that it finds
+        return (['rsync', '--include-from', file, '--exclude', '*',
+                 *transferargs, '--ignore-times'], file)
 
 
 class MainMenu:
@@ -566,8 +629,13 @@ class MainMenu:
             print('Unrecognized arguments:', *args)
             return False
 
+        # If experimental is disabled and some of its options have been
+        # specified, the program has already exited in _check_arguments
+        previewargs = self.rootapp.cliargs.filter_whitelist(groups=(
+                                'shared', 'checksum', 'experimental', 'safe'))
+
         # TODO #14
-        call = _m_subprocess.Popen(['rsync', *self.rootapp.previewargs,
+        call = _m_subprocess.Popen(['rsync', *previewargs,
                                     '--dry-run',
                                     '--info={}'.format(
                                                     self.rootapp.configuration[
