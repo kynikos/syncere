@@ -97,6 +97,8 @@ v1.0.0
 #39: Command flags should support initial-substring-match-only like with menu
       entries, e.g. 'p q' should be enough to mean 'preview quit' (should be
       solved in typein.cmenu)
+     Maybe 'preview quit' should better be 'preview --quit' for consistency
+      with 'transfer --quit'
 #42: Test if the %B argument of --out-format shows ACLs like ls -l
 #56: The interactive menu commands and the '?' '!' '>' symbols shouldn't be
      hard-coded, but centralized constants should be used in their place
