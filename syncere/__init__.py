@@ -284,7 +284,10 @@ class MainMenu:
         # Don't use an Alias because this shouldn't be editable
         _m_cmenu.Action(self.menu, '?', self.reset,
                         helpshort='Built-in alias for <reset>')
-        TransferMenu(self.menu, 'transfer', rootapp)
+        _m_cmenu.Action(self.menu, 'transfer', self.transfer,
+                        # Keep these up to date with the actual flags
+                        accepted_flags=['exclude', 'exclude-from', 'include',
+                                        'include-from', 'files-from'])
         if test:
             _m_cmenu.ResumeTest(self.menu, 'resume-test',
                                 helpfull=self.resume_test)
@@ -436,6 +439,169 @@ class MainMenu:
         for change in self.change_filter.select(*args):
             change.reset()
 
+    def transfer(self, *args):
+        """
+        Start the synchronization.
+
+        Start the synchronization in exclude mode.
+
+        The original rsync command will be executed, but --exclude options will
+        be prepended to its options, one for each file interactively excluded.
+
+
+        Start the synchronization in exclude-from mode.
+
+        The original rsync command will be executed, but a file will be written
+        with a list of the files interactively excluded, and an --exclude-from
+        option will be prepended to the original command's options to read the
+        exclude file.
+
+
+        Start the synchronization in include mode.
+
+        The original rsync command will be executed, but --include options will
+        be prepended to its options, one for each file interactively included,
+        terminated by an --exclude=* option.
+
+
+        Start the synchronization in include-from mode.
+
+        The original rsync command will be executed, but a file will be written
+        with a list of the files interactively included, and an --include-from
+        option will be prepended to the original command's options to read the
+        include file.
+
+
+        Start the synchronization in files-from mode.
+
+        The original rsync command will be executed, but a file will be written
+        with a list of the files interactively included, and an --files-from
+        option will be prepended to the original command's options to read the
+        created file.
+        """
+        try:
+            mode = args[0]
+        except IndexError:
+            # TODO #26
+            mode = 'exclude'
+        else:
+            if len(args) > 1:
+                print('Wrong syntax')
+                return False
+
+        try:
+            # TODO #17
+            method = {
+                # Keep up to date with the accepted_flags parameter for the
+                # command constructor
+                'exclude': self._transfer_exclude,
+                'exclude-from': self._transfer_exclude_from,
+                'include': self._transfer_include,
+                'include-from': self._transfer_include_from,
+                'files-from': self._transfer_files_from,
+            }[mode]
+        except KeyError:
+            print('Wrong syntax')
+            return False
+
+        # TODO #31: This should also warn if some files are included, but their
+        #       parent directories are not, resulting in the files actually
+        #       being excluded
+        for change in self.rootapp.pending_changes:
+            if change.included not in (True, False):
+                print('There are still undecided changes')
+                return False
+
+        targs = method()
+
+        # FIXME
+        print(' '.join(targs))
+        # TODO #14 #18
+        call = _m_subprocess.Popen(targs)
+
+        # TODO #19 #23 (otherwise maybe calling 'wait' is unneeded?)
+        call.wait()
+
+    def _transfer_exclude(self):
+        # TODO #24
+
+        # Note that Popen already does all the necessary escaping on the
+        # arguments
+        excludes = []
+        for change in self.rootapp.pending_changes:
+            if not change.included:
+                excludes.extend(['--exclude', change.sfilename])
+
+        # Prepend, not append, excludes, since the original rsync command
+        # may # have other include/exclude/filter rules, and rsync stops at
+        # the first match that it finds
+        return ('rsync', *excludes, *self.rootapp.transferargs)
+
+    def _transfer_exclude_from(self):
+        # TODO #23
+        FILE = './exclude_from'
+
+        with open(FILE, 'w'):
+            # First make sure the file is empty
+            pass
+        with open(FILE, 'a') as filefrom:
+            for change in self.rootapp.pending_changes:
+                if not change.included:
+                    filefrom.write(change.sfilename + '\n')
+
+        # Prepend, not append, excludes, since the original rsync command
+        # may have other include/exclude/filter rules, and rsync stops at
+        # the first match that it finds
+        return ('rsync', '--exclude-from', FILE, *self.rootapp.transferargs)
+
+    def _transfer_include(self):
+        # TODO #24
+
+        # Note that Popen already does all the necessary escaping on the
+        # arguments
+        includes = []
+        for change in self.rootapp.pending_changes:
+            if change.included:
+                includes.extend(['--include', change.sfilename])
+
+        # Prepend, not append, includes, since the original rsync command
+        # may have other include/exclude/filter rules, and rsync stops at
+        # the first match that it finds
+        return ('rsync', *includes, '--exclude', '*',
+                *self.rootapp.transferargs)
+
+    def _transfer_include_from(self):
+        # TODO #23
+        FILE = './include_from'
+
+        with open(FILE, 'w'):
+            # First make sure the file is empty
+            pass
+        with open(FILE, 'a') as filefrom:
+            for change in self.rootapp.pending_changes:
+                if change.included:
+                    filefrom.write(change.sfilename + '\n')
+
+        # Prepend, not append, includes, since the original rsync command
+        # may # have other include/exclude/filter rules, and rsync stops at
+        # the first match that it finds
+        return ('rsync', '--include-from', FILE, '--exclude', '*',
+                *self.rootapp.transferargs)
+
+    def _transfer_files_from(self):
+        # TODO #23
+        FILE = './files_from'
+
+        with open(FILE, 'w'):
+            # First make sure the file is empty
+            pass
+        with open(FILE, 'a') as filefrom:
+            for change in self.rootapp.pending_changes:
+                if change.included:
+                    filefrom.write(change.sfilename + '\n')
+
+        return ('rsync', '--files-from', FILE, *self.rootapp.transferargs)
+
     def resume_test(self):
         """
         Resume the automatic execution of test commands.
@@ -504,184 +670,6 @@ class ConfigMenu:
             self.rootapp.configuration[option] = \
                 self.rootapp.DEFAULT_CONFIG[option]
         return inner
-
-    def help(self):
-        """
-        Show this help screen.
-
-        Type 'help <command>' for more information on a specific command.
-        Tab completion is always available in the menus.
-        """
-        pass
-
-    def exit(self):
-        """
-        Go back to the parent configuration menu.
-        """
-        pass
-
-
-class TransferMenu:
-    def __init__(self, parent, name, rootapp):
-        """
-        Open the transfer menu or execute a transfer command.
-
-        {command_list}
-        """
-        self.rootapp = rootapp
-
-        # TODO #17
-        menu = _m_cmenu.SubMenu(parent, name, helpfull=self.__init__)
-        _m_cmenu.Action(menu, 'exclude', self.exclude)
-        _m_cmenu.Action(menu, 'exclude-from', self.exclude_from)
-        _m_cmenu.Action(menu, 'include', self.include)
-        _m_cmenu.Action(menu, 'include-from', self.include_from)
-        _m_cmenu.Action(menu, 'files-from', self.files_from)
-        _m_cmenu.Help(menu, 'help', helpfull=self.help)
-        _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
-
-    def _pre_transfer_checks(self, *args):
-        # TODO #31: This should also warn if some files are included, but their
-        #       parent directories are not, resulting in the files actually
-        #       being excluded
-        if len(args) > 0:
-            print('No arguments are accepted')
-            return False
-        for change in self.rootapp.pending_changes:
-            if change.included not in (True, False):
-                print('There are still undecided changes')
-                return False
-
-    def _transfer(self, *args):
-        # TODO #14 #18
-        call = _m_subprocess.Popen(args)
-
-        # TODO #19 #23 (otherwise maybe calling 'wait' is unneeded?)
-        call.wait()
-
-    def exclude(self, *args):
-        """
-        Start the synchronization in exclude mode.
-
-        The original rsync command will be executed, but --exclude options will
-        be prepended to its options, one for each file interactively excluded.
-        """
-        if self._pre_transfer_checks(*args) is not False:
-            # TODO #24
-
-            # Note that Popen already does all the necessary escaping on the
-            # arguments
-            excludes = []
-            for change in self.rootapp.pending_changes:
-                if not change.included:
-                    excludes.extend(['--exclude', change.sfilename])
-
-            # Prepend, not append, excludes, since the original rsync command
-            # may # have other include/exclude/filter rules, and rsync stops at
-            # the first match that it finds
-            self._transfer('rsync', *excludes, *self.rootapp.transferargs)
-
-    def exclude_from(self, *args):
-        """
-        Start the synchronization in exclude-from mode.
-
-        The original rsync command will be executed, but a file will be written
-        with a list of the files interactively excluded, and an --exclude-from
-        option will be prepended to the original command's options to read the
-        exclude file.
-        """
-        if self._pre_transfer_checks(*args) is not False:
-            # TODO #23
-            FILE = './exclude_from'
-
-            with open(FILE, 'w'):
-                # First make sure the file is empty
-                pass
-            with open(FILE, 'a') as filefrom:
-                for change in self.rootapp.pending_changes:
-                    if not change.included:
-                        filefrom.write(change.sfilename + '\n')
-
-            # Prepend, not append, excludes, since the original rsync command
-            # may have other include/exclude/filter rules, and rsync stops at
-            # the first match that it finds
-            self._transfer('rsync', '--exclude-from', FILE,
-                           *self.rootapp.transferargs)
-
-    def include(self, *args):
-        """
-        Start the synchronization in include mode.
-
-        The original rsync command will be executed, but --include options will
-        be prepended to its options, one for each file interactively included,
-        terminated by an --exclude=* option.
-        """
-        if self._pre_transfer_checks(*args) is not False:
-            # TODO #24
-
-            # Note that Popen already does all the necessary escaping on the
-            # arguments
-            includes = []
-            for change in self.rootapp.pending_changes:
-                if change.included:
-                    includes.extend(['--include', change.sfilename])
-
-            # Prepend, not append, includes, since the original rsync command
-            # may have other include/exclude/filter rules, and rsync stops at
-            # the first match that it finds
-            self._transfer('rsync', *includes, '--exclude', '*',
-                           *self.rootapp.transferargs)
-
-    def include_from(self, *args):
-        """
-        Start the synchronization in include-from mode.
-
-        The original rsync command will be executed, but a file will be written
-        with a list of the files interactively included, and an --include-from
-        option will be prepended to the original command's options to read the
-        include file.
-        """
-        if self._pre_transfer_checks(*args) is not False:
-            # TODO #23
-            FILE = './include_from'
-
-            with open(FILE, 'w'):
-                # First make sure the file is empty
-                pass
-            with open(FILE, 'a') as filefrom:
-                for change in self.rootapp.pending_changes:
-                    if change.included:
-                        filefrom.write(change.sfilename + '\n')
-
-            # Prepend, not append, includes, since the original rsync command
-            # may # have other include/exclude/filter rules, and rsync stops at
-            # the first match that it finds
-            self._transfer('rsync', '--include-from', FILE, '--exclude', '*',
-                           *self.rootapp.transferargs)
-
-    def files_from(self, *args):
-        """
-        Start the synchronization in files-from mode.
-
-        The original rsync command will be executed, but a file will be written
-        with a list of the files interactively included, and an --files-from
-        option will be prepended to the original command's options to read the
-        created file.
-        """
-        if self._pre_transfer_checks(*args) is not False:
-            # TODO #23
-            FILE = './files_from'
-
-            with open(FILE, 'w'):
-                # First make sure the file is empty
-                pass
-            with open(FILE, 'a') as filefrom:
-                for change in self.rootapp.pending_changes:
-                    if change.included:
-                        filefrom.write(change.sfilename + '\n')
-
-            self._transfer('rsync', '--files-from', FILE,
-                           *self.rootapp.transferargs)
 
     def help(self):
         """
