@@ -14,8 +14,6 @@ v0.8.0
      confusion with rsync's terminology
 #11: Use colors to show the pending changes in the interface; allow disabling
      them
-#14: Check that terminating syncere with Ctrl+c (and other common ways?) also
-     terminates the rsync commands
 
 
 v0.9.0

@@ -409,7 +409,8 @@ class TransferCommand:
             if file and not pargs.namespace.keep_list:
                 _m_os.remove(file)
         else:
-            # TODO #14 #18
+            # Pressing Ctrl+c should normally terminate both rsync and syncere
+            # TODO #18
             call = _m_subprocess.Popen(targs)
             call.wait()
 
@@ -637,7 +638,7 @@ class MainMenu:
         previewargs = self.rootapp.cliargs.filter_whitelist(groups=(
                                 'shared', 'checksum', 'experimental', 'safe'))
 
-        # TODO #14
+        # Pressing Ctrl+c should normally terminate both rsync and syncere
         call = _m_subprocess.Popen(['rsync', *previewargs,
                                     '--dry-run',
                                     '--info={}'.format(
