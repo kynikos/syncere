@@ -51,6 +51,7 @@ class Syncere:
     def __init__(self, cliargs=None, commands=[], test=False):
         self._parse_arguments(cliargs)
         self.configuration = self.DEFAULT_CONFIG.copy()
+        self.colors = Colors(self)
         self.pending_changes = []
         self._start_interface(commands, test)
 
@@ -77,6 +78,47 @@ class Syncere:
         # last command should be one that quits syncere
         self.mainmenu.loop(intro="Type 'help' to list available commands\n",
                            cmdlines=commands, test=test)
+
+
+class Colors:
+    RED = "\033[0;31m"
+    REDBOLD = "\033[1;31m"
+    GREEN = "\033[0;32m"
+    GREENBOLD = "\033[1;32m"
+    YELLOW = "\033[0;33m"
+    YELLOWBOLD = "\033[1;33m"
+    BLUE = "\033[0;34m"
+    BLUEBOLD = "\033[1;34m"
+    MAGENTA = "\033[0;35m"
+    MAGENTABOLD = "\033[1;35m"
+    CYAN = "\033[0;36m"
+    CYANBOLD = "\033[1;36m"
+    WHITE = "\033[0;37m"
+    WHITEBOLD = "\033[1;37m"
+    RESET = "\033[0m"
+
+    def __init__(self, rootapp):
+        self.rootapp = rootapp
+        self.cmenu_messages = _m_cmenu.MessagesColorable(self.RED, self.RESET)
+
+    def enable(self):
+        for menu in self.rootapp.mainmenu.iter_walk_menus():
+            menu.prompt.enable_colors()
+        self.cmenu_messages.enable_colors()
+
+    def disable(self):
+        for menu in self.rootapp.mainmenu.iter_walk_menus():
+            menu.prompt.disable_colors()
+        self.cmenu_messages.disable_colors()
+
+
+class Prompt(_m_cmenu.DynamicPromptColorable):
+    MON_PREFIX = '('
+    MON_SEPARATOR = '>'
+    MON_SUFFIX = ') '
+    COL_PREFIX = MON_PREFIX.join((Colors.GREEN, Colors.RESET))
+    COL_SEPARATOR = MON_SEPARATOR.join((Colors.GREEN, Colors.RESET))
+    COL_SUFFIX = MON_SUFFIX.join((Colors.GREEN, Colors.RESET))
 
 
 class _ChangeFilter:
@@ -589,7 +631,9 @@ class MainMenu:
 
         # TODO #2: Introduce filters syntax in the specific 'help' messages of
         #          the commands that do support filters
-        self.menu = _m_cmenu.RootMenu('syncere', helpfull=self.__init__)
+        self.menu = _m_cmenu.RootMenu(
+                    'syncere', helpfull=self.__init__, prompt=Prompt,
+                    messages=self.rootapp.colors.cmenu_messages)
 
         self.transfer = TransferCommand(rootapp, self.menu)
 
@@ -805,6 +849,7 @@ class ConfigMenu:
             _m_cmenu.LineEditorDefault(menu, option, self.value_in(option),
                                        self.value_out(option),
                                        self.value_restore(option))
+        _m_cmenu.Choice(menu, 'colors', "Use colors? [Y/n] ", self.colors)
         _m_cmenu.Help(menu, 'help', helpfull=self.help)
         _m_cmenu.Exit(menu, 'exit', helpfull=self.exit)
 
@@ -836,6 +881,15 @@ class ConfigMenu:
             self.rootapp.configuration[option] = \
                 self.rootapp.DEFAULT_CONFIG[option]
         return inner
+
+    def colors(self, choice):
+        """
+        Choose whether to use colors in the program's output.
+        """
+        if choice is False:
+            self.rootapp.colors.disable()
+        else:
+            self.rootapp.colors.enable()
 
     def help(self):
         """
