@@ -121,6 +121,44 @@ class Prompt(_m_cmenu.DynamicPromptColorable):
     COL_SUFFIX = MON_SUFFIX.join((Colors.GREEN, Colors.RESET))
 
 
+class Change:
+    """
+    Objects of this class represent pending changes.
+    """
+    def __init__(self, id_, ichange, operation, permissions, uid, gid,
+                 length, tstamp, lfilename, sfilename, link, checksum):
+        self.id_ = id_
+        self.ichange = ichange
+        self.operation = operation
+        self.permissions = permissions
+        self.uid = uid
+        self.gid = gid
+        self.length = length
+        self.tstamp = tstamp
+        self.lfilename = lfilename
+        self.sfilename = sfilename
+        self.link = link
+        self.checksum = checksum
+
+        self.reset()
+
+    def get_summary(self):
+        return (self.ichange, )
+
+    def get_details(self):
+        return (self.ichange, self.permissions, self.uid, self.gid,
+                self.length, self.tstamp)
+
+    def include(self):
+        self.included = True
+
+    def exclude(self):
+        self.included = False
+
+    def reset(self):
+        self.included = None
+
+
 class _ChangeFilter:
     BadFilter = type('BadFilter', (Exception, ), {})
 
@@ -618,6 +656,13 @@ class TransferCommand:
 
 
 class MainMenu:
+    STATUS_TO_ICON = {
+        # TODO #56
+        None: ' ? ',
+        True: '  >',
+        False: '!  ',
+    }
+
     def __init__(self, rootapp, test):
         """
         Type 'help <command>' for more information.
@@ -762,12 +807,14 @@ class MainMenu:
         """
         changes = self.change_filter.select(*args)
         if changes:
-            print()
             width = len(str(changes[-1].id_))
             # TODO #10 #11
             for change in changes:
-                print(change.get_summary(width))
-            print()
+                print('[{0}] {1} {2} {3}'.format(
+                    str(change.id_).rjust(width),
+                    self.STATUS_TO_ICON[change.included],
+                    ' '.join(change.get_summary()),
+                    ''.join((change.sfilename, change.link))))
 
     def details(self, *args):
         """
@@ -775,13 +822,30 @@ class MainMenu:
         """
         changes = self.change_filter.select(*args)
         if changes:
-            print()
-            width = len(str(changes[-1].id_))
+            rows = []
+            maxw_id = 0
+            maxw_uid = 0
+            maxw_gid = 0
+            maxw_size = 0
             # TODO #10 #11
             for change in changes:
-                print(change.get_summary(width))
-                print(change.get_details(width))
-            print()
+                row = (str(change.id_), self.STATUS_TO_ICON[change.included],
+                       *change.get_details(),
+                       ''.join((change.sfilename, change.link)))
+                rows.append(row)
+                if len(row[0]) > maxw_id:
+                    maxw_id = len(row[0])
+                if len(row[4]) > maxw_uid:
+                    maxw_uid = len(row[4])
+                if len(row[5]) > maxw_gid:
+                    maxw_gid = len(row[5])
+                if len(row[6]) > maxw_size:
+                    maxw_size = len(row[6])
+            for row in rows:
+                print(' '.join(('[{}]'.format(row[0].rjust(maxw_id)),
+                      row[1], row[2], row[3], row[4].rjust(maxw_uid),
+                      row[5].rjust(maxw_gid), row[6].rjust(maxw_size),
+                      row[7], row[8])))
 
     def include(self, *args):
         """
@@ -905,53 +969,3 @@ class ConfigMenu:
         Go back to the parent configuration menu.
         """
         pass
-
-
-class Change:
-    """
-    Objects of this class represent pending changes.
-    """
-    STATUS = {
-        # TODO #56
-        None: ' ? ',
-        True: '  >',
-        False: '!  ',
-    }
-
-    def __init__(self, id_, ichange, operation, permissions, uid, gid,
-                 length, tstamp, lfilename, sfilename, link, checksum):
-        self.id_ = id_
-        self.ichange = ichange
-        self.operation = operation
-        self.permissions = permissions
-        self.uid = uid
-        self.gid = gid
-        self.length = length
-        self.tstamp = tstamp
-        self.lfilename = lfilename
-        self.sfilename = sfilename
-        self.link = link
-        self.checksum = checksum
-
-        self.reset()
-
-    def get_summary(self, width):
-        pad = width - len(str(self.id_))
-        return '[{0}{1}] {2} {3}   {4}{5}'.format(' ' * pad, self.id_,
-                                                  self.STATUS[self.included],
-                                                  self.operation,
-                                                  self.sfilename, self.link)
-
-    def get_details(self, width):
-        return ' ' * (7 + width) + ' '.join((self.ichange, self.permissions,
-                                             self.uid, self.gid, self.length,
-                                             self.tstamp, self.checksum))
-
-    def include(self):
-        self.included = True
-
-    def exclude(self):
-        self.included = False
-
-    def reset(self):
-        self.included = None
