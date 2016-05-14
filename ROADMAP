@@ -10,6 +10,8 @@ v0.8.0
     Document the 'transfer' command options
     When using 'transfer --view-only' document that Popen takes care of
      escaping characters
+#3: After executing the transfer command, the preview data should be reset, or
+     optionally re-run automatically
 #5: Change the 'include' term to 'confirm', and 'exclude' to 'except', to avoid
      confusion with rsync's terminology
 #11: Use colors to show the pending changes in the interface; allow disabling
