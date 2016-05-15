@@ -52,6 +52,7 @@ class Syncere:
         self._parse_arguments(cliargs)
         self.configuration = self.DEFAULT_CONFIG.copy()
         self.messages = Messages(self)
+        self.preview_needed = True
         self.pending_changes = []
         self._start_interface(commands, test)
 
@@ -79,6 +80,10 @@ class Syncere:
         self.mainmenu.loop(intro="Type 'help' to list available commands\n",
                            cmdlines=commands, test=test)
 
+    def clear_preview(self):
+        self.pending_changes.clear()
+        self.preview_needed = True
+
 
 class Messages:
     RED = "\033[0;31m"
@@ -99,6 +104,7 @@ class Messages:
 
     file_cannot_be_written = 'cannot be written:'
     nothing_to_do = 'Nothing to do'
+    preview_needed = 'The preview command must be executed first'
     rsync_error = 'rsync error:'
     selection_bad_args = 'Unrecognized selection'
     selection_bad_syntax = 'Bad filter syntax'
@@ -232,6 +238,10 @@ class _ChangeFilter:
         }
 
     def select(self, *args):
+        if self.rootapp.preview_needed:
+            self.rootapp.messages.error(self.rootapp.messages.preview_needed)
+            return self.pending_changes
+
         if not self.pending_changes:
             self.rootapp.messages.error(
                                     self.rootapp.messages.selection_no_changes)
@@ -448,6 +458,10 @@ class TransferCommand:
             self.rootapp.messages.error(self.rootapp.messages.wrong_syntax)
             return False
 
+        if self.rootapp.preview_needed:
+            self.rootapp.messages.error(self.rootapp.messages.preview_needed)
+            return False
+
         if not self.rootapp.pending_changes:
             self.rootapp.messages.error(
                                     self.rootapp.messages.transfer_no_changes)
@@ -541,6 +555,8 @@ class TransferCommand:
 
             if file and not pargs.namespace.keep_list:
                 _m_os.remove(file)
+
+            self.rootapp.clear_preview()
 
             if call.returncode != 0:
                 self.rootapp.messages.error(
@@ -848,6 +864,8 @@ class MainMenu:
             else:
                 # TODO #28: Allow suppressing these lines
                 print(line)
+
+        self.rootapp.preview_needed = False
 
         if not self.rootapp.pending_changes:
             self.rootapp.messages.info(self.rootapp.messages.nothing_to_do)
