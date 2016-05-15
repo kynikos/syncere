@@ -14,7 +14,7 @@ v0.8.0
      optionally re-run automatically
     The "No pending changes" message should be separated from the "Run preview
      command" case
-#4: 'details' should just be an option of the 'list' command
+#4: 'details' should just be an alias for 'list --details'
 #5: Change the 'include' term to 'confirm', and 'exclude' to 'except', to avoid
      confusion with rsync's terminology
 #11: Use colors to show the pending changes in the interface; allow disabling
