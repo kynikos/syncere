@@ -105,6 +105,7 @@ class Messages:
     selection_no_changes = 'There are no pending changes'
     selection_null = 'No changes selected'
     transfer_ambiguous_mode = 'Transfer modes are mutually exclusive'
+    transfer_no_changes = 'There are no pending changes'
     transfer_selection_null = 'All changes have been excluded'
     transfer_selection_undecided = 'There are still undecided changes'
     unrecognized_arguments = 'Unrecognized arguments:'
@@ -445,6 +446,11 @@ class TransferCommand:
             pargs = self.parser.parse_args(args)
         except _m_forwarg.ForwargError:
             self.rootapp.messages.error(self.rootapp.messages.wrong_syntax)
+            return False
+
+        if not self.rootapp.pending_changes:
+            self.rootapp.messages.error(
+                                    self.rootapp.messages.transfer_no_changes)
             return False
 
         included_changes = []
