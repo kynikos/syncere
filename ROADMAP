@@ -19,8 +19,7 @@ v0.8.0
      confusion with rsync's terminology
 #11: Use colors to show the pending changes in the interface; allow disabling
      them
-     The internal error messages and the output of the 'list' and 'details'
-     commands are left to be colored
+     Only the output of the 'list' and 'details' commands is left to be colored
 
 
 v0.9.0

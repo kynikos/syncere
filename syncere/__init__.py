@@ -51,7 +51,7 @@ class Syncere:
     def __init__(self, cliargs=None, commands=[], test=False):
         self._parse_arguments(cliargs)
         self.configuration = self.DEFAULT_CONFIG.copy()
-        self.colors = Colors(self)
+        self.messages = Messages(self)
         self.pending_changes = []
         self._start_interface(commands, test)
 
@@ -80,7 +80,7 @@ class Syncere:
                            cmdlines=commands, test=test)
 
 
-class Colors:
+class Messages:
     RED = "\033[0;31m"
     REDBOLD = "\033[1;31m"
     GREEN = "\033[0;32m"
@@ -97,28 +97,60 @@ class Colors:
     WHITEBOLD = "\033[1;37m"
     RESET = "\033[0m"
 
+    file_cannot_be_written = 'cannot be written:'
+    nothing_to_do = 'Nothing to do'
+    rsync_error = 'rsync error:'
+    selection_bad_args = 'Unrecognized selection'
+    selection_bad_syntax = 'Bad filter syntax'
+    selection_no_changes = 'There are no pending changes'
+    selection_null = 'No changes selected'
+    transfer_ambiguous_mode = 'Transfer modes are mutually exclusive'
+    transfer_selection_null = 'All changes have been excluded'
+    transfer_selection_undecided = 'There are still undecided changes'
+    unrecognized_arguments = 'Unrecognized arguments:'
+    wrong_syntax = 'Wrong syntax'
+
     def __init__(self, rootapp):
         self.rootapp = rootapp
-        self.cmenu_messages = _m_cmenu.MessagesColorable(self.RED, self.RESET)
 
-    def enable(self):
+        self.error_prefix = self.RED
+        self.reset_suffix = self.RESET
+        self._error_prefix = self.error_prefix
+        self._reset_suffix = self.reset_suffix
+
+        self.cmenu = _m_cmenu.MessagesColorable(self.error_prefix,
+                                                self.reset_suffix)
+
+    def enable_colors(self):
+        self._error_prefix = self.error_prefix
+        self._reset_suffix = self.reset_suffix
+
         for menu in self.rootapp.mainmenu.iter_walk_menus():
             menu.prompt.enable_colors()
-        self.cmenu_messages.enable_colors()
+        self.cmenu.enable_colors()
 
-    def disable(self):
+    def disable_colors(self):
+        self._error_prefix = ''
+        self._reset_suffix = ''
+
         for menu in self.rootapp.mainmenu.iter_walk_menus():
             menu.prompt.disable_colors()
-        self.cmenu_messages.disable_colors()
+        self.cmenu.disable_colors()
+
+    def info(self, message, *args):
+        print(message, *args)
+
+    def error(self, message, *args):
+        print(message.join((self._error_prefix, self._reset_suffix)), *args)
 
 
 class Prompt(_m_cmenu.DynamicPromptColorable):
     MON_PREFIX = '('
     MON_SEPARATOR = '>'
     MON_SUFFIX = ') '
-    COL_PREFIX = MON_PREFIX.join((Colors.GREEN, Colors.RESET))
-    COL_SEPARATOR = MON_SEPARATOR.join((Colors.GREEN, Colors.RESET))
-    COL_SUFFIX = MON_SUFFIX.join((Colors.GREEN, Colors.RESET))
+    COL_PREFIX = MON_PREFIX.join((Messages.GREEN, Messages.RESET))
+    COL_SEPARATOR = MON_SEPARATOR.join((Messages.GREEN, Messages.RESET))
+    COL_SUFFIX = MON_SUFFIX.join((Messages.GREEN, Messages.RESET))
 
 
 class Change:
@@ -162,8 +194,9 @@ class Change:
 class _ChangeFilter:
     BadFilter = type('BadFilter', (Exception, ), {})
 
-    def __init__(self, pending_changes):
-        self.pending_changes = pending_changes
+    def __init__(self, rootapp):
+        self.rootapp = rootapp
+        self.pending_changes = rootapp.pending_changes
 
         self.parser = _m_forwarg.ArgumentParser()
         self.parser.add_argument('ids', nargs='*')
@@ -199,13 +232,15 @@ class _ChangeFilter:
 
     def select(self, *args):
         if not self.pending_changes:
-            print('There are no pending changes')
+            self.rootapp.messages.error(
+                                    self.rootapp.messages.selection_no_changes)
             return self.pending_changes
 
         try:
             sargs = self.parser.parse_args(args)
         except _m_forwarg.ForwargError:
-            print('Bad filter syntax')
+            self.rootapp.messages.error(
+                                    self.rootapp.messages.selection_bad_syntax)
             return []
 
         try:
@@ -224,11 +259,12 @@ class _ChangeFilter:
                             changes.remove(change)
                             break
         except self.BadFilter:
-            print('Unrecognized selection')
+            self.rootapp.messages.error(
+                                    self.rootapp.messages.selection_bad_args)
             return []
 
         if not changes:
-            print('No changes selected')
+            self.rootapp.messages.error(self.rootapp.messages.selection_null)
 
         return changes
 
@@ -408,7 +444,7 @@ class TransferCommand:
         try:
             pargs = self.parser.parse_args(args)
         except _m_forwarg.ForwargError:
-            print('Wrong syntax')
+            self.rootapp.messages.error(self.rootapp.messages.wrong_syntax)
             return False
 
         included_changes = []
@@ -425,10 +461,12 @@ class TransferCommand:
         #       being excluded
         if len(self.rootapp.pending_changes) - len(included_changes) - \
                 len(excluded_changes) > 0:
-            print('There are still undecided changes')
+            self.rootapp.messages.error(
+                            self.rootapp.messages.transfer_selection_undecided)
             return False
         elif len(included_changes) == 0:
-            print('All changes have been excluded')
+            self.rootapp.messages.error(
+                                self.rootapp.messages.transfer_selection_null)
             return False
 
         modecheck = set(['exclude', 'exclude_from', 'include', 'include_from',
@@ -458,7 +496,8 @@ class TransferCommand:
         elif len(modecheck) == 1:
             mode = modecheck.pop()
         else:
-            print('Transfer modes are mutually exclusive')
+            self.rootapp.messages.error(
+                                self.rootapp.messages.transfer_ambiguous_mode)
             return False
 
         if mode in ('checksum', 'checksum_from'):
@@ -498,7 +537,8 @@ class TransferCommand:
                 _m_os.remove(file)
 
             if call.returncode != 0:
-                print('rsync error:', call.returncode)
+                self.rootapp.messages.error(
+                            self.rootapp.messages.rsync_error, call.returncode)
                 if pargs.namespace.quit:
                     _m_sys.exit(call.returncode)
             elif pargs.namespace.quit:
@@ -534,7 +574,10 @@ class TransferCommand:
             # Use 'w' instead of 'a' to make sure the file is empty
             filefrom = open(file, 'w')
         except OSError as exc:
-            print(file, 'cannot be written:', exc.strerror)
+            self.rootapp.messages.error(
+                                file,
+                                self.rootapp.messages.file_cannot_be_written,
+                                exc.strerror)
         else:
             with filefrom:
                 for change in excluded_changes:
@@ -576,7 +619,10 @@ class TransferCommand:
             # Use 'w' instead of 'a' to make sure the file is empty
             filefrom = open(file, 'w')
         except OSError as exc:
-            print(file, 'cannot be written:', exc.strerror)
+            self.rootapp.messages.error(
+                                file,
+                                self.rootapp.messages.file_cannot_be_written,
+                                exc.strerror)
         else:
             with filefrom:
                 for change in included_changes:
@@ -603,7 +649,10 @@ class TransferCommand:
             # Use 'w' instead of 'a' to make sure the file is empty
             filefrom = open(file, 'w')
         except OSError as exc:
-            print(file, 'cannot be written:', exc.strerror)
+            self.rootapp.messages.error(
+                                file,
+                                self.rootapp.messages.file_cannot_be_written,
+                                exc.strerror)
         else:
             with filefrom:
                 for change in included_changes:
@@ -642,7 +691,10 @@ class TransferCommand:
             # Use 'w' instead of 'a' to make sure the file is empty
             filefrom = open(file, 'w')
         except OSError as exc:
-            print(file, 'cannot be written:', exc.strerror)
+            self.rootapp.messages.error(
+                                file,
+                                self.rootapp.messages.file_cannot_be_written,
+                                exc.strerror)
         else:
             with filefrom:
                 for change in included_changes:
@@ -672,13 +724,13 @@ class MainMenu:
         """
         self.rootapp = rootapp
 
-        self.change_filter = _ChangeFilter(rootapp.pending_changes)
+        self.change_filter = _ChangeFilter(rootapp)
 
         # TODO #2: Introduce filters syntax in the specific 'help' messages of
         #          the commands that do support filters
         self.menu = _m_cmenu.RootMenu(
                     'syncere', helpfull=self.__init__, prompt=Prompt,
-                    messages=self.rootapp.colors.cmenu_messages)
+                    messages=self.rootapp.messages.cmenu)
 
         self.transfer = TransferCommand(rootapp, self.menu)
 
@@ -719,7 +771,8 @@ class MainMenu:
         if len(args) == 1 and args[0] == 'quit':
             quit = True
         elif len(args) > 0:
-            print('Unrecognized arguments:', *args)
+            self.rootapp.messages.error(
+                        self.rootapp.messages.unrecognized_arguments, *args)
             return False
 
         # If experimental is disabled and some of its options have been
@@ -791,7 +844,7 @@ class MainMenu:
                 print(line)
 
         if not self.rootapp.pending_changes:
-            print('Nothing to do')
+            self.rootapp.messages.info(self.rootapp.messages.nothing_to_do)
             if quit:
                 self.menu.break_loops(True)
 
@@ -951,9 +1004,9 @@ class ConfigMenu:
         Choose whether to use colors in the program's output.
         """
         if choice is False:
-            self.rootapp.colors.disable()
+            self.rootapp.messages.disable_colors()
         else:
-            self.rootapp.colors.enable()
+            self.rootapp.messages.enable_colors()
 
     def help(self):
         """
