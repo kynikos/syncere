@@ -13,9 +13,6 @@ v0.8.0
 #4: 'details' should just be an alias for 'list --details'
 #5: Change the 'include' term to 'confirm', and 'exclude' to 'except', to avoid
      confusion with rsync's terminology
-#11: Use colors to show the pending changes in the interface; allow disabling
-     them
-     Only the output of the 'list' and 'details' commands is left to be colored
 
 
 v0.9.0
@@ -85,8 +82,6 @@ v1.0.0
      Maybe 'preview quit' should better be 'preview --quit' for consistency
       with 'transfer --quit'
 #42: Test if the %B argument of --out-format shows ACLs like ls -l
-#56: The interactive menu commands and the '?' '!' '>' symbols shouldn't be
-     hard-coded, but centralized constants should be used in their place
 #50: If UnrecognizedItemizedChangeError is raised, a message should be printed
       to suggest reporting a bug
 

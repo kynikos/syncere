@@ -68,7 +68,7 @@ class Syncere:
             raise exceptions.MissingDestinationError()
 
     def _start_interface(self, commands, test):
-        # TODO #30 #31 #33 #56
+        # TODO #30 #31 #33
         self.mainmenu = MainMenu(self, test).menu
 
         # When testing, we don't want the original DEFAULT_STARTUP_COMMANDS to
@@ -86,21 +86,32 @@ class Syncere:
 
 
 class Messages:
-    RED = "\033[0;31m"
-    REDBOLD = "\033[1;31m"
-    GREEN = "\033[0;32m"
-    GREENBOLD = "\033[1;32m"
-    YELLOW = "\033[0;33m"
-    YELLOWBOLD = "\033[1;33m"
-    BLUE = "\033[0;34m"
-    BLUEBOLD = "\033[1;34m"
-    MAGENTA = "\033[0;35m"
-    MAGENTABOLD = "\033[1;35m"
-    CYAN = "\033[0;36m"
-    CYANBOLD = "\033[1;36m"
-    WHITE = "\033[0;37m"
-    WHITEBOLD = "\033[1;37m"
-    RESET = "\033[0m"
+    COLOR_RESET = "\033[0m"
+    COLOR_ERROR = "\033[0;31m"  # red fg
+    COLOR_PROMPT = "\033[0;32m"  # green fg
+    COLOR_CHANGE_UNDECIDED = "\033[1;33m"  # yellow fg
+    COLOR_CHANGE_INCLUDED = "\033[1;32m"  # green fg
+    COLOR_CHANGE_EXCLUDED = "\033[1;31m"  # red fg
+
+    ICON_CHANGE_UNDECIDED = '?'
+    ICON_CHANGE_INCLUDED = '>'
+    ICON_CHANGE_EXCLUDED = '!'
+    STATUS_TO_ICON_COL = {
+        None: ' {}{}{} '.format(COLOR_CHANGE_UNDECIDED,
+                                ICON_CHANGE_UNDECIDED,
+                                COLOR_RESET),
+        True: '  {}{}{}'.format(COLOR_CHANGE_INCLUDED,
+                                ICON_CHANGE_INCLUDED,
+                                COLOR_RESET),
+        False: '{}{}{}  '.format(COLOR_CHANGE_EXCLUDED,
+                                 ICON_CHANGE_EXCLUDED,
+                                 COLOR_RESET),
+    }
+    STATUS_TO_ICON_NOCOL = {
+        None: ' {} '.format(ICON_CHANGE_UNDECIDED),
+        True: '  {}'.format(ICON_CHANGE_INCLUDED),
+        False: '{}  '.format(ICON_CHANGE_EXCLUDED),
+    }
 
     file_cannot_be_written = 'cannot be written:'
     nothing_to_do = 'Nothing to do'
@@ -120,13 +131,14 @@ class Messages:
     def __init__(self, rootapp):
         self.rootapp = rootapp
 
-        self.error_prefix = self.RED
-        self.reset_suffix = self.RESET
+        self.error_prefix = self.COLOR_ERROR
+        self.reset_suffix = self.COLOR_RESET
         self._error_prefix = self.error_prefix
         self._reset_suffix = self.reset_suffix
 
         self.cmenu = _m_cmenu.MessagesColorable(self.error_prefix,
                                                 self.reset_suffix)
+        self.status_to_icon = self.STATUS_TO_ICON_COL
 
     def enable_colors(self):
         self._error_prefix = self.error_prefix
@@ -135,6 +147,7 @@ class Messages:
         for menu in self.rootapp.mainmenu.iter_walk_menus():
             menu.prompt.enable_colors()
         self.cmenu.enable_colors()
+        self.status_to_icon = self.STATUS_TO_ICON_COL
 
     def disable_colors(self):
         self._error_prefix = ''
@@ -143,6 +156,7 @@ class Messages:
         for menu in self.rootapp.mainmenu.iter_walk_menus():
             menu.prompt.disable_colors()
         self.cmenu.disable_colors()
+        self.status_to_icon = self.STATUS_TO_ICON_NOCOL
 
     def info(self, message, *args):
         print(message, *args)
@@ -155,9 +169,10 @@ class Prompt(_m_cmenu.DynamicPromptColorable):
     MON_PREFIX = '('
     MON_SEPARATOR = '>'
     MON_SUFFIX = ') '
-    COL_PREFIX = MON_PREFIX.join((Messages.GREEN, Messages.RESET))
-    COL_SEPARATOR = MON_SEPARATOR.join((Messages.GREEN, Messages.RESET))
-    COL_SUFFIX = MON_SUFFIX.join((Messages.GREEN, Messages.RESET))
+    COL_PREFIX = MON_PREFIX.join((Messages.COLOR_PROMPT, Messages.COLOR_RESET))
+    COL_SEPARATOR = MON_SEPARATOR.join((Messages.COLOR_PROMPT,
+                                        Messages.COLOR_RESET))
+    COL_SUFFIX = MON_SUFFIX.join((Messages.COLOR_PROMPT, Messages.COLOR_RESET))
 
 
 class Change:
@@ -730,13 +745,6 @@ class TransferCommand:
 
 
 class MainMenu:
-    STATUS_TO_ICON = {
-        # TODO #56
-        None: ' ? ',
-        True: '  >',
-        False: '!  ',
-    }
-
     def __init__(self, rootapp, test):
         """
         Type 'help <command>' for more information.
@@ -764,15 +772,15 @@ class MainMenu:
         ConfigMenu(self.menu, 'config', self.menu, rootapp)
         _m_cmenu.Action(self.menu, 'include', self.include)
         # Don't use an Alias because this shouldn't be editable
-        _m_cmenu.Action(self.menu, '>', self.include,
+        _m_cmenu.Action(self.menu, Messages.ICON_CHANGE_INCLUDED, self.include,
                         helpshort='Built-in alias for <include>')
         _m_cmenu.Action(self.menu, 'exclude', self.exclude)
         # Don't use an Alias because this shouldn't be editable
-        _m_cmenu.Action(self.menu, '!', self.exclude,
+        _m_cmenu.Action(self.menu, Messages.ICON_CHANGE_EXCLUDED, self.exclude,
                         helpshort='Built-in alias for <exclude>')
         _m_cmenu.Action(self.menu, 'reset', self.reset)
         # Don't use an Alias because this shouldn't be editable
-        _m_cmenu.Action(self.menu, '?', self.reset,
+        _m_cmenu.Action(self.menu, Messages.ICON_CHANGE_UNDECIDED, self.reset,
                         helpshort='Built-in alias for <reset>')
         _m_cmenu.Action(self.menu, 'transfer', self.transfer.execute)
         if test:
@@ -885,11 +893,11 @@ class MainMenu:
         changes = self.change_filter.select(*args)
         if changes:
             width = len(str(changes[-1].id_))
-            # TODO #10 #11
+            # TODO #10
             for change in changes:
                 print('[{0}] {1} {2} {3}'.format(
                     str(change.id_).rjust(width),
-                    self.STATUS_TO_ICON[change.included],
+                    self.rootapp.messages.status_to_icon[change.included],
                     ' '.join(change.get_summary()),
                     ''.join((change.sfilename, change.link))))
 
@@ -904,9 +912,10 @@ class MainMenu:
             maxw_uid = 0
             maxw_gid = 0
             maxw_size = 0
-            # TODO #10 #11
+            # TODO #10
             for change in changes:
-                row = (str(change.id_), self.STATUS_TO_ICON[change.included],
+                row = (str(change.id_), self.rootapp.messages.status_to_icon[
+                                                            change.included],
                        *change.get_details(),
                        ''.join((change.sfilename, change.link)))
                 rows.append(row)
