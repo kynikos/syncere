@@ -41,7 +41,8 @@ class Syncere:
     """
     VERSION_NUMBER = '0.8.0'
     VERSION_DATE = '2016-05-07'
-    DEFAULT_STARTUP_COMMANDS = ['preview quit', 'list']
+    DEFAULT_STARTUP_COMMANDS = ['config alias set details "list --details"',
+                                'preview quit', 'list']
     DEFAULT_CONFIG = {
         'max-inline-filters': '12',
         'preview-info-flags': 'backup4,copy4,del4,flist4,misc4,mount4,name1,'
@@ -77,7 +78,7 @@ class Syncere:
             self.DEFAULT_STARTUP_COMMANDS[:]
         # This can raise _m_cmenu.InsufficientTestCommands: if testing, the
         # last command should be one that quits syncere
-        self.mainmenu.loop(intro="Type 'help' to list available commands\n",
+        self.mainmenu.loop(intro="Type 'help' to list available commands",
                            cmdlines=commands, test=test)
 
     def clear_preview(self):
@@ -113,12 +114,12 @@ class Messages:
         False: '{}  '.format(ICON_CHANGE_EXCLUDED),
     }
 
+    bad_command_syntax = 'Bad command syntax'
     file_cannot_be_written = 'cannot be written:'
     nothing_to_do = 'Nothing to do'
     preview_needed = 'The preview command must be executed first'
     rsync_error = 'rsync error:'
     selection_bad_args = 'Unrecognized selection'
-    selection_bad_syntax = 'Bad filter syntax'
     selection_no_changes = 'There are no pending changes'
     selection_null = 'No changes selected'
     transfer_ambiguous_mode = 'Transfer modes are mutually exclusive'
@@ -220,21 +221,22 @@ class _ChangeFilter:
         self.rootapp = rootapp
         self.pending_changes = rootapp.pending_changes
 
-        self.parser = _m_forwarg.ArgumentParser()
-        self.parser.add_argument('ids', nargs='*')
-        self.parser.add_argument('-i', '--itemized-change', action='append')
-        self.parser.add_argument('-o', '--operation', action='append')
-        self.parser.add_argument('-p', '--permissions', action='append')
-        self.parser.add_argument('-u', '--owner-id', action='append')
-        self.parser.add_argument('-g', '--group-id', action='append')
-        self.parser.add_argument('-s', '--size', action='append')
-        self.parser.add_argument('-t', '--timestamp', action='append')
-        self.parser.add_argument('-f', '--exact-path', action='append')
-        self.parser.add_argument('-F', '--exact-path-icase', action='append')
-        self.parser.add_argument('-x', '--regex-path', action='append')
-        self.parser.add_argument('-X', '--regex-path-icase', action='append')
-        self.parser.add_argument('-w', '--glob-path', action='append')
-        self.parser.add_argument('-W', '--glob-path-icase', action='append')
+    def add_filter_parser_arguments(self, parser):
+        group = parser.add_argument_group('selection filters')
+        group.add_argument('ids', nargs='*')
+        group.add_argument('-i', '--itemized-change', action='append')
+        group.add_argument('-o', '--operation', action='append')
+        group.add_argument('-p', '--permissions', action='append')
+        group.add_argument('-u', '--owner-id', action='append')
+        group.add_argument('-g', '--group-id', action='append')
+        group.add_argument('-s', '--size', action='append')
+        group.add_argument('-t', '--timestamp', action='append')
+        group.add_argument('-f', '--exact-path', action='append')
+        group.add_argument('-F', '--exact-path-icase', action='append')
+        group.add_argument('-x', '--regex-path', action='append')
+        group.add_argument('-X', '--regex-path-icase', action='append')
+        group.add_argument('-w', '--glob-path', action='append')
+        group.add_argument('-W', '--glob-path-icase', action='append')
 
         self.arg_to_filter = {
             'itemized_change': self._select_changes_by_itemized_change,
@@ -252,7 +254,7 @@ class _ChangeFilter:
             'glob_path_icase': self._select_changes_by_glob_path_icase,
         }
 
-    def select(self, *args):
+    def select(self, sargs):
         if self.rootapp.preview_needed:
             self.rootapp.messages.error(self.rootapp.messages.preview_needed)
             return self.pending_changes
@@ -261,13 +263,6 @@ class _ChangeFilter:
             self.rootapp.messages.error(
                                     self.rootapp.messages.selection_no_changes)
             return self.pending_changes
-
-        try:
-            sargs = self.parser.parse_args(args)
-        except _m_forwarg.ForwargError:
-            self.rootapp.messages.error(
-                                    self.rootapp.messages.selection_bad_syntax)
-            return []
 
         try:
             # Process id ranges first, thus initializing the changes list
@@ -768,7 +763,6 @@ class MainMenu:
                         accepted_flags=['quit'])
         _m_cmenu.RunScript(self.menu, 'import', helpfull=self.import_)
         _m_cmenu.Action(self.menu, 'list', self.list_)
-        _m_cmenu.Action(self.menu, 'details', self.details)
         ConfigMenu(self.menu, 'config', self.menu, rootapp)
         _m_cmenu.Action(self.menu, 'include', self.include)
         # Don't use an Alias because this shouldn't be editable
@@ -788,6 +782,14 @@ class MainMenu:
                                 helpfull=self.resume_test)
         _m_cmenu.Help(self.menu, 'help', helpfull=self.help)
         _m_cmenu.Quit(self.menu, 'quit', helpfull=self.quit)
+
+        self.list_parser = _m_forwarg.ArgumentParser()
+        group = self.list_parser.add_argument_group('list-specific')
+        group.add_argument('-d', '--details', action='store_true')
+        self.change_filter.add_filter_parser_arguments(self.list_parser)
+
+        self.include_parser = _m_forwarg.ArgumentParser()
+        self.change_filter.add_filter_parser_arguments(self.include_parser)
 
     def preview(self, *args):
         """
@@ -886,52 +888,59 @@ class MainMenu:
         """
         pass
 
+    def _list_summary(self, changes):
+        width = len(str(changes[-1].id_))
+        # TODO #10
+        for change in changes:
+            print('[{0}] {1} {2} {3}'.format(
+                str(change.id_).rjust(width),
+                self.rootapp.messages.status_to_icon[change.included],
+                ' '.join(change.get_summary()),
+                ''.join((change.sfilename, change.link))))
+
+    def _list_details(self, changes):
+        rows = []
+        maxw_id = 0
+        maxw_uid = 0
+        maxw_gid = 0
+        maxw_size = 0
+        # TODO #10
+        for change in changes:
+            row = (str(change.id_), self.rootapp.messages.status_to_icon[
+                                                        change.included],
+                   *change.get_details(),
+                   ''.join((change.sfilename, change.link)))
+            rows.append(row)
+            if len(row[0]) > maxw_id:
+                maxw_id = len(row[0])
+            if len(row[4]) > maxw_uid:
+                maxw_uid = len(row[4])
+            if len(row[5]) > maxw_gid:
+                maxw_gid = len(row[5])
+            if len(row[6]) > maxw_size:
+                maxw_size = len(row[6])
+        for row in rows:
+            print(' '.join(('[{}]'.format(row[0].rjust(maxw_id)),
+                  row[1], row[2], row[3], row[4].rjust(maxw_uid),
+                  row[5].rjust(maxw_gid), row[6].rjust(maxw_size),
+                  row[7], row[8])))
+
     def list_(self, *args):
         """
         List a selection of pending changes.
         """
-        changes = self.change_filter.select(*args)
+        try:
+            sargs = self.list_parser.parse_args(args)
+        except _m_forwarg.ForwargError:
+            self.rootapp.messages.error(
+                                    self.rootapp.messages.bad_command_syntax)
+            return False
+        changes = self.change_filter.select(sargs)
         if changes:
-            width = len(str(changes[-1].id_))
-            # TODO #10
-            for change in changes:
-                print('[{0}] {1} {2} {3}'.format(
-                    str(change.id_).rjust(width),
-                    self.rootapp.messages.status_to_icon[change.included],
-                    ' '.join(change.get_summary()),
-                    ''.join((change.sfilename, change.link))))
-
-    def details(self, *args):
-        """
-        List a selection of pending changes with details.
-        """
-        changes = self.change_filter.select(*args)
-        if changes:
-            rows = []
-            maxw_id = 0
-            maxw_uid = 0
-            maxw_gid = 0
-            maxw_size = 0
-            # TODO #10
-            for change in changes:
-                row = (str(change.id_), self.rootapp.messages.status_to_icon[
-                                                            change.included],
-                       *change.get_details(),
-                       ''.join((change.sfilename, change.link)))
-                rows.append(row)
-                if len(row[0]) > maxw_id:
-                    maxw_id = len(row[0])
-                if len(row[4]) > maxw_uid:
-                    maxw_uid = len(row[4])
-                if len(row[5]) > maxw_gid:
-                    maxw_gid = len(row[5])
-                if len(row[6]) > maxw_size:
-                    maxw_size = len(row[6])
-            for row in rows:
-                print(' '.join(('[{}]'.format(row[0].rjust(maxw_id)),
-                      row[1], row[2], row[3], row[4].rjust(maxw_uid),
-                      row[5].rjust(maxw_gid), row[6].rjust(maxw_size),
-                      row[7], row[8])))
+            if sargs.namespace.details:
+                self._list_details(changes)
+            else:
+                self._list_summary(changes)
 
     def include(self, *args):
         """
@@ -939,7 +948,13 @@ class MainMenu:
         """
         # TODO #31: This should also ask to include all the ancestor
         #       directories, if they aren't included already
-        for change in self.change_filter.select(*args):
+        try:
+            sargs = self.include_parser.parse_args(args)
+        except _m_forwarg.ForwargError:
+            self.rootapp.messages.error(
+                                    self.rootapp.messages.bad_command_syntax)
+            return False
+        for change in self.change_filter.select(sargs):
             change.include()
 
     def exclude(self, *args):
@@ -949,7 +964,13 @@ class MainMenu:
         # TODO #31: If this is a directory, this should also ask to exclude all
         #       the descendant files and directories, if they are still
         #       included
-        for change in self.change_filter.select(*args):
+        try:
+            sargs = self.include_parser.parse_args(args)
+        except _m_forwarg.ForwargError:
+            self.rootapp.messages.error(
+                                    self.rootapp.messages.bad_command_syntax)
+            return False
+        for change in self.change_filter.select(sargs):
             change.exclude()
 
     def reset(self, *args):
@@ -959,7 +980,13 @@ class MainMenu:
         # TODO #31: If the path was included and was a directory, this should
         #       ask to reset all the descendants; if the path was excluded,
         #       this should ask to reset all the ancestor directories
-        for change in self.change_filter.select(*args):
+        try:
+            sargs = self.include_parser.parse_args(args)
+        except _m_forwarg.ForwargError:
+            self.rootapp.messages.error(
+                                    self.rootapp.messages.bad_command_syntax)
+            return False
+        for change in self.change_filter.select(sargs):
             change.reset()
 
     def resume_test(self):

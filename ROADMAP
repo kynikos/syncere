@@ -10,7 +10,6 @@ v0.8.0
     Document the 'transfer' command options
     When using 'transfer --view-only' document that Popen takes care of
      escaping characters
-#4: 'details' should just be an alias for 'list --details'
 #5: Change the 'include' term to 'confirm', and 'exclude' to 'except', to avoid
      confusion with rsync's terminology
 
