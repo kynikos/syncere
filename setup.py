@@ -22,12 +22,24 @@ setup(
     name='syncere',
     version='0.8.0',
     description='Interactive rsync-based data synchronization.',
+    long_description='Interactive rsync-based data synchronization.',
     author='Dario Giovannetti',
     author_email='dev@dariogiovannetti.net',
     url='https://github.com/kynikos/syncere',
-    license='GPLv3',
+    license='GPLv3+',
     packages=['syncere'],
+    install_requires=['forwarg', 'cmenu'],
     entry_points={
         'console_scripts': ['syncere = syncere:Syncere']
-    }
+    },
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Intended Audience :: System Administrators',
+        'Topic :: System :: Archiving :: Backup',
+        'Topic :: System :: Archiving :: Mirroring',
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',  # noqa
+        'Programming Language :: Python :: 3',
+    ],
+    keywords='rsync synchronization backup files transfer mirroring',
 )

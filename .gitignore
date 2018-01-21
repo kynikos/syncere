@@ -1,6 +1,8 @@
-__pycache__
-*.pyc
-*.pyo
-
 .cache
 test/tmpdir
+build/
+dist/
+__pycache__
+*.pyo
+*.pyc
+*.egg-info/
